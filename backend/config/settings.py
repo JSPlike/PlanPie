@@ -146,6 +146,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# 커스텀 유저 모델
+AUTH_USER_MODEL = 'accounts.User'
+
 # CORS 설정
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React 웹
@@ -167,9 +170,14 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
+# TODO:
+# 소셜 로그인 설정 (환경 변수로 관리 권장)
+GOOGLE_CLIENT_ID = 'google-client-id'
+KAKAO_REST_API_KEY = 'kakao-rest-api-key'
+
 # JWT 설정
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=2),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
