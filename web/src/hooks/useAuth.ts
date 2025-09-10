@@ -5,7 +5,7 @@ import { authAPI } from '../services/api';
 
 interface UseAuthReturn {
   user: User | null;
-  loading: boolean;
+  isLoading: boolean;
   error: string | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -15,7 +15,7 @@ interface UseAuthReturn {
 
 export const useAuth = (): UseAuthReturn => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [isLoading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -29,7 +29,7 @@ export const useAuth = (): UseAuthReturn => {
 
     try {
       setLoading(true);
-      const response = await authAPI.getProfile();
+      const response = await authAPI.getCurrentUser();
       setUser(response.data);
       setError(null);
     } catch (err) {
@@ -49,10 +49,10 @@ export const useAuth = (): UseAuthReturn => {
       setLoading(true);
       setError(null);
       const response = await authAPI.login({ email, password });
-      const { tokens, user } = response.data;
+      const { access, refresh, user } = response.data;
       
-      localStorage.setItem('access_token', tokens.access);
-      localStorage.setItem('refresh_token', tokens.refresh);
+      localStorage.setItem('access_token', access);
+      localStorage.setItem('refresh_token', refresh);
       setUser(user);
       
       navigate('/profile');
@@ -76,7 +76,7 @@ export const useAuth = (): UseAuthReturn => {
 
   return {
     user,
-    loading,
+    isLoading,
     error,
     isAuthenticated,
     login,

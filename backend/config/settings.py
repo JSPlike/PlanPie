@@ -150,6 +150,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # 커스텀 유저 모델
 AUTH_USER_MODEL = 'accounts.User'
 
+FRONTEND_URL = 'https://planpie.com'
+
 # CORS 설정
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React 웹

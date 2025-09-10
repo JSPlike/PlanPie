@@ -84,9 +84,9 @@ export const authAPI = {
       provider,
       access_token: accessToken,
     } as SocialLoginRequest),
-  
-  getProfile: () => 
-    api.get<User>('/accounts/profile/'),
+
+  getCurrentUser: () => 
+    api.get<User>('/accounts/user/'),
   
   refreshToken: (refreshToken: string) =>
     api.post<{ access: string }>('/accounts/token/refresh/', {

@@ -16,7 +16,7 @@ const Profile: React.FC = () => {
   const fetchProfile = async (): Promise<void> => {
     try {
       setLoading(true);
-      const response = await authAPI.getProfile();
+      const response = await authAPI.getCurrentUser();
       setUser(response.data);
       setError('');
     } catch (error: any) {

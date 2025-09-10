@@ -1,8 +1,8 @@
 import React, { useState, FormEvent, ChangeEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { authAPI } from '../services/api';
-import { LoginRequest } from '../types/auth.types';
-import SocialLogin from './SocialLogin';
+import { authAPI } from '../../services/api';
+import { LoginRequest } from '../../types/auth.types';
+import SocialLogin from '../../components/SocialLogin';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -28,10 +28,10 @@ const Login: React.FC = () => {
 
     try {
       const response = await authAPI.login(formData);
-      const { tokens, user } = response.data;
+      const { access, refresh, user } = response.data;
       
-      localStorage.setItem('access_token', tokens.access);
-      localStorage.setItem('refresh_token', tokens.refresh);
+      localStorage.setItem('access_token', access);
+      localStorage.setItem('refresh_token', refresh);
       
       alert(`환영합니다, ${user.email || user.username}님!`);
       navigate('/profile');

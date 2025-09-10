@@ -1,0 +1,282 @@
+/* src/pages/NotFound.css */
+
+.not-found-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* 배경 장식 */
+  .not-found-container::before {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: backgroundMove 20s linear infinite;
+    pointer-events: none;
+  }
+  
+  @keyframes backgroundMove {
+    0% {
+      transform: translate(0, 0);
+    }
+    100% {
+      transform: translate(50px, 50px);
+    }
+  }
+  
+  .not-found-content {
+    background: white;
+    border-radius: 24px;
+    padding: 60px;
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    position: relative;
+    animation: slideUp 0.5s ease-out;
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* SVG 일러스트 */
+  .not-found-illustration {
+    margin-bottom: 40px;
+  }
+  
+  .not-found-svg {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* 캘린더 아이콘 애니메이션 */
+  .calendar-icon {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  
+  /* 구름 애니메이션 */
+  .clouds ellipse {
+    animation: drift 15s ease-in-out infinite;
+  }
+  
+  .clouds ellipse:nth-child(2) {
+    animation-delay: -5s;
+  }
+  
+  .clouds ellipse:nth-child(3) {
+    animation-delay: -10s;
+  }
+  
+  .clouds ellipse:nth-child(4) {
+    animation-delay: -7s;
+  }
+  
+  @keyframes drift {
+    0%, 100% {
+      transform: translateX(0);
+    }
+    50% {
+      transform: translateX(20px);
+    }
+  }
+  
+  /* 물음표 애니메이션 */
+  .question-marks text {
+    animation: bounce 2s ease-in-out infinite;
+  }
+  
+  .question-marks text:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  
+  .question-marks text:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+  
+  .question-marks text:nth-child(4) {
+    animation-delay: 0.6s;
+  }
+  
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+  
+  /* 텍스트 스타일 */
+  .not-found-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #2D3748;
+    margin: 0 0 16px 0;
+  }
+  
+  .not-found-description {
+    font-size: 18px;
+    color: #4A5568;
+    margin: 0 0 8px 0;
+  }
+  
+  .not-found-subdescription {
+    font-size: 16px;
+    color: #718096;
+    margin: 0 0 32px 0;
+  }
+  
+  /* 버튼 스타일 */
+  .not-found-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    min-width: 160px;
+  }
+  
+  .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+  }
+  
+  .btn-secondary {
+    background: #F7FAFC;
+    color: #4A5568;
+    border: 2px solid #E2E8F0;
+  }
+  
+  .btn-secondary:hover {
+    background: #EDF2F7;
+    border-color: #CBD5E0;
+  }
+  
+  /* 도움말 섹션 */
+  .not-found-help {
+    padding-top: 32px;
+    border-top: 1px solid #E2E8F0;
+  }
+  
+  .not-found-help p {
+    font-size: 14px;
+    color: #718096;
+    margin: 0 0 12px 0;
+  }
+  
+  .help-links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .help-link {
+    color: #5C7AEA;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  
+  .help-link:hover {
+    color: #4A63D8;
+    text-decoration: underline;
+  }
+  
+  .separator {
+    color: #CBD5E0;
+    font-size: 12px;
+  }
+  
+  /* 반응형 디자인 */
+  @media (max-width: 768px) {
+    .not-found-content {
+      padding: 40px 24px;
+    }
+  
+    .not-found-title {
+      font-size: 28px;
+    }
+  
+    .not-found-description {
+      font-size: 16px;
+    }
+  
+    .not-found-subdescription {
+      font-size: 14px;
+    }
+  
+    .not-found-actions {
+      flex-direction: column;
+    }
+  
+    .btn-primary,
+    .btn-secondary {
+      width: 100%;
+    }
+  
+    .not-found-svg {
+      width: 300px;
+      height: 225px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .not-found-content {
+      padding: 32px 20px;
+    }
+  
+    .not-found-title {
+      font-size: 24px;
+    }
+  
+    .not-found-svg {
+      width: 250px;
+      height: 187px;
+    }
+  }
+  

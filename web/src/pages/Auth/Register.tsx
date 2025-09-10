@@ -1,7 +1,7 @@
 import React, { useState, FormEvent, ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authAPI } from '../services/api';
-import { RegisterRequest } from '../types/auth.types';
+import { authAPI } from '../../services/api';
+import { RegisterRequest } from '../../types/auth.types';
 
 interface FormErrors {
   [key: string]: string | string[];
@@ -35,10 +35,10 @@ const Register: React.FC = () => {
 
     try {
       const response = await authAPI.register(formData);
-      const { tokens } = response.data;
+      const { access, refresh } = response.data;
       
-      localStorage.setItem('access_token', tokens.access);
-      localStorage.setItem('refresh_token', tokens.refresh);
+      localStorage.setItem('access_token', access);
+      localStorage.setItem('refresh_token', refresh);
       
       alert('회원가입 성공!');
       navigate('/profile');

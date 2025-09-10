@@ -48,7 +48,8 @@ export interface User {
   // API 응답
   export interface AuthResponse {
     user: User;
-    tokens: AuthTokens;
+    access: string;  // 직접 access
+    refresh: string; // 직접 refresh
   }
   
   // 에러 응답

@@ -115,3 +115,35 @@ class SocialLoginSerializer(serializers.Serializer):
         attrs['user_info'] = user_info
         attrs['social_id'] = user_info['social_id']
         return attrs
+    
+class UpdateProfileSerializer(serializers.ModelSerializer):
+    """프로필 업데이트 시리얼라이저"""
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'profile_image_url']
+        
+    def validate_username(self, value):
+        user = self.instance
+        if User.objects.exclude(pk=user.pk).filter(username=value).exists():
+            raise serializers.ValidationError("이미 사용 중인 사용자명입니다.")
+        return value
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    """비밀번호 변경 시리얼라이저"""
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True, min_length=8)
+    new_password2 = serializers.CharField(required=True)
+    
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['new_password2']:
+            raise serializers.ValidationError("새 비밀번호가 일치하지 않습니다.")
+        
+        user = self.context['request'].user
+        if not user.check_password(attrs['old_password']):
+            raise serializers.ValidationError("현재 비밀번호가 올바르지 않습니다.")
+        
+        if attrs['old_password'] == attrs['new_password']:
+            raise serializers.ValidationError("새 비밀번호는 현재 비밀번호와 달라야 합니다.")
+        
+        return attrs    

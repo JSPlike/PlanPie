@@ -1,0 +1,97 @@
+/* CalendarList.css */
+.calendar-list-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+  
+  .calendar-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+  }
+  
+  .calendar-list-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #2D3748;
+  }
+  
+  .btn-create {
+    padding: 12px 24px;
+    background: #5C7AEA;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .btn-create:hover {
+    background: #4A63D8;
+    transform: translateY(-2px);
+  }
+  
+  .calendar-filter-tabs {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 32px;
+    border-bottom: 2px solid #E2E8F0;
+  }
+  
+  .tab {
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: #718096;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+  }
+  
+  .tab.active {
+    color: #5C7AEA;
+    border-bottom-color: #5C7AEA;
+  }
+  
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+  }
+  
+  .calendar-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .calendar-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+  }
+  
+  .empty-state h3 {
+    font-size: 24px;
+    color: #2D3748;
+    margin: 24px 0 12px;
+  }
+  
+  .empty-state p {
+    color: #718096;
+    margin-bottom: 24px;
+  }
+  

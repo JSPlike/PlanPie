@@ -49,10 +49,10 @@ const SocialLogin: React.FC = () => {
 
     try {
       const response = await authAPI.socialLogin('google', credentialResponse.credential);
-      const { tokens, user } = response.data;
+      const { access, refresh, user } = response.data;
       
-      localStorage.setItem('access_token', tokens.access);
-      localStorage.setItem('refresh_token', tokens.refresh);
+      localStorage.setItem('access_token', access);
+      localStorage.setItem('refresh_token', refresh);
       
       alert(`Google 로그인 성공! ${user.email || user.username}님 환영합니다.`);
       navigate('/profile');
@@ -77,10 +77,10 @@ const SocialLogin: React.FC = () => {
       success: async (authObj: any) => {
         try {
           const response = await authAPI.socialLogin('kakao', authObj.access_token);
-          const { tokens, user } = response.data;
+          const { access, refresh, user } = response.data;
           
-          localStorage.setItem('access_token', tokens.access);
-          localStorage.setItem('refresh_token', tokens.refresh);
+          localStorage.setItem('access_token', access);
+          localStorage.setItem('refresh_token', refresh);
           
           alert(`Kakao 로그인 성공! ${user.email || user.username}님 환영합니다.`);
           navigate('/profile');

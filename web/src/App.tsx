@@ -1,7 +1,8 @@
+/*
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
-import Login from './components/Login';
-import Register from './components/Register';
+import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
 import Profile from './components/Profile';
 
 // Private Route 컴포넌트
@@ -154,5 +155,30 @@ const Home: React.FC = () => {
     </div>
   );
 };
+
+export default App;
+*/
+
+
+import React from 'react';
+import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import AppRoutes from './routes/AppRoutes';
+import ErrorBoundary from './components/Common/ErrorBoundary';
+import './App.css';
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <div className="App">
+            <AppRoutes />
+          </div>
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
+  );
+}
 
 export default App;
