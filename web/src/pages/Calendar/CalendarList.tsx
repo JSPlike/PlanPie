@@ -20,6 +20,12 @@ const CalendarList: React.FC = () => {
     try {
       setLoading(true);
       const response = await calendarAPI.getCalendars();
+
+      console.log('Full response:', response);
+      console.log('response.data:', response.data);
+      console.log('Type of response.data:', typeof response.data);
+      console.log('Is response.data an array?:', Array.isArray(response.data));
+      
       setCalendars(response.data);
     } catch (error) {
       console.error('Failed to fetch calendars:', error);
@@ -36,10 +42,20 @@ const CalendarList: React.FC = () => {
     navigate('/calendars/create');
   };
 
-  const filteredCalendars = calendars.filter(calendar => {
+  // 배열이 비어있는지 체크  
+  // 항상 배열임을 보장
+  const safeCalendars = Array.isArray(calendars) ? calendars : [];
+    
+  // 안전한 필터링
+  const filteredCalendars = safeCalendars.filter(calendar => {
     if (filter === 'all') return true;
     return calendar.calendar_type === filter;
   });
+
+  // 안전한 카운트
+  const totalCount = safeCalendars.length;
+  const personalCount = safeCalendars.filter(c => c?.calendar_type === 'personal').length;
+  const sharedCount = safeCalendars.filter(c => c?.calendar_type === 'shared').length;
 
   if (loading) {
     return <Loading message="캘린더를 불러오는 중..." />;
@@ -59,19 +75,19 @@ const CalendarList: React.FC = () => {
           className={`tab ${filter === 'all' ? 'active' : ''}`}
           onClick={() => setFilter('all')}
         >
-          전체 ({calendars.length})
+          전체 ({totalCount})
         </button>
         <button 
           className={`tab ${filter === 'personal' ? 'active' : ''}`}
           onClick={() => setFilter('personal')}
         >
-          개인 ({calendars.filter(c => c.calendar_type === 'personal').length})
+          개인 ({personalCount})
         </button>
         <button 
           className={`tab ${filter === 'shared' ? 'active' : ''}`}
           onClick={() => setFilter('shared')}
         >
-          공유 ({calendars.filter(c => c.calendar_type === 'shared').length})
+          공유 ({sharedCount})
         </button>
       </div>
 

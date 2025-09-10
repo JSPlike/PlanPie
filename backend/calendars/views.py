@@ -17,10 +17,12 @@ class CalendarViewSet(viewsets.ModelViewSet):
     """캘린더 ViewSet"""
     serializer_class = CalendarSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = None  # 페이지네이션 비활성화
     
     def get_queryset(self):
         """사용자가 접근 가능한 캘린더만 반환"""
         user = self.request.user
+
         # 소유자이거나 멤버인 캘린더
         return Calendar.objects.filter(
             models.Q(owner=user) | 
@@ -37,7 +39,6 @@ class CalendarViewSet(viewsets.ModelViewSet):
         calendars = self.get_queryset()
         owned_count = calendars.filter(owner=request.user).count()
         member_count = calendars.exclude(owner=request.user).count()
-        
         return Response({
             'has_calendars': calendars.exists(),
             'owned_count': owned_count,
