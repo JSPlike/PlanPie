@@ -128,6 +128,12 @@ class User(AbstractBaseUser, PermissionsMixin):
             username = f'{base_username}_{counter}'
             counter += 1
         return username
+    
+    # 유저의 마지막 로그인 일시 저장
+    def update_last_login(self):
+        self.last_login = timezone.now()
+        self.save(update_fields=['last_login'])
+    
 
 
 class SocialAccount(models.Model):

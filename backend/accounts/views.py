@@ -45,7 +45,8 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
-        
+        print('로그인 요청')
+        print(request.data)
         # 마지막 로그인 시간 업데이트
         user.update_last_login()
         
