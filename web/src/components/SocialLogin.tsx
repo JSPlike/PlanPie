@@ -108,7 +108,7 @@ const SocialLogin: React.FC = () => {
             shape="rectangular"
             theme="outline"
             size="large"
-            width={400}
+            width="100%"
           />
         </div>
       </GoogleOAuthProvider>

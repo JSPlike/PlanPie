@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../../services/api';
 import { LoginRequest } from '../../types/auth.types';
 import SocialLogin from '../../components/SocialLogin';
+import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import './Login.css';
 
 const Login: React.FC = () => {
@@ -12,6 +13,16 @@ const Login: React.FC = () => {
     email: '',
     password: '',
   });
+
+  // 현재 달 가져오기
+  const getCurrentMonth = () => {
+    const months = [
+      'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+      'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
+    ];
+    return months[new Date().getMonth()];
+  };
+
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -75,17 +86,124 @@ const Login: React.FC = () => {
         </div>
         <div className="illustration-image">
           <svg viewBox="0 0 400 400" className="animated-svg">
-            <circle cx="200" cy="200" r="150" fill="url(#gradient)" opacity="0.3"/>
-            <rect x="150" y="150" width="100" height="100" rx="20" fill="white" opacity="0.9"/>
-            <path d="M150 180 L250 180" stroke="#667eea" strokeWidth="3"/>
-            <circle cx="180" cy="140" r="5" fill="#667eea"/>
-            <circle cx="220" cy="140" r="5" fill="#667eea"/>
+            {/* 배경 그라데이션 원 */}
             <defs>
-              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#667eea"/>
-                <stop offset="100%" stopColor="#764ba2"/>
+              <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#667eea" stopOpacity="0.6"/>
+                <stop offset="100%" stopColor="#764ba2" stopOpacity="0.3"/>
               </linearGradient>
+              <linearGradient id="gradient2" x1="0%" y1="100%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#f472b6" stopOpacity="0.4"/>
+                <stop offset="100%" stopColor="#bd34fe" stopOpacity="0.2"/>
+              </linearGradient>
+              <filter id="shadow">
+                <feDropShadow dx="0" dy="10" stdDeviation="15" floodOpacity="0.2"/>
+              </filter>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
             </defs>
+            
+            {/* 배경 장식 원들 */}
+            <circle cx="100" cy="100" r="60" fill="url(#gradient2)" className="floating-circle-1"/>
+            <circle cx="300" cy="320" r="80" fill="url(#gradient1)" className="floating-circle-2"/>
+            <circle cx="350" cy="150" r="40" fill="url(#gradient2)" className="floating-circle-3"/>
+            
+            {/* 메인 캘린더 카드 */}
+            <g filter="url(#shadow)" className="calendar-card-group">
+              {/* 카드 배경 */}
+              <rect x="120" y="120" width="160" height="160" rx="20" fill="white"/>
+              
+              {/* 캘린더 헤더 */}
+              <rect x="120" y="120" width="160" height="45" rx="20" fill="#667eea"/>
+              <rect x="120" y="145" width="160" height="20" fill="#667eea"/>
+              
+              {/* 캘린더 고리 */}
+              <circle cx="160" cy="115" r="8" fill="none" stroke="white" strokeWidth="3"/>
+              <circle cx="240" cy="115" r="8" fill="none" stroke="white" strokeWidth="3"/>
+              <line x1="160" y1="107" x2="160" y2="130" stroke="white" strokeWidth="3" strokeLinecap="round"/>
+              <line x1="240" y1="107" x2="240" y2="130" stroke="white" strokeWidth="3" strokeLinecap="round"/>
+              
+              {/* 월 표시 */}
+              <text x="200" y="150" fontSize="18" fontWeight="bold" fill="white" textAnchor="middle">
+                {getCurrentMonth()}
+              </text>
+              
+              {/* 캘린더 그리드 */}
+              <g className="calendar-grid">
+                {/* 요일 헤더 */}
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                  <text 
+                    key={day + i}
+                    x={135 + i * 20} 
+                    y="185" 
+                    fontSize="10" 
+                    fill="#94a3b8" 
+                    textAnchor="middle"
+                  >
+                    {day}
+                  </text>
+                ))}
+                
+                {/* 날짜 점들 */}
+                {Array.from({ length: 28 }, (_, i) => {
+                  const row = Math.floor(i / 7);
+                  const col = i % 7;
+                  const isToday = i === 14;
+                  const hasEvent = [5, 12, 14, 20, 25].includes(i);
+                  
+                  return (
+                    <g key={i}>
+                      {isToday && (
+                        <circle 
+                          cx={135 + col * 20} 
+                          cy={200 + row * 20} 
+                          r="10" 
+                          fill="#667eea" 
+                          opacity="0.2"
+                        />
+                      )}
+                      <circle 
+                        cx={135 + col * 20} 
+                        cy={200 + row * 20} 
+                        r="2" 
+                        fill={isToday ? "#667eea" : hasEvent ? "#f472b6" : "#cbd5e1"}
+                        className={hasEvent ? "event-dot" : ""}
+                      />
+                    </g>
+                  );
+                })}
+              </g>
+            </g>
+            
+            {/* 플로팅 아이콘들 */}
+            <g className="floating-icons">
+              <g transform="translate(50, 200)" className="float-icon-1">
+                <circle cx="0" cy="0" r="25" fill="white" opacity="0.9" filter="url(#shadow)"/>
+                <text x="0" y="5" fontSize="20" textAnchor="middle">✅</text>
+              </g>
+              
+              <g transform="translate(320, 80)" className="float-icon-2">
+                <circle cx="0" cy="0" r="25" fill="white" opacity="0.9" filter="url(#shadow)"/>
+                <text x="0" y="5" fontSize="20" textAnchor="middle">📅</text>
+              </g>
+              
+              <g transform="translate(350, 250)" className="float-icon-3">
+                <circle cx="0" cy="0" r="25" fill="white" opacity="0.9" filter="url(#shadow)"/>
+                <text x="0" y="5" fontSize="20" textAnchor="middle">⏰</text>
+              </g>
+            </g>
+            
+            {/* 연결선 */}
+            <g className="connection-lines" opacity="0.3">
+              <line x1="75" y1="200" x2="120" y2="200" stroke="#667eea" strokeWidth="2" strokeDasharray="5,5"/>
+              <line x1="280" y1="200" x2="325" y2="225" stroke="#764ba2" strokeWidth="2" strokeDasharray="5,5"/>
+              <line x1="320" y1="105" x2="280" y2="140" stroke="#f472b6" strokeWidth="2" strokeDasharray="5,5"/>
+            </g>
           </svg>
         </div>
       </div>
@@ -115,7 +233,7 @@ const Login: React.FC = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="form-input"
+                  className="auth-form-input has-icon"
                 />
               </div>
             </div>
@@ -137,14 +255,14 @@ const Login: React.FC = () => {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="form-input"
+                  className="auth-form-input has-icon"
                 />
                 <button
                   type="button"
                   className="password-toggle"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  {showPassword ? AiOutlineEyeInvisible({}) : AiOutlineEye({})}
                 </button>
               </div>
             </div>

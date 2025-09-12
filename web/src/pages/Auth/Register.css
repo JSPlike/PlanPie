@@ -1,6 +1,6 @@
 /* src/pages/Auth/Register.css */
 
-.register-container {
+  .register-container {
     display: flex;
     min-height: 100vh;
     background: #f8fafc;
@@ -170,7 +170,7 @@
   }
   
   .card-1 {
-    top: 20%;
+    top: 25%;
     right: 10%;
     animation-delay: 0s;
   }
@@ -182,8 +182,8 @@
   }
   
   .card-3 {
-    top: 50%;
-    right: 25%;
+    top: 60%;
+    right: 10%;
     animation-delay: 2s;
   }
   
@@ -244,6 +244,7 @@
     font-weight: 500;
     color: #475569;
     font-size: 14px;
+    text-align: left;
   }
   
   .input-wrapper {
@@ -258,9 +259,12 @@
     color: #94a3b8;
     display: flex;
     align-items: center;
+
+    z-index: 1;  /* 아이콘이 위에 표시되도록 */
+    pointer-events: none;  /* 클릭 이벤트 통과 */
   }
   
-  .form-input {
+  .auth-form-input {
     width: 100%;
     padding: 14px 16px 14px 48px;
     border: 2px solid #e2e8f0;
@@ -268,16 +272,28 @@
     font-size: 15px;
     transition: all 0.3s ease;
     background: #f8fafc;
+
+    box-sizing: border-box;
+  }
+
+  /* 아이콘이 없는 입력 필드 */
+  .auth-form-input:not(.has-icon) {
+    padding: 14px 16px;  /* 양쪽 동일한 패딩 */
   }
   
-  .form-input:focus {
+  .auth-form-input:focus {
     outline: none;
     border-color: #667eea;
     background: white;
     box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
   }
   
-  .form-input.error {
+  .auth-form-input::placeholder {
+    color: #94a3b8;
+    opacity: 1;  /* Firefox 대응 */
+  }
+
+  .auth-form-input.error {
     border-color: #ef4444;
     background: #fef2f2;
   }
@@ -328,7 +344,7 @@
   
   .terms-section .checkbox-label {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 8px;
     cursor: pointer;
     font-size: 14px;
