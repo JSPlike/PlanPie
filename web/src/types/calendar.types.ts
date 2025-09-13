@@ -33,6 +33,7 @@ export interface Calendar {
   share_url: string;
   share_token: string;
   is_admin: boolean;
+  is_active: boolean; // 후에 추가됨 (현재 화면에서 캘린더 활성/비활성)
   can_leave: boolean;
   can_delete: boolean;
   created_at: string;
@@ -158,4 +159,9 @@ export interface EventFilters {
 export interface CalendarFilters {
   calendar_type?: 'personal' | 'shared';
   is_admin?: boolean;
+}
+
+// 로컬 상태 관리용 (Calendar + 화면 표시 여부)
+export interface CalendarWithVisibility extends Calendar {
+  isVisible: boolean;  // 로컬 상태 (DB 저장 X)
 }

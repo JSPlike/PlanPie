@@ -7,7 +7,7 @@ import Login from '../pages/Auth/Login';
 import Register from '../pages/Auth/Register';
 
 // Calendar Pages
-import CalendarList from '../pages/Calendar/CalendarList';
+import CalendarList from '../pages/Calendar/CalendarList';
 import CalendarCreate from '../pages/Calendar/CalendarCreate';
 import CalendarDetail from '../pages/Calendar/CalendarDetail';
 import JoinCalendar from '../pages/Calendar/JoinCalendar';
@@ -15,6 +15,7 @@ import JoinCalendar from '../pages/Calendar/JoinCalendar';
 // Common Components
 import PrivateRoute from '../components/Common/PrivateRoute';
 import NotFound from '../pages/NotFound';
+import Calendar from '../pages/Calendar/CalendarView';
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -50,7 +51,8 @@ const AppRoutes: React.FC = () => {
         path="/calendars" 
         element={
           <PrivateRoute>
-            <CalendarList />
+            {/* <CalendarList /> */}
+            <Calendar/>
           </PrivateRoute>
         } 
       />

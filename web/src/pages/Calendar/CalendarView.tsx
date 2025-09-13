@@ -1,0 +1,279 @@
+// src/pages/Calendar/CalendarView.tsx
+import React, { useState, useMemo } from 'react';
+import styles from './CalendarView.module.css';
+import CalendarLeftSide from '../../components/Calendar/CalendarLeftSide';
+import CalendarGrid from '../../components/Calendar/CalendarGrid';
+import EventModal from '../../components/Calendar/EventModal';
+import { Calendar, CalendarWithVisibility, Event } from '../../types/calendar.types';
+import { User } from '../../types/auth.types';
+
+const CalendarView: React.FC = () => {
+    const [myUser, setMyUser] = useState<User | null>(null);
+    const dummyUser: User = {
+        id: "u1",
+        email: "test@test.com",
+        username: "tester",
+        first_name: "테스트",
+        last_name: "유저",
+        login_method: "email",
+        is_active: true,
+        is_staff: false,
+        is_verified: true,
+        date_joined: new Date().toISOString(),
+    };
+
+  // 캘린더 목록
+  const [calendars, setCalendars] = useState<Calendar[]>([
+    {
+        id: "1",
+        name: "개인 일정",
+        description: "개인적인 일정 관리용",
+        calendar_type: "personal",
+        image: undefined,
+        color: "#4A90E2",
+        owner: dummyUser,
+        members: [],
+        tags: [],
+        member_count: 1,
+        event_count: 0,
+        share_url: "",
+        share_token: "",
+        is_admin: true,
+        is_active: true,
+        can_leave: false,
+        can_delete: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: "2",
+        name: "업무",
+        description: "업무 관련 일정",
+        calendar_type: "shared",
+        image: undefined,
+        color: "#50C878",
+        owner: dummyUser,
+        members: [],
+        tags: [],
+        member_count: 3,
+        event_count: 5,
+        share_url: "",
+        share_token: "",
+        is_admin: true,
+        is_active: true,
+        can_leave: false,
+        can_delete: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: "3",
+        name: "가족 일정",
+        description: "가족 모임 및 행사",
+        calendar_type: "shared",
+        image: undefined,
+        color: "#FFB347",
+        owner: dummyUser,
+        members: [],
+        tags: [],
+        member_count: 4,
+        event_count: 2,
+        share_url: "",
+        share_token: "",
+        is_admin: false,
+        is_active: false,
+        can_leave: true,
+        can_delete: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ]);
+
+    const [events, setEvents] = useState<Event[]>([
+    {
+        id: 'e1',
+        calendar: '1',
+        title: '회의',
+        description: '',
+        location: '',
+        start_date: new Date(2024, 0, 15, 10, 0).toISOString(),
+        end_date: new Date(2024, 0, 15, 11, 0).toISOString(),
+        all_day: false,
+        color: '#4A90E2',
+        created_by: dummyUser,
+        can_edit: true,
+        can_delete: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+    },
+    {
+        id: 'e2',
+        calendar: '2',
+        title: '프로젝트 마감',
+        description: '',
+        location: '',
+        start_date: new Date(2024, 0, 20).toISOString(),
+        end_date: new Date(2024, 0, 20).toISOString(),
+        all_day: true,
+        color: '#50C878',
+        created_by: dummyUser,
+        can_edit: true,
+        can_delete: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+    }
+    ]);
+    
+  // 캘린더 표시 상태 (로컬 상태)
+  const [calendarVisibility, setCalendarVisibility] = useState<Record<string, boolean>>({
+    '1': true,
+    '2': true,
+    '3': false
+  });
+  // 캘린더와 표시 상태를 합친 데이터
+  const calendarsWithVisibility = useMemo((): CalendarWithVisibility[] => {
+    return calendars.map(cal => ({
+      ...cal,
+      isVisible: calendarVisibility[cal.id] ?? true
+    }));
+  }, [calendars, calendarVisibility]);
+
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [selectedCalendarId, setSelectedCalendarId] = useState<string>('1');
+
+  // 활성화된 캘린더의 이벤트만 필터링
+  const visibleEvents = useMemo(() => {
+    const activeCalendarIds = calendars
+      .filter(cal => cal.is_active)
+      .map(cal => cal.id);
+    
+    return events.filter(event => activeCalendarIds.includes(event.calendar));
+  }, [calendars, events]);
+
+  // 캘린더 토글
+  const toggleCalendar = (calendarId: string) => {
+    setCalendars(prev => prev.map(cal => 
+      cal.id === calendarId 
+        ? { ...cal, isActive: !cal.is_active }
+        : cal
+    ));
+  };
+
+  // 캘린더 추가
+  const addCalendar = (newCalendar: Omit<Calendar, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const calendar: Calendar = {
+      ...newCalendar,
+      id: Date.now().toString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    setCalendars(prev => [...prev, calendar]);
+  };
+
+  // 캘린더 수정
+  const updateCalendar = (calendarId: string, updates: Partial<Calendar>) => {
+    setCalendars(prev => prev.map(cal =>
+      cal.id === calendarId
+        ? { ...cal, ...updates, updatedAt: new Date() }
+        : cal
+    ));
+  };
+
+  // 캘린더 삭제
+  const deleteCalendar = (calendarId: string) => {
+    // 기본 캘린더는 삭제 불가
+    const calendar = calendars.find(cal => cal.id === calendarId);
+
+    setCalendars(prev => prev.filter(cal => cal.id !== calendarId));
+    // 해당 캘린더의 이벤트도 삭제
+    setEvents(prev => prev.filter(event => event.calendar !== calendarId));
+  };
+
+  // 이벤트 추가
+//   const addEvent = (eventData: Omit<Event, 'id'>) => {
+//     const newEvent: Event = {
+//       ...eventData,
+//       id: Date.now().toString()
+//     };
+//     setEvents(prev => [...prev, newEvent]);
+//   };
+
+  const addEvent = (event: Partial<Event>) => {
+    if (event.id) {
+      // 수정
+      setEvents(prev =>
+        prev.map(ev => (ev.id === event.id ? { ...ev, ...event } : ev))
+      );
+    } else {
+      // 추가
+      const newEvent: Event = {
+        ...event,
+        id: Date.now().toString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      } as Event;
+  
+      setEvents(prev => [...prev, newEvent]);
+    }
+  };
+
+  // 이벤트 색상 가져오기 (이벤트 커스텀 색상 또는 캘린더 색상)
+  const getEventColor = (event: Event): string => {
+    if (event.color) return event.color;
+    const calendar = calendars.find(cal => cal.id === event.calendar);
+    return calendar?.color || '#4A90E2';
+  };
+
+  return (
+    <div className={styles.calendarContainer}>
+      {/* 왼쪽 사이드바 */}
+      <CalendarLeftSide
+        calendars={calendars}
+        onToggleCalendar={toggleCalendar}
+        onAddCalendar={addCalendar}
+        onUpdateCalendar={updateCalendar}
+        onDeleteCalendar={deleteCalendar}
+        selectedCalendarId={selectedCalendarId}
+        onSelectCalendar={setSelectedCalendarId}
+        onAddEvent={() => setIsEventModalOpen(true)}
+      />
+
+      {/* 메인 캘린더 영역 */}
+      <div className={styles.calendarMain}>
+        <CalendarGrid
+          currentDate={currentDate}
+          selectedDate={selectedDate}
+          events={visibleEvents}
+          calendars={calendars}
+          onDateSelect={setSelectedDate}
+          onMonthChange={setCurrentDate}
+          getEventColor={getEventColor}
+          onEventClick={(event) => {
+            console.log("이벤트 클릭:", event);
+            // 상세보기 모달 열기 같은 동작
+          }}
+          onEventDelete={(eventId) => {
+            console.log("이벤트 삭제:", eventId);
+            setEvents((prev) => prev.filter(e => e.id !== eventId));
+          }}
+        />
+      </div>
+
+      {/* 이벤트 추가 모달 */}
+      {isEventModalOpen && (
+        <EventModal
+          isOpen={isEventModalOpen}
+          onClose={() => setIsEventModalOpen(false)}
+          onSave={addEvent}
+          selectedDate={selectedDate || new Date()}
+          calendars={calendars.filter(cal => cal.is_active)}
+          defaultCalendarId={selectedCalendarId}
+        />
+      )}
+    </div>
+  );
+};
+
+export default CalendarView;

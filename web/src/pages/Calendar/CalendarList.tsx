@@ -20,11 +20,6 @@ const CalendarList: React.FC = () => {
     try {
       setLoading(true);
       const response = await calendarAPI.getCalendars();
-
-      console.log('Full response:', response);
-      console.log('response.data:', response.data);
-      console.log('Type of response.data:', typeof response.data);
-      console.log('Is response.data an array?:', Array.isArray(response.data));
       
       setCalendars(response.data);
     } catch (error) {

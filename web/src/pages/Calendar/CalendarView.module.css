@@ -1,0 +1,11 @@
+.calendarContainer {
+    display: flex;
+    height: 100vh;
+    background: #f8f9fa;
+  }
+  
+  .calendarMain {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+  }

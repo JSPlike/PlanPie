@@ -1,0 +1,470 @@
+/* src/components/EventModal/EventModal.module.css */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  .modalContent {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  .modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e0e0e0;
+    background: #fafafa;
+  }
+  
+  .modalHeader h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .closeButton {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #666;
+    transition: all 0.2s;
+  }
+  
+  .closeButton:hover {
+    background: #e0e0e0;
+    color: #333;
+  }
+  
+  .eventForm {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  
+  .formGroup {
+    margin-bottom: 20px;
+  }
+  
+  .formGroup label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #555;
+  }
+  
+  .formGroup input[type="text"],
+  .formGroup input[type="date"],
+  .formGroup input[type="time"],
+  .formGroup input[type="datetime-local"],
+  .formGroup select,
+  .formGroup textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.2s;
+    background: white;
+  }
+  
+  .formGroup input:focus,
+  .formGroup select:focus,
+  .formGroup textarea:focus {
+    outline: none;
+    border-color: #4A90E2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+  }
+  
+  .formGroup input:disabled,
+  .formGroup select:disabled,
+  .formGroup textarea:disabled {
+    background: #f5f5f5;
+    color: #999;
+    cursor: not-allowed;
+  }
+  
+  .formGroup textarea {
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+  }
+  
+  /* 체크박스 스타일 */
+  .formGroup input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+    cursor: pointer;
+  }
+  
+  .formGroup label input[type="checkbox"] {
+    vertical-align: middle;
+  }
+  
+  /* 캘린더 선택 드롭다운 */
+  .formGroup select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23666' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+  
+  /* 날짜/시간 입력 그룹 */
+  .formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  
+  .formRow .formGroup {
+    margin-bottom: 0;
+  }
+  
+  /* 색상 선택기 */
+  .colorPicker {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  
+  .colorOption {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  
+  .colorOption:hover {
+    transform: scale(1.1);
+  }
+  
+  .colorOption.selected {
+    border-color: #333;
+    box-shadow: 0 0 0 3px white, 0 0 0 4px #333;
+  }
+  
+  .colorOption.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+  }
+  
+  /* 모달 푸터 */
+  .modalFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid #e0e0e0;
+    background: #fafafa;
+  }
+  
+  .cancelButton,
+  .saveButton {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 80px;
+  }
+  
+  .cancelButton {
+    background: white;
+    border: 1px solid #ddd;
+    color: #666;
+  }
+  
+  .cancelButton:hover {
+    background: #f5f5f5;
+    border-color: #ccc;
+  }
+  
+  .saveButton {
+    background: #4A90E2;
+    border: none;
+    color: white;
+  }
+  
+  .saveButton:hover {
+    background: #357ABD;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+  }
+  
+  .saveButton:active {
+    transform: translateY(0);
+  }
+  
+  .saveButton:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  
+  /* 에러 메시지 */
+  .errorMessage {
+    color: #ff4444;
+    font-size: 12px;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .errorMessage::before {
+    content: '⚠';
+    font-size: 14px;
+  }
+  
+  /* 도움말 텍스트 */
+  .helpText {
+    color: #999;
+    font-size: 12px;
+    margin-top: 4px;
+    font-style: italic;
+  }
+  
+  /* 필수 필드 표시 */
+  .formGroup label.required::after {
+    content: ' *';
+    color: #ff4444;
+  }
+  
+  /* 로딩 상태 */
+  .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+  
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f0f0f0;
+    border-top-color: #4A90E2;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  /* 반응형 디자인 */
+  @media (max-width: 600px) {
+    .modalContent {
+      width: 95%;
+      max-height: 95vh;
+      margin: 10px;
+    }
+  
+    .modalHeader {
+      padding: 16px 20px;
+    }
+  
+    .modalHeader h2 {
+      font-size: 18px;
+    }
+  
+    .eventForm {
+      padding: 20px;
+    }
+  
+    .formRow {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+  
+    .formRow .formGroup {
+      margin-bottom: 20px;
+    }
+  
+    .modalFooter {
+      padding: 12px 20px;
+    }
+  
+    .cancelButton,
+    .saveButton {
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+  }
+  
+  /* 다크 모드 지원 (선택사항) */
+  @media (prefers-color-scheme: dark) {
+    .modalContent {
+      background: #2a2a2a;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+  
+    .modalHeader {
+      background: #333;
+      border-bottom-color: #444;
+    }
+  
+    .modalHeader h2 {
+      color: #e0e0e0;
+    }
+  
+    .closeButton {
+      color: #999;
+    }
+  
+    .closeButton:hover {
+      background: #444;
+      color: #e0e0e0;
+    }
+  
+    .formGroup label {
+      color: #ccc;
+    }
+  
+    .formGroup input,
+    .formGroup select,
+    .formGroup textarea {
+      background: #333;
+      border-color: #444;
+      color: #e0e0e0;
+    }
+  
+    .formGroup input:focus,
+    .formGroup select:focus,
+    .formGroup textarea:focus {
+      border-color: #4A90E2;
+      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+    }
+  
+    .formGroup input:disabled,
+    .formGroup select:disabled,
+    .formGroup textarea:disabled {
+      background: #222;
+      color: #666;
+    }
+  
+    .modalFooter {
+      background: #333;
+      border-top-color: #444;
+    }
+  
+    .cancelButton {
+      background: #444;
+      border-color: #555;
+      color: #ccc;
+    }
+  
+    .cancelButton:hover {
+      background: #555;
+      border-color: #666;
+    }
+  
+    .helpText {
+      color: #777;
+    }
+  }
+  
+  /* 애니메이션 개선 */
+  .formGroup input,
+  .formGroup select,
+  .formGroup textarea {
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  
+  .colorOption {
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  /* 접근성 개선 */
+  .formGroup input:focus-visible,
+  .formGroup select:focus-visible,
+  .formGroup textarea:focus-visible,
+  .closeButton:focus-visible,
+  .cancelButton:focus-visible,
+  .saveButton:focus-visible {
+    outline: 2px solid #4A90E2;
+    outline-offset: 2px;
+  }
+  
+  /* 커스텀 스크롤바 */
+  .eventForm::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .eventForm::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  
+  .eventForm::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+  }
+  
+  .eventForm::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+  
