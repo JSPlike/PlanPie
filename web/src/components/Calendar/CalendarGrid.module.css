@@ -1,26 +1,15 @@
 /* src/components/CalendarGrid/CalendarGrid.module.css */
-.calendarGrid {
+  .calendarGrid {
     background: white;
-    border-radius: 12px;
+    /* 
+    border-radius: 12px; */
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-  }
-  
-  .header {
+    height: 100%;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    border-bottom: 1px solid #e0e0e0;
-    background: #fafafa;
+    flex-direction: column;
   }
-  
-  .headerLeft {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  
+
   .todayButton {
     padding: 8px 16px;
     background: #4A90E2;
@@ -37,12 +26,6 @@
     background: #357ABD;
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
-  }
-  
-  .headerCenter {
-    display: flex;
-    align-items: center;
-    gap: 16px;
   }
   
   .navButton {
@@ -104,7 +87,9 @@
   .daysGrid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    grid-auto-rows: minmax(120px, 1fr);
+    grid-auto-rows: 1fr;  /* 각 행이 균등한 높이 */
+    flex: 1;  /* 남은 공간 모두 차지 */
+    height: calc(100% - 40px);  /* 요일 헤더 높이 제외 */
   }
   
   .dayCell {
@@ -146,7 +131,7 @@
     width: 28px;
     height: 28px;
     background: white;
-    border-radius: 50%;
+    /* border-radius: 50%; */
     box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);
   }
   
@@ -319,6 +304,7 @@
   }
   
   /* 다크 모드 지원 (선택사항) */
+  /*
   @media (prefers-color-scheme: dark) {
     .calendarGrid {
       background: #1e1e1e;
@@ -387,4 +373,5 @@
       color: #ccc;
     }
   }
+  */
   

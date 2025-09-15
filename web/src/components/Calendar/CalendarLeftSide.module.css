@@ -328,6 +328,81 @@
 */
 /* src/components/CalendarLeftSide/CalendarLeftSide.module.css */
 
+.calendarItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.calendarItem:hover {
+  background: #f5f5f5;
+}
+/*
+.calendarItem.selected {
+  background: #e8f4fd;
+}
+
+.calendarItem.selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #4A90E2;
+  border-radius: 6px 0 0 6px;
+}
+*/
+
+.calendarItemLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;  /* 요소 간 간격 */
+  flex: 1;
+  height: 100%;
+  min-width: 0;  /* 텍스트 오버플로우 처리를 위해 */
+}
+
+.editInput {
+  flex: 1;
+  padding: 2px 6px;
+  border: 1px solid #4A90E2;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+  background: white;
+}
+
+.calendarName {
+  font-size: 14px;
+  color: #333;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendarNameInput {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 10px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.calendarNameInput:focus {
+  border-color: #4A90E2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
 /* 기존 확장 모드 스타일 */
 .sidebar {
   height: 100%;
@@ -486,17 +561,30 @@
 }
 
 .calendarThumbnail {
-  width: 60px;  /* 24px → 36px로 확대 */
-  height: 50px;  /* 24px → 36px로 확대 */
+  width: 86px;  /* 24px → 36px로 확대 */
+  height: 66px;  /* 24px → 36px로 확대 */
   border-radius: 6px;
   overflow: hidden;
   flex-shrink: 0;
+  position: relative;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
 }
 
 .calendarThumbnail img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.calendarThumbnail.unchecked {
+  opacity: 0.5;
+  filter: grayscale(50%);
+}
+
+.calendarThumbnail.unchecked img {
+  filter: brightness(0.7);
 }
 
 /* 또는 더 명확하게 구분하려면 */
@@ -510,6 +598,40 @@
   position: relative;
   padding: 4px;
 }
+
+.checkOverlay {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  background: #4A90E2;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  animation: checkIn 0.2s ease;
+}
+
+@keyframes checkIn {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.calendarThumbnail:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.calendarThumbnail:hover.unchecked {
+  opacity: 0.7;
+}
+
 
 .addCalendarButtonCollapsed:hover {
   border-color: #4A90E2;

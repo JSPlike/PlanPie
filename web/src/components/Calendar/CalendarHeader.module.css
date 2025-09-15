@@ -6,11 +6,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 20px;
+    padding: 0px 20px;
     background: white;
     border-bottom: 1px solid #e0e0e0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     height: 60px;
+    min-height: 60px;
   }
   
   .headerLeft {
@@ -18,12 +19,15 @@
     align-items: center;
     gap: 20px;
     flex: 1;
+    height: 100%;
   }
   
   .headerRight {
     display: flex;
     align-items: center;
     gap: 16px;
+    height: 100%;
+    margin-right: 50px;
   }
   
   /* 사이드바 토글 버튼 */
@@ -74,7 +78,7 @@
   }
   
   .todayButton {
-    padding: 7px 14px;
+    padding: 8px 16px;
     background: #4A90E2;
     color: white;
     border: none;
@@ -84,6 +88,7 @@
     font-size: 14px;
     transition: all 0.2s;
     white-space: nowrap;
+    height: 36px;
   }
   
   .todayButton:hover {

@@ -145,7 +145,7 @@ const CalendarView: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [selectedCalendarId, setSelectedCalendarId] = useState<string>('1');
-  const [isLeftSideOpen, setIsLeftSideOpen] = useState(true);
+  const [isLeftSideOpen, setIsLeftSideOpen] = useState(false);
   const [isRightSideOpen, setIsRightSideOpen] = useState(false);
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
 

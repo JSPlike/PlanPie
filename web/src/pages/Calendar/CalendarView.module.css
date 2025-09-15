@@ -1,34 +1,16 @@
   .calendarContainer {
     display: flex;
-    height: 100vh;
+    height: calc(100vh - 60px); 
     background: #f8f9fa;
+    overflow: hidden;
+    position: relative;
   }
   
   .calendarMain {
     flex: 1;
-    padding: 20px;
-    overflow-y: auto;
+    overflow: hidden;
     transition: margin-left 0.3s ease;
   }
-
-
-
-  /* .leftSideContainer {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 320px;
-    background: white;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-    z-index: 20;
-  }
-  
-  .leftSideContainer.open {
-    transform: translateX(0);
-  } */
 
   .leftSideContainer {
     position: relative;
@@ -83,7 +65,6 @@
   @media (max-width: 1023px) {
     .leftSideContainer {
       position: fixed;
-      top: 80px; /* 헤더 높이 */
       bottom: 0;
       left: 0;
     }

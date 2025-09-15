@@ -33,6 +33,11 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
   const [newCalendarColor, setNewCalendarColor] = useState('#4A90E2');
   const [editingCalendarId, setEditingCalendarId] = useState<string | null>(null);
 
+  console.log('CalendarLeftSide props:', {
+    onToggleCalendar: typeof onToggleCalendar,
+    onSelectCalendar: typeof onSelectCalendar
+  });
+
   const handleAddCalendar = () => {
     navigate('/calendar/create');  // react-router 사용 시 예시
   };
@@ -136,20 +141,48 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
             <div 
               key={calendar.id} 
               className={`${styles.calendarItem} ${selectedCalendarId === calendar.id ? styles.selected : ''}`}
-              onClick={() => onSelectCalendar(calendar.id)}
+              
+              onClick={(e) => {
+                console.log('Calendar selected:', calendar.id); 
+
+                console.log('Calendar item clicked:', calendar.id);
+                console.log('Event target:', e.target);
+                console.log('onSelectCalendar exists?', !!onSelectCalendar);
+              
+                if (onSelectCalendar) {
+                  onSelectCalendar(calendar.id);
+                }
+              }}
             >
               <div className={styles.calendarItemLeft}>
-                <input
-                  type="checkbox"
-                  checked={calendar.is_active}
-                  onChange={(e) => {
+                {/* 이미지와 체크 오버레이 */}
+                <div 
+                  className={`${styles.calendarThumbnail} ${!calendar.is_active ? styles.unchecked : ''}`}
+                  onClick={(e) => {
                     e.stopPropagation();
+                    console.log('Toggle visibility:', calendar.id);
                     onToggleCalendar(calendar.id);
                   }}
-                  className={styles.checkbox}
-                  style={{ accentColor: calendar.color }}
-                />
-                <div className={styles.calendarThumbnail}>
+                >
+                  <img 
+                    src={getCalendarImage(calendar)}
+                    alt={calendar.name}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = defaultImages[0];
+                    }}
+                  />
+                  {/* 체크 오버레이 */}
+                  {calendar.is_active && (
+                    <div className={styles.checkOverlay}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                  )}
+                </div>
+
+
+                {/* <div className={styles.calendarThumbnail}>
                   <img 
                     src={getCalendarImage(calendar)}
                     alt={calendar.name}
@@ -177,23 +210,8 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
                   />
                 ) : (
                   <span className={styles.calendarName}>{calendar.name}</span>
-                )}
-              </div>
+                )} */}
 
-              <div className={styles.calendarActions}>
-                <button
-                  className={styles.actionButton}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditingCalendarId(calendar.id);
-                  }}
-                  title="수정"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path d="M11 4H4C2.9 4 2 4.9 2 6V20C2 21.1 2.9 22 4 22H18C19.1 22 20 21.1 20 20V13" stroke="currentColor" strokeWidth="2"/>
-                    <path d="M18.5 2.5C19.3 1.7 20.7 1.7 21.5 2.5C22.3 3.3 22.3 4.7 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" strokeWidth="2"/>
-                  </svg>
-                </button>
               </div>
             </div>
           ))}
@@ -259,7 +277,6 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
 
 
 
-  
 
 };
 
