@@ -1,4 +1,4 @@
-.calendarContainer {
+  .calendarContainer {
     display: flex;
     height: 100vh;
     background: #f8f9fa;
@@ -8,4 +8,94 @@
     flex: 1;
     padding: 20px;
     overflow-y: auto;
+    transition: margin-left 0.3s ease;
+  }
+
+
+
+  /* .leftSideContainer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 320px;
+    background: white;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 20;
+  }
+  
+  .leftSideContainer.open {
+    transform: translateX(0);
+  } */
+
+  .leftSideContainer {
+    position: relative;
+    background: white;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    transition: width 0.3s ease;
+    z-index: 20;
+    overflow: hidden;
+  }
+  
+  /* 축소 상태 - 50px */
+  .leftSideContainer {
+    width: 80px;
+  }
+  
+  /* 확장 상태 - 320px */
+  .leftSideContainer.open {
+    width: 320px;
+  }
+
+  .RightSideContainer {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 320px;
+    background: white;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 20;
+  }
+  
+  .RightSideContainer.open {
+    transform: translateX(100);
+  } 
+
+  /* 데스크톱에서 부드러운 애니메이션 */
+  @media (min-width: 1024px) {
+    .calendarContainer {
+      display: flex;
+      position: relative;
+    }
+    
+    .leftSideContainer {
+      position: relative;
+      height: 100%;
+    }
+  }
+
+  /* 모바일에서는 절대 위치 */
+  @media (max-width: 1023px) {
+    .leftSideContainer {
+      position: fixed;
+      top: 80px; /* 헤더 높이 */
+      bottom: 0;
+      left: 0;
+    }
+    
+    /* 모바일 축소 상태 - 화면 밖으로 */
+    .leftSideContainer {
+      transform: translateX(-100%);
+    }
+    
+    /* 모바일 확장 상태 */
+    .leftSideContainer.open {
+      transform: translateX(0);
+      width: 280px;
+    }
   }

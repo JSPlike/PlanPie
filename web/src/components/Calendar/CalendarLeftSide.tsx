@@ -12,6 +12,7 @@ interface CalendarSidebarProps {
   selectedCalendarId: string;
   onSelectCalendar: (calendarId: string) => void;
   onAddEvent: () => void;
+  isOpen: boolean;
 }
 
 const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
@@ -22,7 +23,9 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
   onDeleteCalendar,
   selectedCalendarId,
   onSelectCalendar,
-  onAddEvent
+  onAddEvent,
+  isOpen
+
 }) => {
   const navigate = useNavigate();
   const [isAddingCalendar, setIsAddingCalendar] = useState(false);
@@ -34,11 +37,76 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
     navigate('/calendar/create');  // react-router 사용 시 예시
   };
 
+  const defaultImages = '/images/default-calendar.png';
+
+  const getCalendarImage = (calendar: any) => {
+    if (calendar.image) return calendar.image;
+    return defaultImages;
+  };
+
   const colorOptions = [
     '#4A90E2', '#50C878', '#FFB347', '#FF6B6B', 
     '#9B59B6', '#3498DB', '#E74C3C', '#F39C12'
   ];
 
+  if (!isOpen) {
+    return (
+      <div className={styles.sidebarCollapsed}>
+        {/* 축소 모드 새 일정 버튼 */}
+        <button 
+          className={styles.addEventButtonCollapsed} 
+          onClick={onAddEvent}
+          title="새 일정 만들기"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </button>
+
+        {/* 축소 모드 캘린더 목록 - 이미지만 표시 */}
+        <div className={styles.calendarListCollapsed}>
+          {calendars.map(calendar => (
+            <div
+              key={calendar.id}
+              className={`${styles.calendarItemCollapsed} ${selectedCalendarId === calendar.id ? styles.selected : ''}`}
+              onClick={() => onSelectCalendar(calendar.id)}
+              title={calendar.name}
+            >
+              <div 
+                className={`${styles.calendarImageWrapper} ${calendar.is_active ? styles.visible : styles.hidden}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleCalendar(calendar.id);
+                }}
+                style={{ borderColor: calendar.color }}
+              >
+                <img 
+                  src={getCalendarImage(calendar)}
+                  alt={calendar.name}
+                  className={styles.calendarImage}
+                  onError={(e) => {
+                    // 이미지 로드 실패시 첫 번째 기본 이미지로
+                    (e.target as HTMLImageElement).src = defaultImages[0];
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 축소 모드 새 캘린더 추가 */}
+        <button 
+          className={styles.addCalendarButtonCollapsed}
+          onClick={() => setIsAddingCalendar(true)}
+          title="새 캘린더 추가"
+        >
+          +
+        </button>
+      </div>
+    );
+  }
+
+  // 확장 모드
   return (
     <div className={styles.sidebar}>
       {/* 새 일정 추가 버튼 */}
@@ -81,6 +149,15 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
                   className={styles.checkbox}
                   style={{ accentColor: calendar.color }}
                 />
+                <div className={styles.calendarThumbnail}>
+                  <img 
+                    src={getCalendarImage(calendar)}
+                    alt={calendar.name}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = defaultImages;
+                    }}
+                  />
+                </div>
                 <div 
                   className={styles.colorDot}
                   style={{ backgroundColor: calendar.color }}
@@ -117,28 +194,12 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
                     <path d="M18.5 2.5C19.3 1.7 20.7 1.7 21.5 2.5C22.3 3.3 22.3 4.7 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" strokeWidth="2"/>
                   </svg>
                 </button>
-                {(
-                  <button
-                    className={styles.actionButton}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (window.confirm(`"${calendar.name}" 캘린더를 삭제하시겠습니까?`)) {
-                        onDeleteCalendar(calendar.id);
-                      }
-                    }}
-                    title="삭제"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                      <path d="M3 6H21M8 6V4C8 3.4 8.4 3 9 3H15C15.6 3 16 3.4 16 4V6M10 11V17M14 11V17M5 6L6 19C6 20.1 6.9 21 8 21H16C17.1 21 18 20.1 18 19L19 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    </svg>
-                  </button>
-                )}
               </div>
             </div>
           ))}
         </div>
 
-        {/* 새 캘린더 추가 폼 */}
+        {/* 새 캘린더 추가 폼 (간단하게) */}
         {isAddingCalendar && (
           <div className={styles.addCalendarForm}>
             <input
@@ -149,6 +210,7 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
               className={styles.calendarNameInput}
               autoFocus
             />
+            
             <div className={styles.colorPicker}>
               {colorOptions.map(color => (
                 <button
@@ -159,6 +221,7 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
                 />
               ))}
             </div>
+            
             <div className={styles.formActions}>
               <button 
                 className={styles.cancelButton}
@@ -181,7 +244,7 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
         )}
       </div>
 
-      {/* 다른 캘린더 섹션 (공유받은 캘린더 등) */}
+      {/* 공유 캘린더 섹션 */}
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <h3>공유 캘린더</h3>
@@ -192,6 +255,12 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
       </div>
     </div>
   );
+
+
+
+
+  
+
 };
 
 export default CalendarLeftSide;

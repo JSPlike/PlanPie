@@ -1,270 +1,603 @@
+/* src/components/CalendarLeftSide/CalendarLeftSide.module.css */
+/*
 .sidebar {
-    width: 280px;
-    background: white;
-    border-right: 1px solid #e0e0e0;
-    height: 100vh;
-    overflow-y: auto;
-    padding: 20px;
+  height: 100%;
+  background: white;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.addEventButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #4A90E2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 24px;
+}
+
+.addEventButton:hover {
+  background: #357ABD;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(74, 144, 226, 0.3);
+}
+
+.addEventButton:active {
+  transform: translateY(0);
+}
+
+.section {
+  margin-bottom: 30px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.sectionHeader h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.addButton {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  background: white;
+  cursor: pointer;
+  font-size: 18px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.addButton:hover {
+  background: #f5f5f5;
+  border-color: #4A90E2;
+  color: #4A90E2;
+}
+
+.calendarList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.calendarItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.calendarItem:hover {
+  background: #f5f5f5;
+}
+
+.calendarItem.selected {
+  background: #e8f4fd;
+}
+
+.calendarItem.selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #4A90E2;
+  border-radius: 6px 0 0 6px;
+}
+
+.calendarItemLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.colorDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.calendarName {
+  font-size: 14px;
+  color: #333;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editInput {
+  flex: 1;
+  padding: 2px 6px;
+  border: 1px solid #4A90E2;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+  background: white;
+}
+
+.calendarActions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.calendarItem:hover .calendarActions {
+  opacity: 1;
+}
+
+.actionButton {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: #666;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.actionButton:hover {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.actionButton svg {
+  width: 14px;
+  height: 14px;
+}
+
+.addCalendarForm {
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  margin-top: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.calendarNameInput {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 10px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.calendarNameInput:focus {
+  border-color: #4A90E2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.colorPicker {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.colorOption {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.colorOption:hover {
+  transform: scale(1.15);
+}
+
+.colorOption.selected {
+  border-color: #333;
+  box-shadow: 0 0 0 2px white, 0 0 0 3px #333;
+}
+
+.formActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.cancelButton,
+.saveButton {
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelButton {
+  background: white;
+  border: 1px solid #ddd;
+  color: #666;
+}
+
+.cancelButton:hover {
+  background: #f5f5f5;
+  border-color: #bbb;
+}
+
+.saveButton {
+  background: #4A90E2;
+  color: white;
+}
+
+.saveButton:hover:not(:disabled) {
+  background: #357ABD;
+}
+
+.saveButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.emptyState {
+  padding: 30px 20px;
+  text-align: center;
+  color: #999;
+  font-size: 13px;
+  background: #fafafa;
+  border-radius: 6px;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    padding: 16px;
   }
-  
+
   .addEventButton {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px 20px;
-    background: #4A90E2;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.2s;
-    margin-bottom: 30px;
+    padding: 10px 16px;
+    font-size: 14px;
   }
-  
-  .addEventButton:hover {
-    background: #357ABD;
-  }
-  
+
   .section {
-    margin-bottom: 30px;
+    margin-bottom: 24px;
   }
-  
-  .sectionHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-  }
-  
-  .sectionHeader h3 {
-    font-size: 14px;
-    font-weight: 600;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 0;
-  }
-  
-  .addButton {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    border: 1px solid #ddd;
-    background: white;
-    cursor: pointer;
-    font-size: 18px;
-    color: #666;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-  }
-  
-  .addButton:hover {
-    background: #f5f5f5;
-    border-color: #4A90E2;
-    color: #4A90E2;
-  }
-  
-  .calendarList {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  
-  .calendarItem {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  
-  .calendarItem:hover {
-    background: #f5f5f5;
-  }
-  
-  .calendarItem.selected {
-    background: #e8f4fd;
-  }
-  
-  .calendarItemLeft {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex: 1;
-  }
-  
-  .checkbox {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-  }
-  
-  .colorDot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-  }
-  
-  .calendarName {
-    font-size: 14px;
-    color: #333;
-    flex: 1;
-  }
-  
-  .editInput {
-    flex: 1;
-    padding: 2px 4px;
-    border: 1px solid #4A90E2;
-    border-radius: 4px;
-    font-size: 14px;
-    outline: none;
-  }
-  
-  .calendarActions {
-    display: flex;
-    gap: 4px;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  
-  .calendarItem:hover .calendarActions {
-    opacity: 1;
-  }
-  
-  .actionButton {
-    width: 24px;
-    height: 24px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    color: #666;
-    transition: all 0.2s;
-  }
-  
-  .actionButton:hover {
-    background: #e0e0e0;
-    color: #333;
-  }
-  
-  .addCalendarForm {
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 6px;
-    margin-top: 8px;
-  }
-  
-  .calendarNameInput {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    margin-bottom: 10px;
-    outline: none;
-  }
-  
-  .calendarNameInput:focus {
-    border-color: #4A90E2;
-  }
-  
-  .colorPicker {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-  }
-  
-  .colorOption {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    border: 2px solid transparent;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .colorOption:hover {
-    transform: scale(1.1);
-  }
-  
-  .colorOption.selected {
-    border-color: #333;
-    box-shadow: 0 0 0 2px white, 0 0 0 3px #333;
-  }
-  
-  .formActions {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-  }
-  
-  .cancelButton,
-  .saveButton {
-    padding: 6px 12px;
-    border-radius: 4px;
-    border: none;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .cancelButton {
-    background: white;
-    border: 1px solid #ddd;
-    color: #666;
-  }
-  
-  .cancelButton:hover {
-    background: #f5f5f5;
-  }
-  
-  .saveButton {
-    background: #4A90E2;
-    color: white;
-  }
-  
-  .saveButton:hover:not(:disabled) {
-    background: #357ABD;
-  }
-  
-  .saveButton:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  
-  .emptyState {
-    padding: 20px;
-    text-align: center;
-    color: #999;
-    font-size: 14px;
-  }
-  
-  /* 스크롤바 스타일링 */
-  .sidebar::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  .sidebar::-webkit-scrollbar-track {
-    background: #f1f1f1;
-  }
-  
-  .sidebar::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 3px;
-  }
-  
-  .sidebar::-webkit-scrollbar-thumb:hover {
-    background: #555;
-  }
+}
+*/
+/* src/components/CalendarLeftSide/CalendarLeftSide.module.css */
+
+/* 기존 확장 모드 스타일 */
+.sidebar {
+  height: 100%;
+  background: white;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* 축소 모드 스타일 */
+.sidebarCollapsed {
+  height: 100%;
+  width: 64px;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* 축소 모드 새 일정 버튼 */
+.addEventButtonCollapsed {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #4A90E2;
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.addEventButtonCollapsed:hover {
+  background: #357ABD;
+  transform: scale(1.05);
+}
+
+/* 축소 모드 캘린더 목록 */
+.calendarListCollapsed {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  flex: 1;
+}
+
+/* 축소 모드 캘린더 아이템 */
+.calendarItemCollapsed {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.addButton {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  background: white;
+  cursor: pointer;
+  font-size: 18px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.addButton:hover {
+  background: #f5f5f5;
+  border-color: #4A90E2;
+  color: #4A90E2;
+}
+
+.calendarIconWrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid;
+  background: white;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.calendarIconWrapper.visible {
+  opacity: 1;
+}
+
+.calendarIconWrapper.hidden {
+  opacity: 0.4;
+  background: #f5f5f5;
+}
+
+.calendarIconWrapper:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.calendarItemCollapsed.selected .calendarIconWrapper {
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+}
+
+.calendarIcon {
+  font-size: 20px;
+  user-select: none;
+}
+
+/* 축소 모드 새 캘린더 추가 버튼 */
+.addCalendarButtonCollapsed {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px dashed #ddd;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #999;
+  transition: all 0.2s;
+  margin-top: 12px;
+  flex-shrink: 0;
+}
+
+.calendarImageWrapper {
+  width: 60px;  /* 36px → 24px로 축소 */
+  height: 50px;  /* 36px → 24px로 축소 */
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.calendarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 3px;
+}
+
+.calendarThumbnail {
+  width: 60px;  /* 24px → 36px로 확대 */
+  height: 50px;  /* 24px → 36px로 확대 */
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.calendarThumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 또는 더 명확하게 구분하려면 */
+
+/* 축소 모드 전체 아이템 */
+.calendarItemCollapsed {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  padding: 4px;
+}
+
+.addCalendarButtonCollapsed:hover {
+  border-color: #4A90E2;
+  color: #4A90E2;
+  background: #f8f9fa;
+}
+
+/* 확장 모드에서 아이콘 표시 */
+.calendarIconSmall {
+  font-size: 16px;
+  margin-right: 4px;
+}
+
+/* 아이콘 선택기 */
+.iconPicker {
+  margin-bottom: 12px;
+}
+
+.iconPicker label {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.iconOptions {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+}
+
+.iconOption {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+.iconOption:hover {
+  border-color: #4A90E2;
+  background: #f8f9fa;
+}
+
+.iconOption.selected {
+  border-color: #4A90E2;
+  background: #e8f4fd;
+}
+
+/* 기존 스타일들... */
+.addEventButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #4A90E2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 24px;
+}
+
+/* ... 나머지 기존 스타일들 ... */
+
+/* 스크롤바 스타일링 */
+.sidebarCollapsed::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebarCollapsed::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebarCollapsed::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 2px;
+}
+
+

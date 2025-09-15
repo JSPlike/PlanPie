@@ -1,8 +1,10 @@
 // src/pages/Calendar/CalendarView.tsx
 import React, { useState, useMemo } from 'react';
 import styles from './CalendarView.module.css';
+import CalendarHeader from '../../components/Calendar/CalendarHeader';
 import CalendarLeftSide from '../../components/Calendar/CalendarLeftSide';
 import CalendarGrid from '../../components/Calendar/CalendarGrid';
+import CalendarRightSide from '../../components/Calendar/CalendarRightSide';
 import EventModal from '../../components/Calendar/EventModal';
 import { Calendar, CalendarWithVisibility, Event } from '../../types/calendar.types';
 import { User } from '../../types/auth.types';
@@ -140,8 +142,12 @@ const CalendarView: React.FC = () => {
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [selectedCalendarId, setSelectedCalendarId] = useState<string>('1');
+  const [isLeftSideOpen, setIsLeftSideOpen] = useState(true);
+  const [isRightSideOpen, setIsRightSideOpen] = useState(false);
+  const [view, setView] = useState<'month' | 'week' | 'day'>('month');
 
   // 활성화된 캘린더의 이벤트만 필터링
   const visibleEvents = useMemo(() => {
@@ -191,15 +197,6 @@ const CalendarView: React.FC = () => {
     setEvents(prev => prev.filter(event => event.calendar !== calendarId));
   };
 
-  // 이벤트 추가
-//   const addEvent = (eventData: Omit<Event, 'id'>) => {
-//     const newEvent: Event = {
-//       ...eventData,
-//       id: Date.now().toString()
-//     };
-//     setEvents(prev => [...prev, newEvent]);
-//   };
-
   const addEvent = (event: Partial<Event>) => {
     if (event.id) {
       // 수정
@@ -219,6 +216,20 @@ const CalendarView: React.FC = () => {
     }
   };
 
+  // 이벤트 삭제
+  const deleteEvent = (eventId: string) => {
+    const event = events.find(e => e.id === eventId);
+    if (!event?.can_delete) {
+      alert('이 일정은 삭제할 수 없습니다.');
+      return;
+    }
+    setEvents(prev => prev.filter(e => e.id !== eventId));
+    // 삭제 후 선택된 이벤트 초기화
+    if (selectedEvent?.id === eventId) {
+      setSelectedEvent(null);
+    }
+  };
+
   // 이벤트 색상 가져오기 (이벤트 커스텀 색상 또는 캘린더 색상)
   const getEventColor = (event: Event): string => {
     if (event.color) return event.color;
@@ -227,51 +238,92 @@ const CalendarView: React.FC = () => {
   };
 
   return (
-    <div className={styles.calendarContainer}>
-      {/* 왼쪽 사이드바 */}
-      <CalendarLeftSide
-        calendars={calendars}
-        onToggleCalendar={toggleCalendar}
-        onAddCalendar={addCalendar}
-        onUpdateCalendar={updateCalendar}
-        onDeleteCalendar={deleteCalendar}
-        selectedCalendarId={selectedCalendarId}
-        onSelectCalendar={setSelectedCalendarId}
-        onAddEvent={() => setIsEventModalOpen(true)}
+    <div className={styles.calendarLayout}>
+      {/* 상단 고정 헤더 */}
+      <CalendarHeader
+        currentDate={currentDate}
+        view={view}
+        isLeftSideOpen={isLeftSideOpen}
+        isRightSideOpen={isRightSideOpen}
+        onToggleLeftSide={() => setIsLeftSideOpen(!isLeftSideOpen)}
+        onToggleRightSide={() => setIsRightSideOpen(!isRightSideOpen)}
+        onDateChange={setCurrentDate}
+        onViewChange={setView}
+        onToday={() => setCurrentDate(new Date())}
+        onAddEvent={() => {
+          setSelectedEvent(null);
+          setIsEventModalOpen(true);
+        }}
       />
+      <div className={styles.calendarContainer}>
+        {/* 왼쪽 사이드바 */}
+        <div className={`${styles.leftSideContainer} ${isLeftSideOpen ? styles.open : ''}`}>
+          <CalendarLeftSide
+            calendars={calendars}
+            onToggleCalendar={toggleCalendar}
+            onAddCalendar={addCalendar}
+            onUpdateCalendar={updateCalendar}
+            onDeleteCalendar={deleteCalendar}
+            selectedCalendarId={selectedCalendarId}
+            onSelectCalendar={setSelectedCalendarId}
+            onAddEvent={() => setIsEventModalOpen(true)}
+            isOpen={isLeftSideOpen}
+          />
+        </div>
 
-      {/* 메인 캘린더 영역 */}
-      <div className={styles.calendarMain}>
-        <CalendarGrid
-          currentDate={currentDate}
-          selectedDate={selectedDate}
-          events={visibleEvents}
-          calendars={calendars}
-          onDateSelect={setSelectedDate}
-          onMonthChange={setCurrentDate}
-          getEventColor={getEventColor}
-          onEventClick={(event) => {
-            console.log("이벤트 클릭:", event);
-            // 상세보기 모달 열기 같은 동작
-          }}
-          onEventDelete={(eventId) => {
-            console.log("이벤트 삭제:", eventId);
-            setEvents((prev) => prev.filter(e => e.id !== eventId));
-          }}
-        />
+        {/* 메인 캘린더 영역 */}
+        <div className={styles.calendarMain}>
+          <CalendarGrid
+            currentDate={currentDate}
+            selectedDate={selectedDate}
+            events={visibleEvents}
+            calendars={calendars}
+            onDateSelect={setSelectedDate}
+            onMonthChange={setCurrentDate}
+            getEventColor={getEventColor}
+            onEventClick={(event) => {
+              console.log("이벤트 클릭:", event);
+              // 상세보기 모달 열기 같은 동작
+            }}
+            onEventDelete={(eventId) => {
+              console.log("이벤트 삭제:", eventId);
+              setEvents((prev) => prev.filter(e => e.id !== eventId));
+            }}
+          />
+        </div>
+
+        {/* 오른쪽 사이드바 */}
+        <div className={`${styles.rightSideContainer} ${isRightSideOpen ? styles.open : ''}`}>
+          <CalendarRightSide
+            selectedDate={selectedDate}
+            selectedEvent={selectedEvent}
+            events={visibleEvents}
+            onEditEvent={(event) => {
+              setSelectedEvent(event);
+              setIsEventModalOpen(true);
+            }}
+            onDeleteEvent={deleteEvent}
+            onAddEvent={() => {
+              setSelectedEvent(null);
+              setIsEventModalOpen(true);
+            }}
+            isOpen={isRightSideOpen}
+            onClose={() => setIsRightSideOpen(false)}
+          />
+        </div>
+
+        {/* 이벤트 추가 모달 */}
+        {isEventModalOpen && (
+          <EventModal
+            isOpen={isEventModalOpen}
+            onClose={() => setIsEventModalOpen(false)}
+            onSave={addEvent}
+            selectedDate={selectedDate || new Date()}
+            calendars={calendars.filter(cal => cal.is_active)}
+            defaultCalendarId={selectedCalendarId}
+          />
+        )}
       </div>
-
-      {/* 이벤트 추가 모달 */}
-      {isEventModalOpen && (
-        <EventModal
-          isOpen={isEventModalOpen}
-          onClose={() => setIsEventModalOpen(false)}
-          onSave={addEvent}
-          selectedDate={selectedDate || new Date()}
-          calendars={calendars.filter(cal => cal.is_active)}
-          defaultCalendarId={selectedCalendarId}
-        />
-      )}
     </div>
   );
 };

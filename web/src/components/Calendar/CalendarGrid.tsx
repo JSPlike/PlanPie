@@ -74,31 +74,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
 
   return (
     <div className={styles.calendarGrid}>
-      {/* 헤더 */}
-      <div className={styles.header}>
-        <div className={styles.headerLeft}>
-          <button className={styles.todayButton} onClick={handleToday}>
-            오늘
-          </button>
-        </div>
-
-        <div className={styles.headerCenter}>
-          <button className={styles.navButton} onClick={handlePrevMonth}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </button>
-          <h2 className={styles.currentMonth}>
-            {format(currentDate, 'yyyy년 M월', { locale: ko })}
-          </h2>
-          <button className={styles.navButton} onClick={handleNextMonth}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-
       {/* 요일 헤더 */}
       <div className={styles.weekDays}>
         {['일', '월', '화', '수', '목', '금', '토'].map((day, index) => (

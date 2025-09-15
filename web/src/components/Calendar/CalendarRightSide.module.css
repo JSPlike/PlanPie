@@ -1,0 +1,261 @@
+/* src/components/CalendarRightSide/CalendarRightSide.module.css */
+.sidebar {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: white;
+  }
+  
+  .sidebarHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .sidebarHeader h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .closeButton {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  
+  .closeButton:hover {
+    background: #f5f5f5;
+  }
+  
+  .sidebarContent {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+  
+  /* 이벤트 상세 */
+  .eventDetail {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .eventHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .eventColorBar {
+    width: 4px;
+    height: 32px;
+    border-radius: 2px;
+  }
+  
+  .eventHeader h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .eventInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .infoItem {
+    display: flex;
+    gap: 12px;
+  }
+  
+  .infoIcon {
+    font-size: 20px;
+    width: 24px;
+    text-align: center;
+  }
+  
+  .infoLabel {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 4px;
+  }
+  
+  .infoValue {
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .eventActions {
+    display: flex;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid #e0e0e0;
+  }
+  
+  .editButton,
+  .deleteButton {
+    flex: 1;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .editButton {
+    background: #4A90E2;
+    color: white;
+    border: none;
+  }
+  
+  .editButton:hover {
+    background: #357ABD;
+  }
+  
+  .deleteButton {
+    background: white;
+    color: #ff4444;
+    border: 1px solid #ff4444;
+  }
+  
+  .deleteButton:hover {
+    background: #ff4444;
+    color: white;
+  }
+  
+  /* 날짜별 일정 목록 */
+  .dayView {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .selectedDate {
+    text-align: center;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+  }
+  
+  .selectedDate h3 {
+    margin: 0 0 4px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .selectedDate p {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .addEventButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    background: white;
+    color: #4A90E2;
+    border: 1px solid #4A90E2;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .addEventButton:hover {
+    background: #4A90E2;
+    color: white;
+  }
+  
+  .eventsList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .eventCard {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .eventCard:hover {
+    background: #e8f4fd;
+    transform: translateX(4px);
+  }
+  
+  .eventIndicator {
+    width: 3px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  
+  .eventContent {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .eventTime {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 4px;
+  }
+  
+  .eventTitle {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .eventLocation {
+    font-size: 12px;
+    color: #999;
+  }
+  
+  .noEvents {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+  }
+  
+  .emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #999;
+    text-align: center;
+  }
+  
+  .emptyState p {
+    margin: 8px 0;
+    font-size: 14px;
+  }
+  
