@@ -706,6 +706,24 @@
   margin-bottom: 24px;
 }
 
+.addCalendarButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #4A90E2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 24px;
+}
+
 /* ... 나머지 기존 스타일들 ... */
 
 /* 스크롤바 스타일링 */

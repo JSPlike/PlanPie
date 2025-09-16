@@ -39,7 +39,7 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
   });
 
   const handleAddCalendar = () => {
-    navigate('/calendar/create');  // react-router 사용 시 예시
+    navigate('/calendars/create');  // react-router 사용 시 예시
   };
 
   const defaultImages = '/images/default-calendar.png';
@@ -60,8 +60,8 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
         {/* 축소 모드 새 일정 버튼 */}
         <button 
           className={styles.addEventButtonCollapsed} 
-          onClick={onAddEvent}
-          title="새 일정 만들기"
+          onClick={handleAddCalendar}
+          title="새 캘린더 만들기"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -115,24 +115,17 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
   return (
     <div className={styles.sidebar}>
       {/* 새 일정 추가 버튼 */}
-      <button className={styles.addEventButton} onClick={onAddEvent}>
+      <button className={styles.addCalendarButton} onClick={handleAddCalendar}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
           <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
         </svg>
-        새 일정
+        새 캘린더
       </button>
 
       {/* 내 캘린더 섹션 */}
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <h3>내 캘린더</h3>
-          <button 
-            className={styles.addButton}
-            onClick={() => setIsAddingCalendar(true)}
-            title="새 캘린더 추가"
-          >
-            +
-          </button>
         </div>
 
         {/* 캘린더 목록 */}
@@ -180,86 +173,14 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
                     </div>
                   )}
                 </div>
-
-
-                {/* <div className={styles.calendarThumbnail}>
-                  <img 
-                    src={getCalendarImage(calendar)}
-                    alt={calendar.name}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = defaultImages;
-                    }}
-                  />
-                </div>
-                <div 
-                  className={styles.colorDot}
-                  style={{ backgroundColor: calendar.color }}
-                />
-                {editingCalendarId === calendar.id ? (
-                  <input
-                    type="text"
-                    value={calendar.name}
-                    onChange={(e) => onUpdateCalendar(calendar.id, { name: e.target.value })}
-                    onBlur={() => setEditingCalendarId(null)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') setEditingCalendarId(null);
-                    }}
-                    className={styles.editInput}
-                    autoFocus
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                ) : (
+                {/* 캘린더 이름 */}
+                <div className={styles.calendarInfo}>
                   <span className={styles.calendarName}>{calendar.name}</span>
-                )} */}
-
+                </div>
               </div>
             </div>
           ))}
         </div>
-
-        {/* 새 캘린더 추가 폼 (간단하게) */}
-        {isAddingCalendar && (
-          <div className={styles.addCalendarForm}>
-            <input
-              type="text"
-              placeholder="캘린더 이름"
-              value={newCalendarName}
-              onChange={(e) => setNewCalendarName(e.target.value)}
-              className={styles.calendarNameInput}
-              autoFocus
-            />
-            
-            <div className={styles.colorPicker}>
-              {colorOptions.map(color => (
-                <button
-                  key={color}
-                  className={`${styles.colorOption} ${newCalendarColor === color ? styles.selected : ''}`}
-                  style={{ backgroundColor: color }}
-                  onClick={() => setNewCalendarColor(color)}
-                />
-              ))}
-            </div>
-            
-            <div className={styles.formActions}>
-              <button 
-                className={styles.cancelButton}
-                onClick={() => {
-                  setIsAddingCalendar(false);
-                  setNewCalendarName('');
-                }}
-              >
-                취소
-              </button>
-              <button 
-                className={styles.saveButton}
-                onClick={handleAddCalendar}
-                disabled={!newCalendarName.trim()}
-              >
-                추가
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* 공유 캘린더 섹션 */}
