@@ -6,7 +6,9 @@ export interface CalendarTag {
   name: string;
   color: string;
   order: number;
+  calendar: string;
   created_at: string;
+  updated_at: string;
 }
 
 // 캘린더 멤버 타입
@@ -68,6 +70,7 @@ export interface Event {
   end_date: string;
   all_day: boolean;
   color: string;
+  tag?: CalendarTag | null;
   created_by?: User;
   can_edit?: boolean;
   can_delete?: boolean;
@@ -91,25 +94,16 @@ export interface UpdateCalendarRequest {
   image?: File;
 }
 
-export interface CreateEventRequest {
-  calendar: string;
+export interface CreateUpdateEventRequest {
   title: string;
-  description?: string;
-  location?: string;
   start_date: string;
   end_date: string;
   all_day?: boolean;
+  calendar: string;
   color?: string;
-}
-
-export interface UpdateEventRequest {
-  title?: string;
   description?: string;
+  tag_id?: string | null;
   location?: string;
-  start_date?: string;
-  end_date?: string;
-  all_day?: boolean;
-  color?: string;
 }
 
 export interface SendInvitationRequest {

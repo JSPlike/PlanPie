@@ -8,8 +8,10 @@ import { Event, Calendar } from '../../types/calendar.types';
 interface CalendarGridProps {
   currentDate: Date;
   selectedDate: Date | null;
+  selectedRange: {start: Date, end: Date} | null;
   events: Event[];
   calendars: Calendar[];
+  onDateClick: (date: Date) => void;
   onDateSelect: (date: Date) => void;
   onMonthChange: (date: Date) => void;
   onEventClick: (event: Event) => void;
@@ -20,8 +22,10 @@ interface CalendarGridProps {
 const CalendarGrid: React.FC<CalendarGridProps> = ({
   currentDate,
   selectedDate,
+  selectedRange,
   events,
   calendars,
+  onDateClick,
   onDateSelect,
   onMonthChange,
   onEventClick,
@@ -54,6 +58,33 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
         return isSameDay(eventStart, date);
       }
     });
+  };
+
+  // 날짜 셀 클릭 핸들러
+  const handleDateCellClick = (date: Date, event: React.MouseEvent) => {
+    // 이벤트 버블링 방지 (이벤트 클릭과 구분)
+    event.stopPropagation();
+
+    const isSameDate = selectedDate && 
+      date.getFullYear() === selectedDate.getFullYear() &&
+      date.getMonth() === selectedDate.getMonth() &&
+      date.getDate() === selectedDate.getDate();
+
+    if (isSameDate) {
+      // 이미 선택된 날짜 재클릭 → 오른쪽 섹션 열기
+      onDateClick(date);
+    } else {
+      // 새로운 날짜 클릭 → 선택만 하기
+      onDateSelect(date);
+    }
+  };
+
+  // 날짜가 선택된 날짜인지 확인
+  const isSelectedDate = (date: Date) => {
+    if (!selectedDate) return false;
+    return date.getFullYear() === selectedDate.getFullYear() &&
+           date.getMonth() === selectedDate.getMonth() &&
+           date.getDate() === selectedDate.getDate();
   };
 
   const isToday = (date: Date) => isSameDay(date, new Date());
@@ -102,7 +133,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                 ${date.getDay() === 0 ? styles.sunday : ''}
                 ${date.getDay() === 6 ? styles.saturday : ''}
               `}
-              onClick={() => onDateSelect(date)}
+              onClick={(e) => handleDateCellClick(date, e)}
             >
               <div className={styles.dayNumber}>
                 {format(date, 'd')}

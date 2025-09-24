@@ -1,8 +1,6 @@
 /* src/components/CalendarGrid/CalendarGrid.module.css */
   .calendarGrid {
     background: white;
-    /* 
-    border-radius: 12px; */
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     height: 100%;
@@ -62,8 +60,7 @@
   .weekDays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    background: #f8f9fa;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 0.7px solid #f5f5f5;
   }
   
   .weekDay {
@@ -93,8 +90,8 @@
   }
   
   .dayCell {
-    border-right: 1px solid #f0f0f0;
-    border-bottom: 1px solid #f0f0f0;
+    border-right: 0.7px solid #f5f5f5;
+    border-bottom: 0.7px solid #f5f5f5;
     padding: 8px;
     cursor: pointer;
     transition: background 0.2s;
@@ -137,7 +134,6 @@
   
   .dayCell.selected {
     background: #f0f7ff;
-    border: 2px solid #4A90E2;
     padding: 6px;
   }
   

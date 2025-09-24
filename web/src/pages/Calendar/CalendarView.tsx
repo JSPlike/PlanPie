@@ -1,12 +1,14 @@
 // src/pages/Calendar/CalendarView.tsx
 import React, { useState, useMemo } from 'react';
 import styles from './CalendarView.module.css';
+import { toast } from 'react-toastify';
 import CalendarHeader from '../../components/Calendar/CalendarHeader';
 import CalendarLeftSide from '../../components/Calendar/CalendarLeftSide';
 import CalendarGrid from '../../components/Calendar/CalendarGrid';
 import CalendarRightSide from '../../components/Calendar/CalendarRightSide';
 import EventModal from '../../components/Calendar/EventModal';
-import { Calendar, CalendarWithVisibility, Event } from '../../types/calendar.types';
+import { calendarAPI } from '../../services/calendarApi'; // 기존 API 사용
+import { Calendar, CalendarWithVisibility, CreateUpdateEventRequest, Event } from '../../types/calendar.types';
 import { User } from '../../types/auth.types';
 
 const CalendarView: React.FC = () => {
@@ -142,12 +144,74 @@ const CalendarView: React.FC = () => {
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedRange, setSelectedRange] = useState<{start: Date, end: Date} | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [selectedCalendarId, setSelectedCalendarId] = useState<string>('1');
   const [isLeftSideOpen, setIsLeftSideOpen] = useState(false);
   const [isRightSideOpen, setIsRightSideOpen] = useState(false);
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
+
+  // 날짜 클릭 핸들러 (선택만)
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date);
+
+    console.log("날짜 클릭 >>>");
+    console.log(date);
+    // 오른쪽 섹션은 열지 않음
+  };
+
+  // 날짜 클릭 시 범위 설정
+  const handleDateClick = (date: Date) => {
+    const isSameDate = selectedDate && 
+      date.getFullYear() === selectedDate.getFullYear() &&
+      date.getMonth() === selectedDate.getMonth() &&
+      date.getDate() === selectedDate.getDate();
+      
+    console.log("날짜 더블클릭 >>>");
+    console.log(date);
+
+    if (selectedRange) {
+      // 기존 범위가 있으면 범위의 길이를 유지하면서 시작일 변경
+      const rangeDays = Math.ceil((selectedRange.end.getTime() - selectedRange.start.getTime()) / (1000 * 60 * 60 * 24));
+      const newEndDate = new Date(date);
+      newEndDate.setDate(date.getDate() + rangeDays);
+      
+      setSelectedRange({
+        start: date,
+        end: newEndDate
+      });
+    } else {
+      // 첫 클릭 시에는 하루 범위로 설정
+      setSelectedRange({
+        start: date,
+        end: new Date(date)
+      });
+    }
+    
+    setSelectedDate(date);
+    setIsRightSideOpen(true);
+  };
+
+  const fetchEvents = async () => {
+    try {
+      const response = await calendarAPI.getEvents();
+      setEvents(response.data);
+    } catch (error) {
+      console.error('이벤트 불러오기 실패:', error);
+      alert('일정을 불러오는데 실패했습니다.');
+    }
+  };
+
+  // 캘린더 목록 불러오기
+  const fetchCalendars = async () => {
+    try {
+      const response = await calendarAPI.getCalendars();
+      setCalendars(response.data);
+    } catch (error) {
+      console.error('캘린더 불러오기 실패:', error);
+    }
+  };
 
   // 활성화된 캘린더의 이벤트만 필터링
   const visibleEvents = useMemo(() => {
@@ -197,22 +261,24 @@ const CalendarView: React.FC = () => {
     setEvents(prev => prev.filter(event => event.calendar !== calendarId));
   };
 
-  const addEvent = (event: Partial<Event>) => {
-    if (event.id) {
-      // 수정
-      setEvents(prev =>
-        prev.map(ev => (ev.id === event.id ? { ...ev, ...event } : ev))
-      );
-    } else {
-      // 추가
-      const newEvent: Event = {
-        ...event,
-        id: Date.now().toString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      } as Event;
-  
-      setEvents(prev => [...prev, newEvent]);
+  const handleSaveEvent = async (eventData: CreateUpdateEventRequest & { id?: string }) => {
+    try {
+      if (eventData.id) {
+        // 기존 이벤트 수정 (ID가 있으면)
+        await calendarAPI.updateEvent(eventData.id, eventData);
+        toast.success('일정이 수정되었습니다.');
+      } else {
+        // 새 이벤트 생성 (ID가 없으면)
+        await calendarAPI.createEvent(eventData);
+        toast.success('일정이 생성되었습니다.');
+      }
+      
+      // 이벤트 목록 새로고침
+      await fetchEvents();
+      
+    } catch (error) {
+      console.error('이벤트 저장 실패:', error);
+      toast.error(eventData.id ? '일정 수정에 실패했습니다.' : '일정 생성에 실패했습니다.');
     }
   };
 
@@ -276,9 +342,11 @@ const CalendarView: React.FC = () => {
           <CalendarGrid
             currentDate={currentDate}
             selectedDate={selectedDate}
+            selectedRange={selectedRange}
             events={visibleEvents}
             calendars={calendars}
-            onDateSelect={setSelectedDate}
+            onDateSelect={handleDateSelect} // 날짜 클릭
+            onDateClick={handleDateClick} // 날짜 선택(더블클릭 혹은 선택된 날짜를 한번더 클릭)
             onMonthChange={setCurrentDate}
             getEventColor={getEventColor}
             onEventClick={(event) => {
@@ -295,34 +363,20 @@ const CalendarView: React.FC = () => {
         {/* 오른쪽 사이드바 */}
         <div className={`${styles.rightSideContainer} ${isRightSideOpen ? styles.open : ''}`}>
           <CalendarRightSide
-            selectedDate={selectedDate}
-            selectedEvent={selectedEvent}
-            events={visibleEvents}
-            onEditEvent={(event) => {
-              setSelectedEvent(event);
-              setIsEventModalOpen(true);
-            }}
-            onDeleteEvent={deleteEvent}
-            onAddEvent={() => {
-              setSelectedEvent(null);
-              setIsEventModalOpen(true);
-            }}
             isOpen={isRightSideOpen}
-            onClose={() => setIsRightSideOpen(false)}
+            selectedDate={selectedDate}
+            selectedRange={selectedRange}
+            selectedEvent={selectedEvent}
+            calendars={calendars}
+            events={visibleEvents}
+            onDeleteEvent={deleteEvent}
+            onSaveEvent={handleSaveEvent}
+            onClose={() => {
+              setIsRightSideOpen(false);
+              setSelectedEvent(null);
+            }}
           />
         </div>
-
-        {/* 이벤트 추가 모달 */}
-        {isEventModalOpen && (
-          <EventModal
-            isOpen={isEventModalOpen}
-            onClose={() => setIsEventModalOpen(false)}
-            onSave={addEvent}
-            selectedDate={selectedDate || new Date()}
-            calendars={calendars.filter(cal => cal.is_active)}
-            defaultCalendarId={selectedCalendarId}
-          />
-        )}
       </div>
     </div>
   );

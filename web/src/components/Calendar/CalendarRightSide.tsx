@@ -1,31 +1,59 @@
 // src/components/CalendarRightSide/CalendarRightSide.tsx
-import React from 'react';
+import React, { useState, useEffect }  from 'react';
 import styles from './CalendarRightSide.module.css';
-import { Event } from '../../types/calendar.types';
+import { Event, Calendar, CalendarTag, CreateUpdateEventRequest } from '../../types/calendar.types';
 import { format, parseISO, isSameDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
 interface CalendarRightSideProps {
-  selectedDate: Date | null;
-  selectedEvent: Event | null;
-  events: Event[];
-  onEditEvent: (event: Event) => void;
-  onDeleteEvent: (eventId: string) => void;
-  onAddEvent: () => void;
   isOpen: boolean;
+  selectedDate: Date | null;
+  selectedRange: {start: Date, end: Date} | null;
+  selectedEvent: Event | null;
+  calendars: Calendar[];
+  events: Event[];
+  onSaveEvent: (eventData: CreateUpdateEventRequest & { id?: string }) => void;
+  onDeleteEvent: (eventId: string) => void;
   onClose: () => void;
 }
 
 const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
+  isOpen,
   selectedDate,
   selectedEvent,
+  calendars,
   events,
-  onEditEvent,
+  onSaveEvent,
   onDeleteEvent,
-  onAddEvent,
-  isOpen,
   onClose
 }) => {
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [eventTitle, setEventTitle] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [isAllDay, setIsAllDay] = useState(true);
+  const [selectedCalendarId, setSelectedCalendarId] = useState('');
+  const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
+  const [location, setLocation] = useState('');
+  const [showMemo, setShowMemo] = useState(false);
+  const [description, setDescription] = useState('');
+  const [showTagEditor, setShowTagEditor] = useState(false);
+
+  // 선택된 캘린더의 태그들 가져오기
+  const getSelectedCalendarTags = () => {
+    const calendar = calendars.find(cal => cal.id === selectedCalendarId);
+    return calendar?.tags || [];
+  };
+
+  // 선택된 태그 정보 가져오기
+  const getSelectedTag = () => {
+    const tags = getSelectedCalendarTags();
+    return tags.find(tag => tag.id === selectedTagId);
+  };
+
+
   // 선택된 날짜의 이벤트 필터링
   const dayEvents = selectedDate 
     ? events.filter(event => {
@@ -34,165 +62,279 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
       })
     : [];
 
+  // 폼 초기화
+  useEffect(() => {
+    if (selectedEvent) {
+      setEventTitle(selectedEvent.title);
+      
+      const startDateTime = new Date(selectedEvent.start_date);
+      const endDateTime = new Date(selectedEvent.end_date);
+
+      // 날짜 설정
+      setStartDate(format(startDateTime, 'yyyy-MM-dd'));
+      setEndDate(format(endDateTime, 'yyyy-MM-dd'));
+
+      // 종일 여부 설정
+      setIsAllDay(selectedEvent.all_day);
+
+      // 시간 설정 (종일 여부에 관계없이 항상 설정하되, 종일일 때는 기본값)
+      setStartTime(selectedEvent.all_day ? '00:00' : format(startDateTime, 'HH:mm'));
+      setEndTime(selectedEvent.all_day ? '24:00' : format(endDateTime, 'HH:mm'));
+
+      setSelectedCalendarId(selectedEvent.calendar);
+      setSelectedTagId(selectedEvent.tag?.id || null);
+      setLocation(selectedEvent.location || '');
+      setShowMemo(!!selectedEvent.description);
+      setDescription(selectedEvent.description || '');
+    } else if (selectedDate) {
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      setEventTitle('');
+      setStartDate(dateStr);
+      setStartTime('09:00');
+      setEndDate(dateStr);
+      setEndTime('10:00');
+      setIsAllDay(true);
+      setSelectedCalendarId(calendars[0]?.id || ''); // 첫 번째 캘린더로 설정
+      setSelectedTagId('');
+      setLocation('');
+      setShowMemo(false);
+      setDescription('');
+    }
+  }, [selectedEvent, selectedDate, calendars]);
+    
+
+  const handleSave = () => {
+    // 날짜와 시간을 조합하여 ISO 문자열 생성
+    let startDateTime: string;
+    let endDateTime: string;
+
+    if (isAllDay) {
+      // 종일 이벤트: 시간을 00:00:00과 23:59:59로 설정
+      startDateTime = `${startDate}T00:00:00Z`;
+      endDateTime = `${endDate}T23:59:59Z`;
+    } else {
+      // 시간 지정 이벤트: 입력된 시간 사용
+      startDateTime = `${startDate}T${startTime}:00Z`;
+      endDateTime = `${endDate}T${endTime}:00Z`;
+    }
+    
+    const eventData: CreateUpdateEventRequest & { id?: string } = {
+      ...(selectedEvent?.id && { id: selectedEvent.id }), // 수정 시에만 ID 포함
+      title: eventTitle,
+      start_date: startDateTime,
+      end_date: endDateTime,
+      all_day: isAllDay,
+      calendar: selectedCalendarId,
+      tag_id: selectedTagId,
+      description: showMemo ? description : '',
+      location: location
+    };
+  
+    onSaveEvent(eventData); // 하나의 함수로 처리
+    onClose();
+  };
+
+  const handleDelete = () => {
+    if (selectedEvent && window.confirm('이 일정을 삭제하시겠습니까?')) {
+      onDeleteEvent(selectedEvent.id);
+      onClose();
+    }
+  };
+
+  const isFormValid = eventTitle.trim() && selectedCalendarId && startDate && endDate;
+  const availableTags = getSelectedCalendarTags();
+
+
   return (
     <div className={styles.sidebar}>
-      {/* 헤더 */}
       <div className={styles.sidebarHeader}>
-        <h2>
-          {selectedEvent ? '일정 상세' : selectedDate ? '일정 목록' : '날짜를 선택하세요'}
+      {isEditingTitle ? (
+        <input
+          type="text"
+          value={eventTitle}
+          onChange={(e) => setEventTitle(e.target.value)}
+          onBlur={() => setIsEditingTitle(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === 'Escape') {
+              setIsEditingTitle(false);
+            }
+          }}
+          className={styles.headerTitleEdit}
+          placeholder="일정 제목을 입력하세요"
+          autoFocus
+        />
+      ) : (
+        <h2
+          className={styles.headerTitle}
+          onClick={() => setIsEditingTitle(true)}
+          title="클릭해서 제목 수정"
+        >
+          {eventTitle || (selectedEvent ? selectedEvent.title : 'New Event')}
         </h2>
-        <button className={styles.closeButton} onClick={onClose}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        </button>
+      )}
       </div>
 
       <div className={styles.sidebarContent}>
-        {selectedEvent ? (
-          // 이벤트 상세 보기
-          <div className={styles.eventDetail}>
-            <div className={styles.eventHeader}>
-              <div 
-                className={styles.eventColorBar}
-                style={{ backgroundColor: selectedEvent.color }}
-              />
-              <h3>{selectedEvent.title}</h3>
-            </div>
+        <form className={styles.eventForm}>
 
-            <div className={styles.eventInfo}>
-              <div className={styles.infoItem}>
-                <span className={styles.infoIcon}>📅</span>
-                <div>
-                  <div className={styles.infoLabel}>날짜</div>
-                  <div className={styles.infoValue}>
-                    {format(parseISO(selectedEvent.start_date), 'yyyy년 M월 d일 (EEE)', { locale: ko })}
-                  </div>
-                </div>
-              </div>
-
-              {!selectedEvent.all_day && (
-                <div className={styles.infoItem}>
-                  <span className={styles.infoIcon}>⏰</span>
-                  <div>
-                    <div className={styles.infoLabel}>시간</div>
-                    <div className={styles.infoValue}>
-                      {format(parseISO(selectedEvent.start_date), 'HH:mm')} - 
-                      {format(parseISO(selectedEvent.end_date), 'HH:mm')}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {selectedEvent.location && (
-                <div className={styles.infoItem}>
-                  <span className={styles.infoIcon}>📍</span>
-                  <div>
-                    <div className={styles.infoLabel}>위치</div>
-                    <div className={styles.infoValue}>{selectedEvent.location}</div>
-                  </div>
-                </div>
-              )}
-
-              {selectedEvent.description && (
-                <div className={styles.infoItem}>
-                  <span className={styles.infoIcon}>📝</span>
-                  <div>
-                    <div className={styles.infoLabel}>설명</div>
-                    <div className={styles.infoValue}>{selectedEvent.description}</div>
-                  </div>
-                </div>
-              )}
-
-              <div className={styles.infoItem}>
-                <span className={styles.infoIcon}>📚</span>
-                <div>
-                  <div className={styles.infoLabel}>캘린더</div>
-                  <div className={styles.infoValue}>{selectedEvent.calendar_name}</div>
+          {/* 날짜 및 시간 */}
+          <div className={styles.formGroup}>
+            <div className={styles.dateTimeRow}>
+              <div className={styles.dateTimeGroup}>
+                <label className={styles.smallLabel}>시작</label>
+                <div className={styles.dateTimeInputs}>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className={`${styles.dateInput} ${!isAllDay ? styles.fullWidth : ''}`}
+                  />
+                  {!isAllDay && (
+                    <input
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      className={styles.timeInput}
+                    />
+                  )}
                 </div>
               </div>
             </div>
 
-            <div className={styles.eventActions}>
-              {selectedEvent.can_edit && (
-                <button 
-                  className={styles.editButton}
-                  onClick={() => onEditEvent(selectedEvent)}
-                >
-                  수정
-                </button>
-              )}
-              {selectedEvent.can_delete && (
-                <button 
-                  className={styles.deleteButton}
-                  onClick={() => {
-                    if (window.confirm('이 일정을 삭제하시겠습니까?')) {
-                      onDeleteEvent(selectedEvent.id);
-                      onClose();
-                    }
-                  }}
-                >
-                  삭제
-                </button>
-              )}
+            <div className={styles.dateTimeRow}>
+              <div className={styles.dateTimeGroup}>
+                <label className={styles.smallLabel}>종료</label>
+                <div className={styles.dateTimeInputs}>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className={styles.dateInput}
+                  />
+                  {!isAllDay && (
+                    <input
+                      type="time"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      className={styles.timeInput}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className={styles.checkboxGroup}>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={isAllDay}
+                  onChange={(e) => setIsAllDay(e.target.checked)}
+                  className={styles.checkbox}
+                />
+                종일
+              </label>
             </div>
           </div>
-        ) : selectedDate ? (
-          // 선택된 날짜의 일정 목록
-          <div className={styles.dayView}>
-            <div className={styles.selectedDate}>
-              <h3>{format(selectedDate, 'yyyy년 M월 d일', { locale: ko })}</h3>
-              <p>{format(selectedDate, 'EEEE', { locale: ko })}</p>
+
+          {/* 캘린더 선택 (캘린더가 2개 이상일 때만 표시) */}
+          {calendars.length > 1 && (
+            <div className={styles.formGroup}>
+              <label className={styles.smallLabel}>캘린더</label>
+              <select
+                value={selectedCalendarId}
+                onChange={(e) => setSelectedCalendarId(e.target.value)}
+                className={styles.select}
+              >
+                {calendars.map((calendar) => (
+                  <option key={calendar.id} value={calendar.id}>
+                    {calendar.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* 태그 선택 */}
+          <div className={styles.formGroup}>
+            <label className={styles.label}>태그</label>
+            <div className={styles.tagList}>
+              {availableTags.map((tag) => (
+                <div
+                  key={tag.id}
+                  className={`${styles.tagItem} ${selectedTagId === tag.id ? styles.selected : ''}`}
+                  onClick={() => setSelectedTagId(tag.id)}
+                >
+                  <div className={styles.tagContent}>
+                    <div 
+                      className={styles.tagColor}
+                      style={{ backgroundColor: tag.color }}
+                    />
+                    <span className={styles.tagName}>{tag.name}</span>
+                  </div>
+                  <div className={styles.radioButton}>
+                    {selectedTagId === tag.id && <div className={styles.radioSelected} />}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 메모 체크박스 */}
+          <div className={styles.formGroup}>
+            <div className={styles.checkboxGroup}>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={showMemo}
+                  onChange={(e) => setShowMemo(e.target.checked)}
+                  className={styles.checkbox}
+                />
+                메모 추가
+              </label>
             </div>
 
-            <button className={styles.addEventButton} onClick={onAddEvent}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            {showMemo && (
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="메모를 입력하세요"
+                className={styles.textarea}
+                rows={4}
+              />
+            )}
+          </div>
+
+          {/* 버튼들 */}
+          <div className={styles.buttonGroup}>
+            
+            {/* 닫기 */}
+            <button className={styles.closeButton} type="button" onClick={onClose}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               </svg>
-              일정 추가
             </button>
 
-            <div className={styles.eventsList}>
-              {dayEvents.length > 0 ? (
-                dayEvents.map(event => (
-                  <div 
-                    key={event.id}
-                    className={styles.eventCard}
-                    onClick={() => onEditEvent(event)}
-                  >
-                    <div 
-                      className={styles.eventIndicator}
-                      style={{ backgroundColor: event.color }}
-                    />
-                    <div className={styles.eventContent}>
-                      <div className={styles.eventTime}>
-                        {event.all_day ? '종일' : format(parseISO(event.start_date), 'HH:mm')}
-                      </div>
-                      <div className={styles.eventTitle}>{event.title}</div>
-                      {event.location && (
-                        <div className={styles.eventLocation}>📍 {event.location}</div>
-                      )}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className={styles.noEvents}>
-                  <p>일정이 없습니다</p>
-                </div>
-              )}
-            </div>
+
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={!isFormValid}
+              className={`${styles.saveButton} ${!isFormValid ? styles.disabled : ''}`}
+            >
+              {selectedEvent ? '수정' : '저장'}
+            </button>
+
+            {selectedEvent && selectedEvent.can_delete && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                className={styles.deleteButton}
+              >
+                삭제
+              </button>
+            )}
           </div>
-        ) : (
-          // 날짜 미선택 상태
-          <div className={styles.emptyState}>
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="4" width="18" height="18" rx="2" stroke="#ccc" strokeWidth="2"/>
-              <path d="M16 2V6M8 2V6M3 10H21" stroke="#ccc" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            <p>날짜를 선택하면</p>
-            <p>일정을 확인할 수 있습니다</p>
-          </div>
-        )}
+        </form>
       </div>
     </div>
   );

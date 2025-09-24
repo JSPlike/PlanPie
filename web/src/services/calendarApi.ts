@@ -8,8 +8,7 @@ import {
   Event,
   CreateCalendarRequest,
   UpdateCalendarRequest,
-  CreateEventRequest,
-  UpdateEventRequest,
+  CreateUpdateEventRequest,
   SendInvitationRequest,
   AcceptInvitationRequest,
   ChangeRoleRequest,
@@ -140,11 +139,11 @@ export const calendarAPI = {
     api.get<Event>(`/events/${id}/`),
   
   // 이벤트 생성
-  createEvent: (data: CreateEventRequest) => 
+  createEvent: (data: CreateUpdateEventRequest) => 
     api.post<Event>('/events/', data),
   
   // 이벤트 수정
-  updateEvent: (id: string, data: UpdateEventRequest) => 
+  updateEvent: (id: string, data: CreateUpdateEventRequest) => 
     api.patch<Event>(`/events/${id}/`, data),
   
   // 이벤트 삭제

@@ -1,261 +1,436 @@
 /* src/components/CalendarRightSide/CalendarRightSide.module.css */
-.sidebar {
-    height: 100%;
+  .sidebar {
+    width: 100%;
+    height: 100vh;
+    background: white;
+    border-left: 1px solid #e0e0e0;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    overflow-y: hidden;
     display: flex;
     flex-direction: column;
-    background: white;
   }
   
   .sidebarHeader {
+    text-align: left;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px;
-    border-bottom: 1px solid #e0e0e0;
-  }
-  
-  .sidebarHeader h2 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
+    padding: 24px;
+    border-bottom: 0.7px solid #e0e0e0;
     color: #333;
+    flex-shrink: 0;
   }
-  
-  .closeButton {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: none;
+
+  .headerTitle,
+  .headerTitleEdit {
+    margin: 0;
+    padding: 0; /* 패딩 제거 */
+    font-size: 20px;
+    font-weight: 600;
+    font-family: inherit;
     background: transparent;
+    border: none; /* 보더 제거 */
+    outline: none;
+    flex: 1;
+    height: 40px; /* 고정 높이 */
+    line-height: 40px; /* 세로 중앙 정렬 */
+    border-radius: 8px;
+  }
+  
+  .headerTitle {
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
+    padding: 0 12px; /* h2만 패딩 */
   }
   
-  .closeButton:hover {
-    background: #f5f5f5;
+  .headerTitle:hover {
+    background: rgba(255, 255, 255, 0.1);
   }
   
+  .headerTitleEdit {
+    padding: 0 12px; /* input도 동일한 패딩 */
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  /* 콘텐츠 영역 */
   .sidebarContent {
     flex: 1;
     overflow-y: auto;
-    padding: 20px;
+    padding: 0;
+    background: #fafbfc;
   }
-  
-  /* 이벤트 상세 */
-  .eventDetail {
+
+  .eventForm {
+    padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 24px;
   }
-  
-  .eventHeader {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  
-  .eventColorBar {
-    width: 4px;
-    height: 32px;
-    border-radius: 2px;
-  }
-  
-  .eventHeader h3 {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 600;
-    color: #333;
-  }
-  
-  .eventInfo {
+
+  /* 폼 그룹 */
+  .formGroup {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-  }
-  
-  .infoItem {
-    display: flex;
     gap: 12px;
   }
-  
-  .infoIcon {
-    font-size: 20px;
-    width: 24px;
-    text-align: center;
+
+  .label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 8px;
+  }
+
+  .input,
+  .dateInput,
+  .timeInput,
+  .select,
+  .textarea {
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+    transition: all 0.2s ease;
+    outline: none;
+  }
+
+  .input:focus,
+  .dateInput:focus,
+  .timeInput:focus,
+  .select:focus,
+  .textarea:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  .input::placeholder,
+  .textarea::placeholder {
+    color: #a0aec0;
   }
   
-  .infoLabel {
+  /* 날짜/시간 입력 */
+  .dateTimeRow {
+    margin-bottom: 16px;
+  }
+
+  .dateTimeGroup {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .smallLabel {
     font-size: 12px;
-    color: #999;
-    margin-bottom: 4px;
-  }
-  
-  .infoValue {
-    font-size: 14px;
-    color: #333;
-  }
-  
-  .eventActions {
-    display: flex;
-    gap: 12px;
-    padding-top: 16px;
-    border-top: 1px solid #e0e0e0;
-  }
-  
-  .editButton,
-  .deleteButton {
-    flex: 1;
-    padding: 10px;
-    border-radius: 6px;
-    font-size: 14px;
     font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .editButton {
-    background: #4A90E2;
-    color: white;
-    border: none;
-  }
-  
-  .editButton:hover {
-    background: #357ABD;
-  }
-  
-  .deleteButton {
-    background: white;
-    color: #ff4444;
-    border: 1px solid #ff4444;
-  }
-  
-  .deleteButton:hover {
-    background: #ff4444;
-    color: white;
-  }
-  
-  /* 날짜별 일정 목록 */
-  .dayView {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .selectedDate {
-    text-align: center;
-    padding: 16px;
-    background: #f8f9fa;
-    border-radius: 8px;
-  }
-  
-  .selectedDate h3 {
-    margin: 0 0 4px 0;
-    font-size: 18px;
-    font-weight: 600;
-    color: #333;
-  }
-  
-  .selectedDate p {
-    margin: 0;
-    font-size: 14px;
-    color: #666;
-  }
-  
-  .addEventButton {
-    display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px;
-    background: white;
-    color: #4A90E2;
-    border: 1px solid #4A90E2;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .addEventButton:hover {
-    background: #4A90E2;
-    color: white;
-  }
-  
-  .eventsList {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .eventCard {
-    display: flex;
-    gap: 12px;
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .eventCard:hover {
-    background: #e8f4fd;
-    transform: translateX(4px);
-  }
-  
-  .eventIndicator {
-    width: 3px;
-    border-radius: 2px;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     flex-shrink: 0;
   }
+
+  .dateTimeInputs {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .dateInput {
+    flex: 2;
+  }
+
+  .dateInput.fullWidth {
+    flex: 1; /* 종일일 때: 전체 너비 차지 */
+  }
   
-  .eventContent {
+  .timeInput {
     flex: 1;
-    min-width: 0;
+    min-width: 100px;
   }
   
-  .eventTime {
-    font-size: 12px;
-    color: #666;
-    margin-bottom: 4px;
+  /* 체크박스 */
+  .checkboxGroup {
+    margin: 12px 0;
   }
   
-  .eventTitle {
+  .checkboxLabel {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     font-size: 14px;
-    font-weight: 500;
-    color: #333;
-    margin-bottom: 4px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    color: #4a5568;
+    cursor: pointer;
+    padding: 8px 0;
   }
   
-  .eventLocation {
-    font-size: 12px;
-    color: #999;
+  .checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: #667eea;
+    cursor: pointer;
   }
-  
-  .noEvents {
-    text-align: center;
-    padding: 40px 20px;
-    color: #999;
-  }
-  
-  .emptyState {
+
+  /* 태그 선택 */
+  .tagList {
     display: flex;
     flex-direction: column;
+    gap: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 8px;
+    background: white;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+  }
+
+  .tagItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+    border: 1px solid #e2e8f0;
+  }
+
+  .tagItem:hover {
+    background: #f7fafc;
+    border-color: #cbd5e0;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .tagItem.selected {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+
+  .tagContent {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+  }
+
+  .tagColor {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+  }
+
+  .tagName {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .radioButton {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #cbd5e0;
+    border-radius: 50%;
+    display: flex;
     align-items: center;
     justify-content: center;
-    height: 100%;
-    color: #999;
-    text-align: center;
+    transition: all 0.2s ease;
   }
-  
-  .emptyState p {
-    margin: 8px 0;
+
+  .tagItem.selected .radioButton {
+    border-color: white;
+  }
+
+  .radioSelected {
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+  }
+
+  /* 텍스트 에어리어 */
+  .textarea {
+    min-height: 100px;
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.5;
+  }
+
+  /* 버튼 그룹 */
+  .buttonGroup {
+    display: flex;
+    gap: 12px;
+    padding-top: 24px;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 8px;
+  }
+
+  /* 닫기 버튼 */
+  .closeButton {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    color: #718096;
+  }
+
+  .closeButton:hover {
+    background: #f7fafc;
+    border-color: #cbd5e0;
+    color: #4a5568;
+    transform: scale(1.05);
+  }
+
+  .closeButton:active {
+    transform: scale(0.95);
+  }
+
+  /* 저장 버튼 */
+  .saveButton {
+    flex: 1;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+
+  .saveButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  }
+
+  .saveButton:active {
+    transform: translateY(0);
+  }
+
+  .saveButton.disabled {
+    background: #cbd5e0;
+    color: #a0aec0;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .saveButton.disabled:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* 삭제 버튼 */
+  .deleteButton {
+    padding: 14px 24px;
+    background: white;
+    color: #e53e3e;
+    border: 2px solid #e53e3e;
+    border-radius: 12px;
     font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
   }
-  
+
+  .deleteButton:hover {
+    background: #e53e3e;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
+  }
+
+  .deleteButton:active {
+    transform: translateY(0);
+  }
+
+  /* 스크롤바 커스터마이징 */
+  .sidebarContent::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .sidebarContent::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+
+  .sidebarContent::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 3px;
+  }
+
+  .sidebarContent::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+  }
+
+  .tagList::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .tagList::-webkit-scrollbar-track {
+    background: #f7fafc;
+  }
+
+  .tagList::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 2px;
+  }
+
+  /* 애니메이션 효과 */
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .formGroup {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  /* 반응형 */
+  @media (max-width: 768px) {
+    .eventForm {
+      padding: 20px;
+      gap: 20px;
+    }
+    
+    .dateTimeInputs {
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .dateInput,
+    .timeInput {
+      flex: none;
+    }
+    
+    .buttonGroup {
+      flex-direction: column;
+    }
+    
+    .closeButton {
+      order: -1;
+      align-self: flex-end;
+    }
+  }
+

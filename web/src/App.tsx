@@ -161,6 +161,7 @@ export default App;
 
 
 import React from 'react';
+import { ToastContainer } from 'react-toastify';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import AppRoutes from './routes/AppRoutes';
@@ -176,6 +177,17 @@ function App() {
           <div className="App">
             <AppRoutes />
             <ProfileWidget />
+            <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
           </div>
         </AuthProvider>
       </BrowserRouter>

@@ -9,7 +9,7 @@
   .calendarMain {
     flex: 1;
     overflow: hidden;
-    transition: margin-left 0.3s ease;
+    transition: margin-left 0.3s ease, margin-right 0.3s ease;
   }
 
   .leftSideContainer {
@@ -31,21 +31,21 @@
     width: 320px;
   }
 
-  .RightSideContainer {
-    position: absolute;
+  .rightSideContainer {
+    position: relative;
     right: 0;
     top: 0;
-    bottom: 0;
-    width: 320px;
+    width: 0;
     background: white;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-    transform: translateX(-100%);
+    height: calc(100vh - 60px);
     transition: transform 0.3s ease;
     z-index: 20;
+    overflow-y: auto;
   }
-  
-  .RightSideContainer.open {
-    transform: translateX(100);
+
+  .rightSideContainer.open {
+    width: 400px;
+    transform: translateX(0);
   } 
 
   /* 데스크톱에서 부드러운 애니메이션 */
@@ -55,7 +55,8 @@
       position: relative;
     }
     
-    .leftSideContainer {
+    .leftSideContainer,
+    .rightSideContainer {
       position: relative;
       height: 100%;
     }
@@ -78,5 +79,11 @@
     .leftSideContainer.open {
       transform: translateX(0);
       width: 280px;
+    }
+
+      /* 모바일에서 RightSide */
+    .rightSideContainer {
+      width: 100%;
+      top: 60px;
     }
   }
