@@ -41,6 +41,23 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   const [description, setDescription] = useState('');
   const [showTagEditor, setShowTagEditor] = useState(false);
 
+  // rightside 캘린더 목록
+  const [showCalendarDropdown, setShowCalendarDropdown] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest(`.${styles.customSelect}`)) {
+        setShowCalendarDropdown(false);
+      }
+    };
+  
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   // 선택된 캘린더의 태그들 가져오기
   const getSelectedCalendarTags = () => {
     const calendar = calendars.find(cal => cal.id === selectedCalendarId);
@@ -95,7 +112,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
       setEndTime('10:00');
       setIsAllDay(true);
       setSelectedCalendarId(calendars[0]?.id || ''); // 첫 번째 캘린더로 설정
-      setSelectedTagId('');
+      setSelectedTagId(null);
       setLocation('');
       setShowMemo(false);
       setDescription('');
@@ -147,195 +164,260 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
 
   return (
     <div className={styles.sidebar}>
-      <div className={styles.sidebarHeader}>
-      {isEditingTitle ? (
-        <input
-          type="text"
-          value={eventTitle}
-          onChange={(e) => setEventTitle(e.target.value)}
-          onBlur={() => setIsEditingTitle(false)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === 'Escape') {
-              setIsEditingTitle(false);
-            }
-          }}
-          className={styles.headerTitleEdit}
-          placeholder="일정 제목을 입력하세요"
-          autoFocus
-        />
-      ) : (
-        <h2
-          className={styles.headerTitle}
-          onClick={() => setIsEditingTitle(true)}
-          title="클릭해서 제목 수정"
-        >
-          {eventTitle || (selectedEvent ? selectedEvent.title : 'New Event')}
-        </h2>
-      )}
-      </div>
+      <form className={styles.eventForm}>
+        <div className={styles.sidebarHeader}>
+        {isEditingTitle ? (
+          <input
+            type="text"
+            value={eventTitle}
+            onChange={(e) => setEventTitle(e.target.value)}
+            onBlur={() => setIsEditingTitle(false)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === 'Escape') {
+                setIsEditingTitle(false);
+              }
+            }}
+            className={styles.headerTitleEdit}
+            placeholder="일정 제목을 입력하세요"
+            autoFocus
+          />
+        ) : (
+          <h2
+            className={styles.headerTitle}
+            onClick={() => setIsEditingTitle(true)}
+            title="클릭해서 제목 수정"
+          >
+            {eventTitle || (selectedEvent ? selectedEvent.title : 'New Event')}
+          </h2>
+        )}
+        </div>
 
-      <div className={styles.sidebarContent}>
-        <form className={styles.eventForm}>
-
+        <div className={styles.sidebarContent}>
           {/* 날짜 및 시간 */}
-          <div className={styles.formGroup}>
-            <div className={styles.dateTimeRow}>
+          
+          <div className={styles.sidebarDateContent}>
+            <div className={styles.formGroup}>
               <div className={styles.dateTimeGroup}>
                 <label className={styles.smallLabel}>시작</label>
                 <div className={styles.dateTimeInputs}>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className={`${styles.dateInput} ${!isAllDay ? styles.fullWidth : ''}`}
-                  />
-                  {!isAllDay && (
+                  <div className={styles.dateDiv}>
                     <input
-                      type="time"
-                      value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                      className={styles.timeInput}
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className={`${styles.dateInput} ${!isAllDay ? styles.fullWidth : ''}`}
                     />
+                  </div>
+                  {!isAllDay && (
+                    <div className={styles.timeDiv}>
+                      <input
+                        type="time"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                        className={styles.timeInput}
+                      />
+                    </div>
                   )}
                 </div>
               </div>
-            </div>
 
-            <div className={styles.dateTimeRow}>
               <div className={styles.dateTimeGroup}>
                 <label className={styles.smallLabel}>종료</label>
                 <div className={styles.dateTimeInputs}>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className={styles.dateInput}
-                  />
-                  {!isAllDay && (
+                  <div className={styles.dateDiv}>
                     <input
-                      type="time"
-                      value={endTime}
-                      onChange={(e) => setEndTime(e.target.value)}
-                      className={styles.timeInput}
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className={styles.dateInput}
                     />
+                  </div>
+                  {!isAllDay && (
+                    <div className={styles.timeDiv}>
+                      <input
+                        type="time"
+                        value={endTime}
+                        onChange={(e) => setEndTime(e.target.value)}
+                        className={styles.timeInput}
+                      />
+                    </div>
                   )}
                 </div>
               </div>
-            </div>
-            
-            <div className={styles.checkboxGroup}>
-              <label className={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={isAllDay}
-                  onChange={(e) => setIsAllDay(e.target.checked)}
-                  className={styles.checkbox}
-                />
-                종일
-              </label>
+              
+              <div className={styles.checkboxGroup}>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={isAllDay}
+                    onChange={(e) => setIsAllDay(e.target.checked)}
+                    className={styles.checkbox}
+                  />
+                  종일
+                </label>
+              </div>
             </div>
           </div>
 
-          {/* 캘린더 선택 (캘린더가 2개 이상일 때만 표시) */}
-          {calendars.length > 1 && (
-            <div className={styles.formGroup}>
-              <label className={styles.smallLabel}>캘린더</label>
-              <select
-                value={selectedCalendarId}
-                onChange={(e) => setSelectedCalendarId(e.target.value)}
-                className={styles.select}
-              >
-                {calendars.map((calendar) => (
-                  <option key={calendar.id} value={calendar.id}>
-                    {calendar.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
 
-          {/* 태그 선택 */}
-          <div className={styles.formGroup}>
-            <label className={styles.label}>태그</label>
-            <div className={styles.tagList}>
-              {availableTags.map((tag) => (
-                <div
-                  key={tag.id}
-                  className={`${styles.tagItem} ${selectedTagId === tag.id ? styles.selected : ''}`}
-                  onClick={() => setSelectedTagId(tag.id)}
-                >
-                  <div className={styles.tagContent}>
-                    <div 
-                      className={styles.tagColor}
-                      style={{ backgroundColor: tag.color }}
+          
+          <div className={styles.sidebarOptionContent}>
+            {/* 캘린더 선택 (캘린더가 2개 이상일 때만 표시) */}
+            {calendars.length > 1 && (
+              <div className={styles.formGroup}>
+                <div className={styles.optionDiv}>
+                  <label className={styles.smallLabel}>캘린더</label>
+
+                  <div className={styles.customSelect}>
+                    <input
+                      type="text"
+                      value={calendars.find(cal => cal.id === selectedCalendarId)?.name || ''}
+                      onClick={() => setShowCalendarDropdown(!showCalendarDropdown)}
+                      readOnly
+                      placeholder="캘린더를 선택하세요"
+                      className={styles.selectInput}
                     />
-                    <span className={styles.tagName}>{tag.name}</span>
-                  </div>
-                  <div className={styles.radioButton}>
-                    {selectedTagId === tag.id && <div className={styles.radioSelected} />}
-                  </div>
+                    <div 
+                      className={styles.dropdownArrow}
+                      onClick={() => setShowCalendarDropdown(!showCalendarDropdown)}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                        <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                    </div>
+                    
+                    {/* 드롭다운 목록 */}
+                    {showCalendarDropdown && (
+                      <div className={styles.dropdownList}>
+                        {calendars.map((calendar) => (
+                          <div
+                            key={calendar.id}
+                            className={`${styles.dropdownItem} ${selectedCalendarId === calendar.id ? styles.selected : ''}`}
+                            onClick={() => {
+                              setSelectedCalendarId(calendar.id);
+                              setShowCalendarDropdown(false);
+                            }}
+                          >
+                            <div className={styles.calendarInfo}>
+                              <img 
+                                src={calendar.image || '/images/default-calendar.png'} 
+                                alt={calendar.name}
+                                className={styles.calendarImage}
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = '/images/default-calendar.png';
+                                }}
+                              />
+                              <span className={styles.calendarName}>{calendar.name}</span>
+                            </div>
+                            <div className={styles.radioButton}>
+                              {selectedCalendarId === calendar.id && (
+                                <div className={styles.radioSelected} />
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>  
+
+                  {/* <select
+                    value={selectedCalendarId}
+                    onChange={(e) => setSelectedCalendarId(e.target.value)}
+                    className={styles.select}
+                  >
+                    {calendars.map((calendar) => (
+                      <option key={calendar.id} value={calendar.id}>
+                        {calendar.name}
+                      </option>
+                    ))}
+                  </select> */}
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* 메모 체크박스 */}
-          <div className={styles.formGroup}>
-            <div className={styles.checkboxGroup}>
-              <label className={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={showMemo}
-                  onChange={(e) => setShowMemo(e.target.checked)}
-                  className={styles.checkbox}
-                />
-                메모 추가
-              </label>
-            </div>
-
-            {showMemo && (
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="메모를 입력하세요"
-                className={styles.textarea}
-                rows={4}
-              />
+              </div>
             )}
-          </div>
 
-          {/* 버튼들 */}
-          <div className={styles.buttonGroup}>
-            
-            {/* 닫기 */}
-            <button className={styles.closeButton} type="button" onClick={onClose}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </button>
+            {/* 태그 선택 */}
+            <div className={styles.formGroup}>
+              <label className={styles.label}>태그</label>
+              <div className={styles.tagList}>
+                {availableTags.map((tag) => (
+                  <div
+                    key={tag.id}
+                    className={`${styles.tagItem} ${selectedTagId === tag.id ? styles.selected : ''}`}
+                    onClick={() => setSelectedTagId(tag.id)}
+                  >
+                    <div className={styles.tagContent}>
+                      <div 
+                        className={styles.tagColor}
+                        style={{ backgroundColor: tag.color }}
+                      />
+                      <span className={styles.tagName}>{tag.name}</span>
+                    </div>
+                    <div className={styles.radioButton}>
+                      {selectedTagId === tag.id && <div className={styles.radioSelected} />}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 메모 체크박스 */}
+            <div className={styles.formGroup}>
+              <div className={styles.checkboxGroup}>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={showMemo}
+                    onChange={(e) => setShowMemo(e.target.checked)}
+                    className={styles.checkbox}
+                  />
+                  메모 추가
+                </label>
+              </div>
+
+              {showMemo && (
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="메모를 입력하세요"
+                  className={styles.textarea}
+                  rows={4}
+                />
+              )}
+            </div>
+
+            {/* 버튼들 */}
+            <div className={styles.buttonGroup}>
+              
+              {/* 닫기 */}
+              <button className={styles.closeButton} type="button" onClick={onClose}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
 
 
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={!isFormValid}
-              className={`${styles.saveButton} ${!isFormValid ? styles.disabled : ''}`}
-            >
-              {selectedEvent ? '수정' : '저장'}
-            </button>
-
-            {selectedEvent && selectedEvent.can_delete && (
               <button
                 type="button"
-                onClick={handleDelete}
-                className={styles.deleteButton}
+                onClick={handleSave}
+                disabled={!isFormValid}
+                className={`${styles.saveButton} ${!isFormValid ? styles.disabled : ''}`}
               >
-                삭제
+                {selectedEvent ? '수정' : '저장'}
               </button>
-            )}
+
+              {selectedEvent && selectedEvent.can_delete && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className={styles.deleteButton}
+                >
+                  삭제
+                </button>
+              )}
+            </div>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 };

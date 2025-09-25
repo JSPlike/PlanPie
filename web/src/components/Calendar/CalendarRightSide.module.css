@@ -16,7 +16,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 24px;
+    padding: 26px 24px;
     border-bottom: 0.7px solid #e0e0e0;
     color: #333;
     flex-shrink: 0;
@@ -56,23 +56,35 @@
   /* 콘텐츠 영역 */
   .sidebarContent {
     flex: 1;
-    overflow-y: auto;
-    padding: 0;
-    background: #fafbfc;
+    overflow-y: hidden;
+  }
+
+  .sidebarDateContent {
+    padding: 20px 24px;
+    border-bottom: 0.7px solid #e0e0e0;
+  }
+
+  .sidebarOptionContent {
+    padding: 20px 24px;
+  }
+
+  .optionDiv {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 6px;
   }
 
   .eventForm {
-    padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
   }
 
   /* 폼 그룹 */
   .formGroup {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 6px;
   }
 
   .label {
@@ -81,14 +93,30 @@
     color: #2d3748;
     margin-bottom: 8px;
   }
+  .dateDiv {
+    outline: 0px;
+    width: 100%;
+    height: 40px;
+    flex-basis: 180px;
+    margin-left: auto;
+  }
+
+  .timeDiv {
+    outline: 0px;
+    width: 100%;
+    height: 40px;
+    flex-basis: 90px;
+    margin-left: 8px;
+  }
 
   .input,
   .dateInput,
   .timeInput,
   .select,
   .textarea {
-    padding: 12px 16px;
+    padding: 0px 16px;
     border: 2px solid #e2e8f0;
+    height: 100%;
     border-radius: 8px;
     font-size: 14px;
     font-family: inherit;
@@ -135,13 +163,27 @@
 
   .dateTimeInputs {
     display: flex;
-    gap: 12px;
+    gap: 6px;
     align-items: center;
     min-height: 44px;
   }
 
   .dateInput {
-    flex: 2;
+    /* flex: 2; */
+
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    padding: 0px 16px;
+    color: rgb(33, 33, 33);
+    font-size: 0.875rem;
+    vertical-align: middle;
+    background: rgb(250, 250, 250);
+    border: 0px;
+    border-radius: 8px;
+    outline: 0px;
+    cursor: pointer;
+    caret-color: rgb(46, 204, 135);
   }
 
   .dateInput.fullWidth {
@@ -149,13 +191,21 @@
   }
   
   .timeInput {
-    flex: 1;
-    min-width: 100px;
+    width: 100%;
+    height: 100%;
+    color: rgb(33, 33, 33);
+    font-size: 0.875rem;
+    vertical-align: middle;
+    background: rgb(250, 250, 250);
+    border: 0px;
+    border-radius: 8px;
+    outline: 0px;
+    cursor: pointer;
   }
   
   /* 체크박스 */
   .checkboxGroup {
-    margin: 12px 0;
+    margin: 0;
   }
   
   .checkboxLabel {
@@ -174,6 +224,146 @@
     accent-color: #667eea;
     cursor: pointer;
   }
+
+  .customSelect {
+    position: relative;
+  }
+  
+  .selectInput {
+    padding: 12px 40px 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+  
+  .selectInput:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+  
+  .dropdownArrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    transition: transform 0.2s ease;
+  }
+  
+  .dropdownArrow:hover {
+    color: #333;
+  }
+  
+  .customSelect:focus-within .dropdownArrow {
+    transform: translateY(-50%) rotate(180deg);
+  }
+  
+  /* 드롭다운 목록 */
+  .dropdownList {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 4px;
+  }
+  
+  .dropdownItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  
+  .dropdownItem:last-child {
+    border-bottom: none;
+  }
+  
+  .dropdownItem:hover {
+    background: #f8fafc;
+  }
+  
+  .dropdownItem.selected {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+
+  .calendarInfo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+  }
+  
+  .calendarImage {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    object-fit: cover;
+    border: 1px solid #e2e8f0;
+  }
+  
+  .calendarName {
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .radioButton {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #cbd5e0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+  
+  .dropdownItem.selected .radioButton {
+    border-color: white;
+  }
+  
+  .radioSelected {
+    width: 6px;
+    height: 6px;
+    background: white;
+    border-radius: 50%;
+  }
+  
+  .dropdownItem:not(.selected) .radioSelected {
+    background: #667eea;
+  }
+  
+  /* 스크롤바 커스터마이징 */
+  .dropdownList::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .dropdownList::-webkit-scrollbar-track {
+    background: #f7fafc;
+  }
+  
+  .dropdownList::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 2px;
+  }
+
 
   /* 태그 선택 */
   .tagList {
@@ -302,7 +492,6 @@
   /* 저장 버튼 */
   .saveButton {
     flex: 1;
-    padding: 14px 24px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
