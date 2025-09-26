@@ -12,19 +12,19 @@ import { Calendar, CalendarWithVisibility, CreateUpdateEventRequest, Event } fro
 import { User } from '../../types/auth.types';
 
 const CalendarView: React.FC = () => {
-    const [myUser, setMyUser] = useState<User | null>(null);
-    const dummyUser: User = {
-        id: "u1",
-        email: "test@test.com",
-        username: "tester",
-        first_name: "테스트",
-        last_name: "유저",
-        login_method: "email",
-        is_active: true,
-        is_staff: false,
-        is_verified: true,
-        date_joined: new Date().toISOString(),
-    };
+  const [myUser, setMyUser] = useState<User | null>(null);
+  const dummyUser: User = {
+      id: "u1",
+      email: "test@test.com",
+      username: "tester",
+      first_name: "테스트",
+      last_name: "유저",
+      login_method: "email",
+      is_active: true,
+      is_staff: false,
+      is_verified: true,
+      date_joined: new Date().toISOString(),
+  };
 
   // 캘린더 목록
   const [calendars, setCalendars] = useState<Calendar[]>([
@@ -100,8 +100,8 @@ const CalendarView: React.FC = () => {
         title: '회의',
         description: '',
         location: '',
-        start_date: new Date(2024, 0, 15, 10, 0).toISOString(),
-        end_date: new Date(2024, 0, 15, 11, 0).toISOString(),
+        start_date: new Date(2025, 9, 15, 10, 0).toISOString(),
+        end_date: new Date(2025, 9, 15, 11, 0).toISOString(),
         all_day: false,
         color: '#4A90E2',
         created_by: dummyUser,
@@ -116,8 +116,8 @@ const CalendarView: React.FC = () => {
         title: '프로젝트 마감',
         description: '',
         location: '',
-        start_date: new Date(2024, 0, 20).toISOString(),
-        end_date: new Date(2024, 0, 20).toISOString(),
+        start_date: new Date(2025, 9, 20).toISOString(),
+        end_date: new Date(2025, 9, 20).toISOString(),
         all_day: true,
         color: '#50C878',
         created_by: dummyUser,
@@ -126,7 +126,7 @@ const CalendarView: React.FC = () => {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
     }
-    ]);
+  ]);
     
   // 캘린더 표시 상태 (로컬 상태)
   const [calendarVisibility, setCalendarVisibility] = useState<Record<string, boolean>>({
@@ -146,33 +146,113 @@ const CalendarView: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedRange, setSelectedRange] = useState<{start: Date, end: Date} | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [tempEvent, setTempEvent] = useState<Event | null>(null); // 임시 이벤트 상태 추가
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [selectedCalendarId, setSelectedCalendarId] = useState<string>('1');
   const [isLeftSideOpen, setIsLeftSideOpen] = useState(false);
   const [isRightSideOpen, setIsRightSideOpen] = useState(false);
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
 
+  const handleCreateNewEvent = (startDate: Date, endDate?: Date) => {
+    const selectedCalendar = calendars.find(cal => cal.id === selectedCalendarId);
+    const firstTag = selectedCalendar?.tags?.[0];
+
+    const temp: Event = {
+      id: 'temp-' + Date.now(), // 임시 ID
+      calendar: selectedCalendarId, // 현재 선택된 캘린더
+      title: 'New Event',
+      description: '',
+      location: '',
+      start_date: startDate.toISOString(),
+      end_date: endDate ? endDate.toISOString() : startDate.toISOString(),
+      all_day: true, // 기본값으로 종일 이벤트
+      color: '', // 캘린더 색상 사용
+      tag: firstTag ? { // 기본 태그 설정
+        id: firstTag.id,
+        name: firstTag.name,
+        color: firstTag.color,
+        order: firstTag.order,
+        calendar: firstTag.calendar,
+        created_at: firstTag.created_at,
+        updated_at: firstTag.updated_at
+      } : undefined,
+      created_by: dummyUser,
+      can_edit: true,
+      can_delete: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    setTempEvent(temp);
+  };
+
+  // 임시 이벤트 업데이트 함수 추가
+  const updateTempEvent = (updates: Partial<Event>) => {
+    if (tempEvent) {
+      setTempEvent({
+        ...tempEvent,
+        ...updates,
+        updated_at: new Date().toISOString()
+      });
+    }
+  };
+
+  // 임시 이벤트 취소
+  const handleCancelTempEvent = () => {
+    setTempEvent(null);
+  };
+
   // 날짜 클릭 핸들러 (선택만)
   const handleDateSelect = (date: Date) => {
+    const isSameDate = selectedDate && 
+      date.getFullYear() === selectedDate.getFullYear() &&
+      date.getMonth() === selectedDate.getMonth() &&
+      date.getDate() === selectedDate.getDate();
+
+    console.log(date)
+    console.log(isSameDate)
+    if (isRightSideOpen) {
+      // 오른쪽 패널이 이미 열려있으면 → 바로 임시 이벤트 생성
+      console.log('오른쪽 패널 열린 상태에서 클릭');
+      setSelectedDate(date);
+      if (tempEvent) {
+        setTempEvent(null);
+      }
+      setTimeout(() => {
+        handleCreateNewEvent(date);
+      }, 100);
+    } else {
+      // 첫 번째 클릭 → 선택만
+      console.log('첫 번째 클릭 - 선택만');
+      setSelectedDate(date);
+      // 기존 임시 이벤트가 있으면 제거
+      if (tempEvent) {
+        setTempEvent(null);
+      }
+    }
+    /*
     setSelectedDate(date);
 
-    console.log("날짜 클릭 >>>");
+    if (tempEvent) {
+      setTempEvent(null);
+    }
+    console.log('임시데이터')
     console.log(date);
-    // 오른쪽 섹션은 열지 않음
+    setTimeout(() => {
+      handleCreateNewEvent(date);
+    }, 100);
+    */
   };
 
   // 날짜 클릭 시 범위 설정
   const handleDateClick = (date: Date) => {
+
+    /*
     const isSameDate = selectedDate && 
       date.getFullYear() === selectedDate.getFullYear() &&
       date.getMonth() === selectedDate.getMonth() &&
       date.getDate() === selectedDate.getDate();
       
-    console.log("날짜 더블클릭 >>>");
-    console.log(date);
-
     if (selectedRange) {
-      // 기존 범위가 있으면 범위의 길이를 유지하면서 시작일 변경
       const rangeDays = Math.ceil((selectedRange.end.getTime() - selectedRange.start.getTime()) / (1000 * 60 * 60 * 24));
       const newEndDate = new Date(date);
       newEndDate.setDate(date.getDate() + rangeDays);
@@ -182,7 +262,6 @@ const CalendarView: React.FC = () => {
         end: newEndDate
       });
     } else {
-      // 첫 클릭 시에는 하루 범위로 설정
       setSelectedRange({
         start: date,
         end: new Date(date)
@@ -191,6 +270,35 @@ const CalendarView: React.FC = () => {
     
     setSelectedDate(date);
     setIsRightSideOpen(true);
+    */
+    setSelectedDate(date);
+  
+    if (tempEvent) {
+      setTempEvent(null);
+    }
+    
+    setTimeout(() => {
+      handleCreateNewEvent(date);
+    }, 100);
+    
+    setIsRightSideOpen(true);
+  
+    // 범위 설정 로직 (필요하면 유지)
+    if (selectedRange) {
+      const rangeDays = Math.ceil((selectedRange.end.getTime() - selectedRange.start.getTime()) / (1000 * 60 * 60 * 24));
+      const newEndDate = new Date(date);
+      newEndDate.setDate(date.getDate() + rangeDays);
+      
+      setSelectedRange({
+        start: date,
+        end: newEndDate
+      });
+    } else {
+      setSelectedRange({
+        start: date,
+        end: new Date(date)
+      });
+    }
   };
 
   const fetchEvents = async () => {
@@ -273,6 +381,9 @@ const CalendarView: React.FC = () => {
         toast.success('일정이 생성되었습니다.');
       }
       
+      // 임시 이벤트 제거
+      setTempEvent(null);
+
       // 이벤트 목록 새로고침
       await fetchEvents();
       
@@ -344,6 +455,7 @@ const CalendarView: React.FC = () => {
             selectedDate={selectedDate}
             selectedRange={selectedRange}
             events={visibleEvents}
+            tempEvent={tempEvent}
             calendars={calendars}
             onDateSelect={handleDateSelect} // 날짜 클릭
             onDateClick={handleDateClick} // 날짜 선택(더블클릭 혹은 선택된 날짜를 한번더 클릭)
@@ -369,11 +481,14 @@ const CalendarView: React.FC = () => {
             selectedEvent={selectedEvent}
             calendars={calendars}
             events={visibleEvents}
+            tempEvent={tempEvent}
+            onUpdateTempEvent={updateTempEvent}
             onDeleteEvent={deleteEvent}
             onSaveEvent={handleSaveEvent}
             onClose={() => {
               setIsRightSideOpen(false);
               setSelectedEvent(null);
+              setTempEvent(null); // 임시 이벤트도 제거
             }}
           />
         </div>

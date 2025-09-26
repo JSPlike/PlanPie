@@ -38,15 +38,14 @@
     top: 0;
     width: 0;
     background: white;
-    height: calc(100vh - 60px);
-    transition: transform 0.3s ease;
+    height: 100%;
+    transition: width 0.3s ease;
     z-index: 20;
-    overflow-y: auto;
+    overflow-y: hidden;
   }
 
   .rightSideContainer.open {
-    width: 400px;
-    transform: translateX(0);
+    width: 420px;
   } 
 
   /* 데스크톱에서 부드러운 애니메이션 */
@@ -85,6 +84,5 @@
       /* 모바일에서 RightSide */
     .rightSideContainer {
       width: 100%;
-      top: 60px;
     }
   }

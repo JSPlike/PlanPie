@@ -1,5 +1,5 @@
 /* src/components/CalendarHeader/CalendarHeader.module.css */
-.header {
+  .header {
     position: sticky;
     top: 0;
     z-index: 100;
@@ -8,8 +8,8 @@
     align-items: center;
     padding: 0px 20px;
     background: white;
-    border-bottom: 1px solid #e0e0e0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-bottom: 0.5px solid rgb(237, 237, 237);
+    /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); */
     height: 60px;
     min-height: 60px;
   }

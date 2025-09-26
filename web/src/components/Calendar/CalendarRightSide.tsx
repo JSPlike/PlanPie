@@ -12,6 +12,8 @@ interface CalendarRightSideProps {
   selectedEvent: Event | null;
   calendars: Calendar[];
   events: Event[];
+  tempEvent: Event | null; // 추가
+  onUpdateTempEvent: (updates: Partial<Event>) => void; // 추가
   onSaveEvent: (eventData: CreateUpdateEventRequest & { id?: string }) => void;
   onDeleteEvent: (eventId: string) => void;
   onClose: () => void;
@@ -23,6 +25,8 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   selectedEvent,
   calendars,
   events,
+  tempEvent,
+  onUpdateTempEvent,
   onSaveEvent,
   onDeleteEvent,
   onClose
@@ -44,11 +48,15 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   // rightside 캘린더 목록
   const [showCalendarDropdown, setShowCalendarDropdown] = useState(false);
 
+  // 태그 드롭다운 상태 추가
+  const [showTagDropdown, setShowTagDropdown] = useState(false);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
       if (!target.closest(`.${styles.customSelect}`)) {
         setShowCalendarDropdown(false);
+        setShowTagDropdown(false); // 태그 드롭다운도 닫기
       }
     };
   
@@ -60,8 +68,19 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
 
   // 선택된 캘린더의 태그들 가져오기
   const getSelectedCalendarTags = () => {
+    //const calendar = calendars.find(cal => cal.id === selectedCalendarId);
+    //return calendar?.tags || [];
+
     const calendar = calendars.find(cal => cal.id === selectedCalendarId);
-    return calendar?.tags || [];
+
+    // 실제 캘린더에 태그가 있으면 사용, 없으면 임시 데이터 사용
+    if (calendar?.tags && calendar.tags.length > 0) {
+      console.log('tag있을때만')
+      return calendar.tags;
+    }
+    
+    // 테스트용: 선택된 캘린더 ID에 따라 다른 태그 반환
+    return MOCK_TAGS.filter(tag => tag.calendar === selectedCalendarId);
   };
 
   // 선택된 태그 정보 가져오기
@@ -112,13 +131,79 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
       setEndTime('10:00');
       setIsAllDay(true);
       setSelectedCalendarId(calendars[0]?.id || ''); // 첫 번째 캘린더로 설정
-      setSelectedTagId(null);
+
+      // 첫 번째 태그를 기본값으로 설정
+      const firstCalendar = calendars[0];
+      const firstTag = firstCalendar?.tags?.[0] || MOCK_TAGS.find(tag => tag.calendar === calendars[0]?.id);
+      setSelectedTagId(firstTag?.id || null);
       setLocation('');
       setShowMemo(false);
       setDescription('');
     }
-  }, [selectedEvent, selectedDate, calendars]);
-    
+
+  }, [selectedEvent, selectedDate, calendars, tempEvent]);
+
+  useEffect(() => {
+    // 캘린더가 변경되었을 때 선택된 태그가 해당 캘린더의 태그가 아니면 초기화
+    if (selectedCalendarId) {
+      const availableTags = getSelectedCalendarTags();
+      if (selectedTagId && !availableTags.some(tag => tag.id === selectedTagId)) {
+        setSelectedTagId(availableTags[0]?.id || null);
+      }
+      else if (!selectedTagId && availableTags.length > 0) {
+        setSelectedTagId(availableTags[0].id);
+      }
+    }
+  }, [selectedCalendarId]);
+
+  // 임시 태그 데이터
+  const MOCK_TAGS: CalendarTag[] = [
+    {
+      id: '1',
+      name: '회의',
+      color: '#FF6B6B',
+      order: 0,
+      calendar: '1',
+      created_at: '2024-01-01',
+      updated_at: '2024-01-01'
+    },
+    {
+      id: '2',
+      name: '개인 일정',
+      color: '#4ECDC4',
+      order: 1,
+      calendar: '1',
+      created_at: '2024-01-01',
+      updated_at: '2024-01-01'
+    },
+    {
+      id: '3',
+      name: '업무',
+      color: '#45B7D1',
+      order: 2,
+      calendar: '1',
+      created_at: '2024-01-01',
+      updated_at: '2024-01-01'
+    },
+    {
+      id: '4',
+      name: '휴가',
+      color: '#96CEB4',
+      order: 0,
+      calendar: '2',
+      created_at: '2024-01-01',
+      updated_at: '2024-01-01'
+    },
+    {
+      id: '5',
+      name: '약속',
+      color: '#FECA57',
+      order: 1,
+      calendar: '2',
+      created_at: '2024-01-01',
+      updated_at: '2024-01-01'
+    }
+  ];  
 
   const handleSave = () => {
     // 날짜와 시간을 조합하여 ISO 문자열 생성
@@ -161,6 +246,25 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   const isFormValid = eventTitle.trim() && selectedCalendarId && startDate && endDate;
   const availableTags = getSelectedCalendarTags();
 
+  const handleTagSelect = (tag: CalendarTag) => {
+    setSelectedTagId(tag.id);
+    setShowTagDropdown(false);
+    
+    // 임시 이벤트가 있으면 태그 정보도 업데이트
+    if (tempEvent) {
+      onUpdateTempEvent({ 
+        tag: {
+          id: tag.id,
+          name: tag.name,
+          color: tag.color,
+          order: tag.order,
+          calendar: tag.calendar,
+          created_at: tag.created_at,
+          updated_at: tag.updated_at
+        }
+      });
+    }
+  };
 
   return (
     <div className={styles.sidebar}>
@@ -258,16 +362,15 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
               </div>
             </div>
           </div>
-
-
           
           <div className={styles.sidebarOptionContent}>
-            {/* 캘린더 선택 (캘린더가 2개 이상일 때만 표시) */}
-            {calendars.length > 1 && (
-              <div className={styles.formGroup}>
+            <div className={styles.formGroup}>
+              {/* 캘린더 선택 (캘린더가 2개 이상일 때만 표시) */}
+              {calendars.length > 1 && (
                 <div className={styles.optionDiv}>
-                  <label className={styles.smallLabel}>캘린더</label>
-
+                  <div className={styles.customLabel}>
+                    <label className={styles.smallLabel}>달력</label>
+                  </div>
                   <div className={styles.customSelect}>
                     <input
                       type="text"
@@ -295,6 +398,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                             className={`${styles.dropdownItem} ${selectedCalendarId === calendar.id ? styles.selected : ''}`}
                             onClick={() => {
                               setSelectedCalendarId(calendar.id);
+                              setSelectedTagId(null); // 캘린더 변경 시 태그 초기화
                               setShowCalendarDropdown(false);
                             }}
                           >
@@ -318,102 +422,120 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                         ))}
                       </div>
                     )}
-                  </div>  
+                  </div>
+                </div>
+              )}
 
-                  {/* <select
-                    value={selectedCalendarId}
-                    onChange={(e) => setSelectedCalendarId(e.target.value)}
-                    className={styles.select}
+              {/* 태그 선택 */}
+              <div className={styles.optionDiv}>
+                <div className={styles.customLabel}>
+                  <label className={styles.smallLabel}
+                  style={{
+                    color: selectedTagId 
+                      ? availableTags.find(tag => tag.id === selectedTagId)?.color || '#718096'
+                      : '#718096'
+                  }}>태그</label>
+                </div>
+                <div className={styles.customSelect}>
+                  <input
+                    type="text"
+                    value={selectedTagId ? availableTags.find(tag => tag.id === selectedTagId)?.name || '태그 없음' : '태그 없음'}
+                    onClick={() => setShowTagDropdown(!showTagDropdown)}
+                    readOnly
+                    placeholder="태그를 선택하세요"
+                    className={styles.selectInput}
+                  />
+                  <div 
+                    className={styles.dropdownArrow}
+                    onClick={() => setShowTagDropdown(!showTagDropdown)}
                   >
-                    {calendars.map((calendar) => (
-                      <option key={calendar.id} value={calendar.id}>
-                        {calendar.name}
-                      </option>
-                    ))}
-                  </select> */}
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                      <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  
+                  {/* 태그 드롭다운 목록 */}
+                  {showTagDropdown && (
+                    <div className={styles.dropdownList}>
+                      {/* 사용 가능한 태그들 */}
+                      {availableTags.map((tag) => (
+                        <div
+                          key={tag.id}
+                          className={`${styles.dropdownItem} ${selectedTagId === tag.id ? styles.selected : ''}`}
+                          onClick={() => {
+                            setSelectedTagId(tag.id);
+                            setShowTagDropdown(false);
+                            handleTagSelect(tag);
+                          }}
+                        >
+                          <div className={styles.tagInfo}>
+                            <div 
+                              className={styles.tagColorDot}
+                              style={{ backgroundColor: tag.color }}
+                            />
+                            <span className={styles.tagName}>{tag.name}</span>
+                          </div>
+                          <div className={styles.radioButton}>
+                            {selectedTagId === tag.id && (
+                              <div className={styles.radioSelected} />
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
 
-            {/* 태그 선택 */}
-            <div className={styles.formGroup}>
-              <label className={styles.label}>태그</label>
-              <div className={styles.tagList}>
-                {availableTags.map((tag) => (
-                  <div
-                    key={tag.id}
-                    className={`${styles.tagItem} ${selectedTagId === tag.id ? styles.selected : ''}`}
-                    onClick={() => setSelectedTagId(tag.id)}
-                  >
-                    <div className={styles.tagContent}>
-                      <div 
-                        className={styles.tagColor}
-                        style={{ backgroundColor: tag.color }}
-                      />
-                      <span className={styles.tagName}>{tag.name}</span>
-                    </div>
-                    <div className={styles.radioButton}>
-                      {selectedTagId === tag.id && <div className={styles.radioSelected} />}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+              {/* 메모 체크박스 */}
+              <div className={styles.formGroup}>
+                <div className={styles.checkboxGroup}>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={showMemo}
+                      onChange={(e) => setShowMemo(e.target.checked)}
+                      className={styles.checkbox}
+                    />
+                    메모 추가
+                  </label>
+                </div>
 
-            {/* 메모 체크박스 */}
-            <div className={styles.formGroup}>
-              <div className={styles.checkboxGroup}>
-                <label className={styles.checkboxLabel}>
-                  <input
-                    type="checkbox"
-                    checked={showMemo}
-                    onChange={(e) => setShowMemo(e.target.checked)}
-                    className={styles.checkbox}
+                {showMemo && (
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="메모를 입력하세요"
+                    className={styles.textarea}
+                    rows={4}
                   />
-                  메모 추가
-                </label>
+                )}
               </div>
 
-              {showMemo && (
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="메모를 입력하세요"
-                  className={styles.textarea}
-                  rows={4}
-                />
-              )}
-            </div>
-
-            {/* 버튼들 */}
-            <div className={styles.buttonGroup}>
-              
-              {/* 닫기 */}
-              <button className={styles.closeButton} type="button" onClick={onClose}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </button>
-
-
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={!isFormValid}
-                className={`${styles.saveButton} ${!isFormValid ? styles.disabled : ''}`}
-              >
-                {selectedEvent ? '수정' : '저장'}
-              </button>
-
-              {selectedEvent && selectedEvent.can_delete && (
+              {/* 버튼들 */}
+              <div className={styles.buttonGroup}>
+                {/* 닫기 */}
+                <button className={styles.closeButton} type="button" onClick={onClose}>취소
+                </button>
                 <button
                   type="button"
-                  onClick={handleDelete}
-                  className={styles.deleteButton}
+                  onClick={handleSave}
+                  disabled={!isFormValid}
+                  className={`${styles.saveButton} ${!isFormValid ? styles.disabled : ''}`}
                 >
-                  삭제
+                  {selectedEvent ? '수정' : '저장'}
                 </button>
-              )}
+
+                {selectedEvent && selectedEvent.can_delete && (
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    className={styles.deleteButton}
+                  >
+                    삭제
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
