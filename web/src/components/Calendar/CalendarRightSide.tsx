@@ -75,7 +75,6 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
 
     // 실제 캘린더에 태그가 있으면 사용, 없으면 임시 데이터 사용
     if (calendar?.tags && calendar.tags.length > 0) {
-      console.log('tag있을때만')
       return calendar.tags;
     }
     
@@ -99,6 +98,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     : [];
 
   // 폼 초기화
+  /*
   useEffect(() => {
     if (selectedEvent) {
       setEventTitle(selectedEvent.title);
@@ -140,8 +140,49 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
       setShowMemo(false);
       setDescription('');
     }
-
   }, [selectedEvent, selectedDate, calendars, tempEvent]);
+  */
+
+  // 폼 초기화 useEffect 수정
+  useEffect(() => {
+    // selectedEvent가 있으면 우선, 없으면 tempEvent 사용
+    const eventToEdit = selectedEvent || tempEvent;
+    
+    if (eventToEdit) {
+      setEventTitle(eventToEdit.title);
+      
+      const startDateTime = new Date(eventToEdit.start_date);
+      const endDateTime = new Date(eventToEdit.end_date);
+
+      setStartDate(format(startDateTime, 'yyyy-MM-dd'));
+      setEndDate(format(endDateTime, 'yyyy-MM-dd'));
+      setIsAllDay(eventToEdit.all_day);
+      setStartTime(eventToEdit.all_day ? '09:00' : format(startDateTime, 'HH:mm'));
+      setEndTime(eventToEdit.all_day ? '18:00' : format(endDateTime, 'HH:mm'));
+      setSelectedCalendarId(eventToEdit.calendar);
+      setSelectedTagId(eventToEdit.tag?.id || null);
+      setLocation(eventToEdit.location || '');
+      setShowMemo(!!eventToEdit.description);
+      setDescription(eventToEdit.description || '');
+    } else if (selectedDate) {
+      // 새 이벤트 생성 시 초기화
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      setEventTitle('');
+      setStartDate(dateStr);
+      setStartTime('09:00');
+      setEndDate(dateStr);
+      setEndTime('18:00');
+      setIsAllDay(true);
+      setSelectedCalendarId(calendars[0]?.id || '');
+
+      const firstCalendar = calendars[0];
+      const firstTag = firstCalendar?.tags?.[0] || MOCK_TAGS.find(tag => tag.calendar === calendars[0]?.id);
+      setSelectedTagId(firstTag?.id || null);
+      setLocation('');
+      setShowMemo(false);
+      setDescription('');
+    }
+  }, [selectedEvent, tempEvent, selectedDate, calendars]);
 
   useEffect(() => {
     // 캘린더가 변경되었을 때 선택된 태그가 해당 캘린더의 태그가 아니면 초기화
@@ -266,6 +307,78 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     }
   };
 
+  const handleTitleChange = (newTitle: string) => {
+    setEventTitle(newTitle);
+    
+    // 임시 이벤트가 있으면 제목도 실시간 업데이트
+    if (selectedEvent) {
+      // 실제 이벤트 편집 모드에서는 tempEvent 업데이트 안함
+      return;
+    } else if (tempEvent) {
+      onUpdateTempEvent({ title: newTitle });
+    }
+  };
+
+  const handleStartDateChange = (newDate: string) => {
+    setStartDate(newDate);
+    
+    // selectedEvent가 있으면 tempEvent 업데이트 안함
+    if (!selectedEvent && tempEvent) {
+      const newDateTime = isAllDay 
+        ? `${newDate}T00:00:00Z`
+        : `${newDate}T${startTime}:00Z`;
+      onUpdateTempEvent({ start_date: newDateTime });
+    }
+  };
+
+  const handleEndDateChange = (newDate: string) => {
+    setEndDate(newDate);
+    
+    if (!selectedEvent && tempEvent) {
+      const newDateTime = isAllDay 
+        ? `${newDate}T23:59:59Z`
+        : `${newDate}T${endTime}:00Z`;
+      onUpdateTempEvent({ end_date: newDateTime });
+    }
+  };
+
+  const handleStartTimeChange = (newTime: string) => {
+    setStartTime(newTime);
+    
+    if (!selectedEvent && tempEvent && !isAllDay) {
+      const newDateTime = `${startDate}T${newTime}:00Z`;
+      onUpdateTempEvent({ start_date: newDateTime });
+    }
+  };
+  
+  const handleEndTimeChange = (newTime: string) => {
+    setEndTime(newTime);
+    
+    if (!selectedEvent && tempEvent && !isAllDay) {
+      const newDateTime = `${endDate}T${newTime}:00Z`;
+      onUpdateTempEvent({ end_date: newDateTime });
+    }
+  };
+
+  const handleAllDayChange = (checked: boolean) => {
+    setIsAllDay(checked);
+    
+    if (!selectedEvent && tempEvent) {
+      const startDateTime = checked 
+        ? `${startDate}T00:00:00Z`
+        : `${startDate}T${startTime}:00Z`;
+      const endDateTime = checked 
+        ? `${endDate}T23:59:59Z`
+        : `${endDate}T${endTime}:00Z`;
+      
+      onUpdateTempEvent({ 
+        all_day: checked,
+        start_date: startDateTime,
+        end_date: endDateTime
+      });
+    }
+  };
+
   return (
     <div className={styles.sidebar}>
       <form className={styles.eventForm}>
@@ -274,7 +387,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
           <input
             type="text"
             value={eventTitle}
-            onChange={(e) => setEventTitle(e.target.value)}
+            onChange={(e) => handleTitleChange(e.target.value)}
             onBlur={() => setIsEditingTitle(false)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === 'Escape') {
@@ -291,14 +404,14 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
             onClick={() => setIsEditingTitle(true)}
             title="클릭해서 제목 수정"
           >
-            {eventTitle || (selectedEvent ? selectedEvent.title : 'New Event')}
+            {/* {eventTitle || (selectedEvent ? selectedEvent.title : 'Title')} */}
+            {eventTitle || 'Title'}
           </h2>
         )}
         </div>
 
         <div className={styles.sidebarContent}>
           {/* 날짜 및 시간 */}
-          
           <div className={styles.sidebarDateContent}>
             <div className={styles.formGroup}>
               <div className={styles.dateTimeGroup}>
@@ -439,7 +552,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                 <div className={styles.customSelect}>
                   <input
                     type="text"
-                    value={selectedTagId ? availableTags.find(tag => tag.id === selectedTagId)?.name || '태그 없음' : '태그 없음'}
+                    value={selectedTagId ? availableTags.find(tag => tag.id === selectedTagId)?.name || availableTags[0]?.name : '태그 없음'}
                     onClick={() => setShowTagDropdown(!showTagDropdown)}
                     readOnly
                     placeholder="태그를 선택하세요"
@@ -463,8 +576,8 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                           key={tag.id}
                           className={`${styles.dropdownItem} ${selectedTagId === tag.id ? styles.selected : ''}`}
                           onClick={() => {
-                            setSelectedTagId(tag.id);
-                            setShowTagDropdown(false);
+                            //setSelectedTagId(tag.id);
+                            //setShowTagDropdown(false);
                             handleTagSelect(tag);
                           }}
                         >

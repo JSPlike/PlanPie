@@ -14,7 +14,6 @@ interface CalendarHeaderProps {
   onDateChange: (date: Date) => void;
   onViewChange: (view: 'month' | 'week' | 'day') => void;
   onToday: () => void;
-  onAddEvent: () => void;
 }
 
 const CalendarHeader: React.FC<CalendarHeaderProps> = ({
@@ -27,7 +26,6 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   onDateChange,
   onViewChange,
   onToday,
-  onAddEvent
 }) => {
   const handleLeftToggle = () => {
     console.log('Left toggle clicked, current state:', isLeftSideOpen);
@@ -94,7 +92,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
         </button>
 
         {/* 로고/타이틀 */}
-        <h1 className={styles.logo}>📅 Calendar</h1>
+        <h1 className={styles.logo}>📅 Plan Pie</h1>
 
         {/* 날짜 네비게이션 */}
         <div className={styles.dateNavigation}>
@@ -146,22 +144,11 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
         </div>
 
         {/* 새 일정 추가 버튼 */}
-        <button className={styles.addEventButton} onClick={onAddEvent}>
+        <button className={styles.addEventButton} onClick={onToggleRightSide}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           </svg>
           <span>새 일정</span>
-        </button>
-
-        {/* 오른쪽 사이드바 토글 */}
-        <button 
-          className={`${styles.sidebarToggle} ${isRightSideOpen ? styles.active : ''}`}
-          onClick={onToggleRightSide}
-          title="일정 상세"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L2 7V17C2 17 12 22 12 22C12 22 22 17 22 17V7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
         </button>
       </div>
     </header>

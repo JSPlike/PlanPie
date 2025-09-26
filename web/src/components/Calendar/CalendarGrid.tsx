@@ -362,7 +362,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                 {dayEventBars.map((bar, barIndex) => {
                   const isTemp = tempEvent && bar.event.id === tempEvent.id;
                   let eventColor = getEventColor(bar.event);
-                  console.log('eventColor : ', eventColor);
                   return (
                     <div
                       key={`${bar.event.id}-${barIndex}`}
@@ -382,7 +381,8 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                       }}
                     >
                       <span className={styles.eventTitle}>
-                        {isTemp ? 'New Event' : bar.event.title}
+                        {isTemp ? tempEvent?.title || 'New Event' : bar.event.title}
+                        {/* {isTemp ? 'New Event' : bar.event.title} */}
                       </span>
                     </div>
                   );

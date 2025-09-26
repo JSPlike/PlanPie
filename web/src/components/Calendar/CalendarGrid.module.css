@@ -1,5 +1,5 @@
-/* src/components/CalendarGrid/CalendarGrid.module.css */
-  .calendarGrid {
+/* src/components/CalendarGrid/CalendarGrid.module.css */  
+.calendarGrid {
     background: white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     overflow: hidden;
@@ -105,7 +105,6 @@
     border-right: 1px solid #f5f5f5;
     border-bottom: 1px solid #f5f5f5;
     min-height: 100px;
-    cursor: pointer;
     transition: background 0.2s;
     position: relative;
     overflow: hidden;
@@ -144,6 +143,7 @@
     margin-top: 3px;
     margin-bottom: 8px;
     color: #333;
+    user-select: none; /* 텍스트 선택 방지 */
   }
   
   .dayCell.sunday .dayNumber {
@@ -193,6 +193,7 @@
     font-size: 12px;
     color: white;
     font-weight: 600;
+    user-select: none; /* 텍스트 선택 방지 */
   }
 
   .eventItem {

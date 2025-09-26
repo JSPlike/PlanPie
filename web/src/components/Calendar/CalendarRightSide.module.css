@@ -40,12 +40,13 @@
     height: 40px; /* 고정 높이 */
     line-height: 40px; /* 세로 중앙 정렬 */
     border-radius: 8px;
+    user-select: none;
   }
   
   .headerTitle {
     cursor: pointer;
     transition: all 0.2s ease;
-    padding: 0 12px; /* h2만 패딩 */
+    color: #777;
   }
   
   .headerTitle:hover {
@@ -53,8 +54,8 @@
   }
   
   .headerTitleEdit {
-    padding: 0 12px; /* input도 동일한 패딩 */
     background: rgba(255, 255, 255, 0.1);
+    color: #777;
   }
 
   /* 콘텐츠 영역 */
@@ -120,10 +121,8 @@
     margin-left: 8px;
   }
 
-  .input,
   .dateInput,
   .timeInput,
-  .select,
   .textarea {
     padding: 0px 16px;
     border: 2px solid #e2e8f0;
@@ -172,6 +171,7 @@
     letter-spacing: 0.5px;
     flex-shrink: 0;
     font-weight: 600;
+    user-select: none;
   }
 
   .dateTimeInputs {
@@ -658,6 +658,7 @@
   }
 
   /* 반응형 */
+  /*
   @media (max-width: 768px) {
     .eventForm {
       padding: 20px;
@@ -683,4 +684,4 @@
       align-self: flex-end;
     }
   }
-
+  */

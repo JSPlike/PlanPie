@@ -8,7 +8,7 @@ import CalendarGrid from '../../components/Calendar/CalendarGrid';
 import CalendarRightSide from '../../components/Calendar/CalendarRightSide';
 import EventModal from '../../components/Calendar/EventModal';
 import { calendarAPI } from '../../services/calendarApi'; // 기존 API 사용
-import { Calendar, CalendarWithVisibility, CreateUpdateEventRequest, Event } from '../../types/calendar.types';
+import { Calendar, CalendarWithVisibility, CreateUpdateEventRequest, CalendarTag, Event } from '../../types/calendar.types';
 import { User } from '../../types/auth.types';
 
 const CalendarView: React.FC = () => {
@@ -93,6 +93,55 @@ const CalendarView: React.FC = () => {
       },
     ]);
 
+    // 임시 태그 데이터를 CalendarView로 이동
+    const MOCK_TAGS: CalendarTag[] = [
+      {
+        id: '1',
+        name: '회의',
+        color: '#FF6B6B',
+        order: 0,
+        calendar: '1',
+        created_at: '2024-01-01',
+        updated_at: '2024-01-01'
+      },
+      {
+        id: '2',
+        name: '개인 일정',
+        color: '#4ECDC4',
+        order: 1,
+        calendar: '1',
+        created_at: '2024-01-01',
+        updated_at: '2024-01-01'
+      },
+      {
+        id: '3',
+        name: '업무',
+        color: '#45B7D1',
+        order: 2,
+        calendar: '1',
+        created_at: '2024-01-01',
+        updated_at: '2024-01-01'
+      },
+      {
+        id: '4',
+        name: '휴가',
+        color: '#96CEB4',
+        order: 0,
+        calendar: '2',
+        created_at: '2024-01-01',
+        updated_at: '2024-01-01'
+      },
+      {
+        id: '5',
+        name: '약속',
+        color: '#FECA57',
+        order: 1,
+        calendar: '2',
+        created_at: '2024-01-01',
+        updated_at: '2024-01-01'
+      }
+    ];
+
     const [events, setEvents] = useState<Event[]>([
     {
         id: 'e1',
@@ -153,21 +202,37 @@ const CalendarView: React.FC = () => {
   const [isRightSideOpen, setIsRightSideOpen] = useState(false);
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
 
-  const handleCreateNewEvent = (startDate: Date, endDate?: Date) => {
+  const getCalendarTags = (calendarId: string) => {
+    const calendar = calendars.find(cal => cal.id === calendarId);
+    
+    // 실제 캘린더에 태그가 있으면 사용, 없으면 MOCK_TAGS 사용
+    if (calendar?.tags && calendar.tags.length > 0) {
+      return calendar.tags;
+    }
+    
+    return MOCK_TAGS.filter(tag => tag.calendar === calendarId);
+  };
+
+  const handleCreateNewEvent = (startDate: Date, endDate?: Date, preserveData?: {
+    title?: string;
+    tag?: any;
+    // 이동할 데이터를 추가할 수 있다.
+  }) => {
     const selectedCalendar = calendars.find(cal => cal.id === selectedCalendarId);
-    const firstTag = selectedCalendar?.tags?.[0];
+    const calendarTags = getCalendarTags(selectedCalendarId);
+    const firstTag = calendarTags[0]; // 첫 번째 태그 선택
 
     const temp: Event = {
       id: 'temp-' + Date.now(), // 임시 ID
       calendar: selectedCalendarId, // 현재 선택된 캘린더
-      title: 'New Event',
+      title: preserveData?.title || '',
       description: '',
       location: '',
       start_date: startDate.toISOString(),
       end_date: endDate ? endDate.toISOString() : startDate.toISOString(),
       all_day: true, // 기본값으로 종일 이벤트
       color: '', // 캘린더 색상 사용
-      tag: firstTag ? { // 기본 태그 설정
+      tag: preserveData?.tag || { // 기본 태그 설정
         id: firstTag.id,
         name: firstTag.name,
         color: firstTag.color,
@@ -175,7 +240,7 @@ const CalendarView: React.FC = () => {
         calendar: firstTag.calendar,
         created_at: firstTag.created_at,
         updated_at: firstTag.updated_at
-      } : undefined,
+      },
       created_by: dummyUser,
       can_edit: true,
       can_delete: true,
@@ -214,12 +279,18 @@ const CalendarView: React.FC = () => {
       // 오른쪽 패널이 이미 열려있으면 → 바로 임시 이벤트 생성
       console.log('오른쪽 패널 열린 상태에서 클릭');
       setSelectedDate(date);
+
+      const currentTitle = tempEvent?.title || '';
+      const currentTag = tempEvent?.tag || '';
       if (tempEvent) {
         setTempEvent(null);
       }
       setTimeout(() => {
-        handleCreateNewEvent(date);
-      }, 100);
+        handleCreateNewEvent(date, undefined, {
+          title: currentTitle,
+          tag: currentTag,
+        });
+      }, 0);
     } else {
       // 첫 번째 클릭 → 선택만
       console.log('첫 번째 클릭 - 선택만');
@@ -229,18 +300,6 @@ const CalendarView: React.FC = () => {
         setTempEvent(null);
       }
     }
-    /*
-    setSelectedDate(date);
-
-    if (tempEvent) {
-      setTempEvent(null);
-    }
-    console.log('임시데이터')
-    console.log(date);
-    setTimeout(() => {
-      handleCreateNewEvent(date);
-    }, 100);
-    */
   };
 
   // 날짜 클릭 시 범위 설정
@@ -279,7 +338,7 @@ const CalendarView: React.FC = () => {
     
     setTimeout(() => {
       handleCreateNewEvent(date);
-    }, 100);
+    }, 0);
     
     setIsRightSideOpen(true);
   
@@ -423,14 +482,14 @@ const CalendarView: React.FC = () => {
         isLeftSideOpen={isLeftSideOpen}
         isRightSideOpen={isRightSideOpen}
         onToggleLeftSide={() => setIsLeftSideOpen(!isLeftSideOpen)}
-        onToggleRightSide={() => setIsRightSideOpen(!isRightSideOpen)}
-        onDateChange={setCurrentDate}
-        onViewChange={setView}
-        onToday={() => setCurrentDate(new Date())}
-        onAddEvent={() => {
+        onToggleRightSide={() => {
+          setIsRightSideOpen(true);
           setSelectedEvent(null);
           setIsEventModalOpen(true);
         }}
+        onDateChange={setCurrentDate}
+        onViewChange={setView}
+        onToday={() => setCurrentDate(new Date())}
       />
       <div className={styles.calendarContainer}>
         {/* 왼쪽 사이드바 */}
