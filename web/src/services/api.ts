@@ -33,6 +33,7 @@ api.interceptors.request.use(
 );
 
 // Response 인터셉터 - 토큰 갱신
+/* TODO: 개발중 임시 인터셉터 주석처리
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -67,6 +68,30 @@ api.interceptors.response.use(
       }
     }
 
+    return Promise.reject(error);
+  }
+);
+*/
+
+// 개발용 임시 인터셉터 (필요시)
+api.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    console.log('API Request:', config.method?.toUpperCase(), config.url);
+    console.log('Request data:', config.data);
+    return config;
+  },
+  (error: AxiosError) => {
+    return Promise.reject(error);
+  }
+);
+
+api.interceptors.response.use(
+  (response) => {
+    console.log('API Response:', response.status, response.config.url);
+    return response;
+  },
+  (error: AxiosError) => {
+    console.error('API Error:', error.response?.status, error.config?.url);
     return Promise.reject(error);
   }
 );

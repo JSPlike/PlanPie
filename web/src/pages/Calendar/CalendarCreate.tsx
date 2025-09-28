@@ -1,13 +1,15 @@
 // CalendarCreate.tsx
 import React, { useState } from 'react';
 import CreateCalendarModal from './CalendarCreateModal';
+import { useNavigate } from 'react-router-dom';
 import './CalendarCreate.css';
 
 interface CalendarCreateProps {
-  onCalendarCreated?: () => void;
+  onCalendarCreated?: (calendarId: string) => void;
 }
 
 const CalendarCreate: React.FC<CalendarCreateProps> = ({ onCalendarCreated }) => {
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [calendarType, setCalendarType] = useState<'personal' | 'shared'>('personal');
 
@@ -20,10 +22,19 @@ const CalendarCreate: React.FC<CalendarCreateProps> = ({ onCalendarCreated }) =>
     setShowModal(false);
   };
 
-  const handleCalendarCreated = () => {
+  const handleCalendarCreated = (calendarId: string) => {
+    console.log('=== Calendar Created Successfully ===');
+    console.log('Calendar ID:', calendarId);
     setShowModal(false);
     if (onCalendarCreated) {
-      onCalendarCreated();
+      console.log('부모 콜백 호출:', onCalendarCreated);
+      onCalendarCreated(calendarId);
+
+      navigate('/login');
+    } else {
+      console.log('부모 콜백이 없음 - 기본 처리');
+
+      navigate('/', { replace: true });
     }
   };
 

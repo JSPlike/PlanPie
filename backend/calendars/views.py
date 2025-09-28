@@ -43,6 +43,12 @@ class CalendarViewSet(viewsets.ModelViewSet):
             'has_calendars': calendars.exists(),
             'owned_count': owned_count,
             'member_count': member_count,
+            'should_redirect_to_create': not calendars.exists(),  # 생성 페이지 리다이렉트 여부
+            'user_info': {
+                'id': request.user.id,
+                'email': request.user.email,
+                'name': getattr(request.user, 'get_full_name', lambda: '')() or request.user.email
+            }
         })
     
     @action(detail=True, methods=['get'])

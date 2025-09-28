@@ -2,9 +2,8 @@
 import React, { useState, useRef } from 'react';
 import { CreateCalendarRequest } from '../../types/calendar.types';
 import { calendarAPI } from '../../services/calendarApi';
-//import './CreateCalendarModal.css';
 
-interface CreateCalendarModalProps {
+interface CalendarCreateModalProps {
   calendarType: 'personal' | 'shared';
   onClose: () => void;
   onSuccess: (calendarId: string) => void;
@@ -15,7 +14,7 @@ const PRESET_COLORS = [
   '#9B51E0', '#F2994A', '#56CCF2', '#EB5757', '#BDBDBD',
 ];
 
-const CalendarCreateModal: React.FC<CreateCalendarModalProps> = ({
+const CalendarCreateModal: React.FC<CalendarCreateModalProps> = ({
   calendarType,
   onClose,
   onSuccess,
@@ -94,10 +93,18 @@ const CalendarCreateModal: React.FC<CreateCalendarModalProps> = ({
     if (!validateForm()) {
       return;
     }
-
+    console.log('캘린더 저장 요청......')
     setLoading(true);
+    setErrors({});
+
     try {
+
+      console.log('캘린더 저장 요청 전.....')
+      console.log(formData)
+
       const response = await calendarAPI.createCalendar(formData);
+      console.log('응답 결과 확인.....')
+      console.log(response.data.id);
       onSuccess(response.data.id);
     } catch (error: any) {
       console.error('캘린더 생성 실패:', error);
