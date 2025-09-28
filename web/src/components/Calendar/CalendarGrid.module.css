@@ -121,8 +121,14 @@
   .dayCell.otherMonth {
     background: white;
   }
-  
 
+  .dayCell.sunday .dayNumber {
+    color: #ff4444;
+  }
+  
+  .dayCell.saturday .dayNumber {
+    color: #4444ff;
+  }
   
   .dayCell.today .dayNumber {
     color: white;
@@ -146,13 +152,7 @@
     user-select: none; /* 텍스트 선택 방지 */
   }
   
-  .dayCell.sunday .dayNumber {
-    color: #ff4444;
-  }
-  
-  .dayCell.saturday .dayNumber {
-    color: #4444ff;
-  }
+
   
   .dayEvents {
     display: flex;
