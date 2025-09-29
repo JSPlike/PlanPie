@@ -25,7 +25,6 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
   onSelectCalendar,
   onAddEvent,
   isOpen
-
 }) => {
   const navigate = useNavigate();
   const [isAddingCalendar, setIsAddingCalendar] = useState(false);

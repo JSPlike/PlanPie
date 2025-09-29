@@ -30,53 +30,53 @@ const CalendarView: React.FC = () => {
   const [calendars, setCalendars] = useState<Calendar[]>([]);
 
     // 임시 태그 데이터를 CalendarView로 이동
-    const MOCK_TAGS: CalendarTag[] = [
-      {
-        id: '1',
-        name: '회의',
-        color: '#FF6B6B',
-        order: 0,
-        calendar: '1',
-        created_at: '2024-01-01',
-        updated_at: '2024-01-01'
-      },
-      {
-        id: '2',
-        name: '개인 일정',
-        color: '#4ECDC4',
-        order: 1,
-        calendar: '1',
-        created_at: '2024-01-01',
-        updated_at: '2024-01-01'
-      },
-      {
-        id: '3',
-        name: '업무',
-        color: '#45B7D1',
-        order: 2,
-        calendar: '1',
-        created_at: '2024-01-01',
-        updated_at: '2024-01-01'
-      },
-      {
-        id: '4',
-        name: '휴가',
-        color: '#96CEB4',
-        order: 0,
-        calendar: '2',
-        created_at: '2024-01-01',
-        updated_at: '2024-01-01'
-      },
-      {
-        id: '5',
-        name: '약속',
-        color: '#FECA57',
-        order: 1,
-        calendar: '2',
-        created_at: '2024-01-01',
-        updated_at: '2024-01-01'
-      }
-    ];
+    // const MOCK_TAGS: CalendarTag[] = [
+    //   {
+    //     id: '1',
+    //     name: '회의',
+    //     color: '#FF6B6B',
+    //     order: 0,
+    //     calendar: '1',
+    //     created_at: '2024-01-01',
+    //     updated_at: '2024-01-01'
+    //   },
+    //   {
+    //     id: '2',
+    //     name: '개인 일정',
+    //     color: '#4ECDC4',
+    //     order: 1,
+    //     calendar: '1',
+    //     created_at: '2024-01-01',
+    //     updated_at: '2024-01-01'
+    //   },
+    //   {
+    //     id: '3',
+    //     name: '업무',
+    //     color: '#45B7D1',
+    //     order: 2,
+    //     calendar: '1',
+    //     created_at: '2024-01-01',
+    //     updated_at: '2024-01-01'
+    //   },
+    //   {
+    //     id: '4',
+    //     name: '휴가',
+    //     color: '#96CEB4',
+    //     order: 0,
+    //     calendar: '2',
+    //     created_at: '2024-01-01',
+    //     updated_at: '2024-01-01'
+    //   },
+    //   {
+    //     id: '5',
+    //     name: '약속',
+    //     color: '#FECA57',
+    //     order: 1,
+    //     calendar: '2',
+    //     created_at: '2024-01-01',
+    //     updated_at: '2024-01-01'
+    //   }
+    // ];
 
     const [events, setEvents] = useState<Event[]>([
     {
@@ -150,8 +150,6 @@ const CalendarView: React.FC = () => {
     if (calendar?.tags && calendar.tags.length > 0) {
       return calendar.tags;
     }
-    
-    return MOCK_TAGS.filter(tag => tag.calendar === calendarId);
   };
 
   const handleCreateNewEvent = (startDate: Date, endDate?: Date, preserveData?: {
@@ -160,7 +158,7 @@ const CalendarView: React.FC = () => {
     // 이동할 데이터를 추가할 수 있다.
   }) => {
     const selectedCalendar = calendars.find(cal => cal.id === selectedCalendarId);
-    const calendarTags = getCalendarTags(selectedCalendarId);
+    const calendarTags = getCalendarTags(selectedCalendarId) || []; // 캘린더 태그 리스틑
     const firstTag = calendarTags[0]; // 첫 번째 태그 선택
 
     const temp: Event = {
