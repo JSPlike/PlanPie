@@ -122,7 +122,7 @@
     transition: width 0.3s ease;
     z-index: 20;
     overflow: hidden;
-    width: 80px; /* 기본 축소 상태 */
+    width: 60px; /* 기본 축소 상태 */
     flex-shrink: 0; /* 축소되지 않도록 */
   }
   

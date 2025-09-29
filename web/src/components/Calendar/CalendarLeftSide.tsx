@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import styles from './CalendarLeftSide.module.css';
 import { Calendar } from '../../types/calendar.types';
+import { useCalendarContext } from '../../contexts/CalendarContext';
 import { useNavigate } from 'react-router-dom';
 interface CalendarSidebarProps {
   calendars: Calendar[];
@@ -26,6 +27,8 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
   onAddEvent,
   isOpen
 }) => {
+  const { calendarVisibility } = useCalendarContext();
+
   const navigate = useNavigate();
   const [isAddingCalendar, setIsAddingCalendar] = useState(false);
   const [newCalendarName, setNewCalendarName] = useState('');
@@ -33,7 +36,8 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
   const [editingCalendarId, setEditingCalendarId] = useState<string | null>(null);
 
   const handleAddCalendar = () => {
-    navigate('/calendars/create');  // react-router 사용 시 예시
+    // 캘린더 생성 페이지로 이동한다
+    navigate('/calendars/create');
   };
 
   const defaultImages = '/images/default-calendar.png';
@@ -43,36 +47,25 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
     return defaultImages;
   };
 
-  const colorOptions = [
-    '#4A90E2', '#50C878', '#FFB347', '#FF6B6B', 
-    '#9B59B6', '#3498DB', '#E74C3C', '#F39C12'
-  ];
-
   if (!isOpen) {
     return (
       <div className={styles.sidebarCollapsed}>
-        {/* 축소 모드 새 일정 버튼 */}
-        {/* <button 
-          className={styles.addEventButtonCollapsed} 
-          onClick={handleAddCalendar}
-          title="새 캘린더 만들기"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        </button> */}
-
-        {/* 축소 모드 캘린더 목록 - 이미지만 표시 */}
         <div className={styles.calendarListCollapsed}>
-          {calendars.map(calendar => (
-            <div
+          {calendars.map(calendar => {
+            const isVisible = calendarVisibility[calendar.id] !== false;
+            const isSelected = selectedCalendarId === calendar.id;
+
+            return (
+              <div
               key={calendar.id}
-              className={`${styles.calendarItemCollapsed} ${selectedCalendarId === calendar.id ? styles.selected : ''}`}
+              className={`${styles.calendarItemCollapsed} 
+                          ${isSelected ? styles.selected : ''} 
+                          ${isVisible ? styles.hidden : ''}`}
               onClick={() => onSelectCalendar(calendar.id)}
               title={calendar.name}
             >
               <div 
-                className={`${styles.calendarImageWrapper} ${calendar.is_active ? styles.visible : styles.hidden}`}
+                className={`${styles.calendarImageWrapper} ${isVisible ? styles.hidden : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   onToggleCalendar(calendar.id);
@@ -88,9 +81,19 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
                     (e.target as HTMLImageElement).src = defaultImages[0];
                   }}
                 />
+                {isVisible && (
+                  <div className={styles.checkOverlay}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                )}
+
+
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     );
@@ -99,63 +102,64 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
   // 확장 모드
   return (
     <div className={styles.sidebar}>
-
-
-      {/* 내 캘린더 섹션 */}
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <h3>내 캘린더</h3>
         </div>
 
-        {/* 캘린더 목록 */}
         <div className={styles.calendarList}>
-          {calendars.map(calendar => (
-            <div 
-              key={calendar.id} 
-              className={`${styles.calendarItem} ${selectedCalendarId === calendar.id ? styles.selected : ''}`}
-              
-              onClick={(e) => {
-                if (onSelectCalendar) {
-                  onSelectCalendar(calendar.id);
-                }
-              }}
-            >
-              <div className={styles.calendarItemLeft}>
-                {/* 이미지와 체크 오버레이 */}
-                <div 
-                  className={`${styles.calendarThumbnail} ${!calendar.is_active ? styles.unchecked : ''}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleCalendar(calendar.id);
-                  }}
-                >
-                  <img 
-                    src={getCalendarImage(calendar)}
-                    alt={calendar.name}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = defaultImages[0];
+          {calendars.map(calendar => {
+            const isVisible = calendarVisibility[calendar.id] !== false;
+            const isSelected = selectedCalendarId === calendar.id;
+
+            return (
+              <div 
+                key={calendar.id} 
+                className={`${styles.calendarItem} 
+                            ${isSelected ? styles.selected : ''} 
+                            ${isVisible ? styles.hidden : ''}
+                `}
+
+                onClick={(e) => {
+                  if (onSelectCalendar) {
+                    onSelectCalendar(calendar.id);
+                  }
+                  onToggleCalendar(calendar.id);
+                }}
+              >
+                <div className={styles.calendarItemLeft}>
+                  <div 
+                    className={` ${styles.calendarThumbnail} ${isVisible ? styles.hidden : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleCalendar(calendar.id);
                     }}
-                  />
-                  {/* 체크 오버레이 */}
-                  {calendar.is_active && (
-                    <div className={styles.checkOverlay}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                {/* 캘린더 이름 */}
-                <div className={styles.calendarInfo}>
-                  <span className={styles.calendarName}>{calendar.name}</span>
+                  >
+                    <img 
+                      src={getCalendarImage(calendar)}
+                      alt={calendar.name}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = defaultImages[0];
+                      }}
+                    />
+                    {isVisible && (
+                      <div className={styles.checkOverlay}>
+                        <svg width="55" height="50" viewBox="0 0 24 24" fill="none">
+                          <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <div className={styles.calendarInfo}>
+                    <span className={styles.calendarName}>{calendar.name}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 
-      {/* 공유 캘린더 섹션 */}
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <h3>공유 캘린더</h3>
@@ -165,7 +169,6 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
         </div>
       </div>
 
-      {/* 새 일정 추가 버튼 */}
       <button className={styles.addCalendarButton} onClick={handleAddCalendar}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
           <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -177,3 +180,48 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
 };
 
 export default CalendarLeftSide;
+
+
+// components/Calendar/CalendarLeftSide.tsx
+/*
+import React from 'react';
+import { useCalendarContext } from '../../contexts/CalendarContext';
+import { Calendar } from '../../types/calendar.types';
+
+interface CalendarLeftSideProps {
+  calendars: Calendar[];
+  onToggleCalendar: (calendarId: string) => void;
+  onAddCalendar: (newCalendar: any) => void;
+  onUpdateCalendar: (calendarId: string, updates: any) => void;
+  onDeleteCalendar: (calendarId: string) => void;
+  selectedCalendarId: string;
+  onSelectCalendar: (calendarId: string) => void;
+  onAddEvent: () => void;
+  isOpen: boolean;
+}
+
+const CalendarLeftSide: React.FC<CalendarLeftSideProps> = ({
+  calendars,
+  onToggleCalendar,
+  // ... 기타 props
+}) => {
+  const { calendarVisibility } = useCalendarContext();
+
+  return (
+    <div className="calendar-left-side">
+      {calendars.map(calendar => (
+        <div key={calendar.id} className="calendar-item">
+          <input
+            type="checkbox"
+            checked={calendarVisibility[calendar.id] !== false} // Context의 visibility 상태 사용
+            onChange={() => onToggleCalendar(calendar.id)}
+          />
+          <span style={{ color: calendar.color }}>{calendar.name}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default CalendarLeftSide;
+*/
