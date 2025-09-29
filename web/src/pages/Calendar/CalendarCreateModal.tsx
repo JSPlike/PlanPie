@@ -29,6 +29,33 @@ const CalendarCreateModal: React.FC<CalendarCreateModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isDraggingRef = useRef<boolean>(false);
+  const isPointerDownRef = useRef<boolean>(false);
+  const movedRef = useRef<boolean>(false);
+  const startPosRef = useRef<{x: number; y: number} | null>(null);
+
+  const handleOverlayMouseDown: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    if (e.currentTarget !== e.target) return;
+    isPointerDownRef.current = true;
+    movedRef.current = false;
+    startPosRef.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handleOverlayMouseMove: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    if (!isPointerDownRef.current || !startPosRef.current) return;
+    const dx = Math.abs(e.clientX - startPosRef.current.x);
+    const dy = Math.abs(e.clientY - startPosRef.current.y);
+    if (dx > 5 || dy > 5) movedRef.current = true;
+  };
+
+  const handleOverlayMouseUp: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    const shouldClose = isPointerDownRef.current && !movedRef.current && !isDraggingRef.current && e.currentTarget === e.target;
+    isPointerDownRef.current = false;
+    startPosRef.current = null;
+    if (shouldClose) {
+      onClose();
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -119,8 +146,20 @@ const CalendarCreateModal: React.FC<CalendarCreateModalProps> = ({
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="create-calendar-modal" onClick={e => e.stopPropagation()}>
+    <div
+      className="modal-overlay"
+      onMouseDown={handleOverlayMouseDown}
+      onMouseMove={handleOverlayMouseMove}
+      onMouseUp={handleOverlayMouseUp}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={() => { isDraggingRef.current = false; }}
+    >
+      <div
+        className="create-calendar-modal"
+        onClick={e => e.stopPropagation()}
+        onDragStart={() => { isDraggingRef.current = true; }}
+        onDragEnd={() => { isDraggingRef.current = false; }}
+      >
         <div className="modal-header">
           <h2>
             {calendarType === 'personal' ? '개인 캘린더' : '공유 캘린더'} 만들기

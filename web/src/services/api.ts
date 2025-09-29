@@ -73,28 +73,28 @@ api.interceptors.response.use(
 );
 */
 
-// 개발용 임시 인터셉터 (필요시)
-api.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    console.log('API Request:', config.method?.toUpperCase(), config.url);
-    console.log('Request data:', config.data);
-    return config;
-  },
-  (error: AxiosError) => {
-    return Promise.reject(error);
-  }
-);
+// // 개발용 임시 인터셉터 (필요시)
+// api.interceptors.request.use(
+//   (config: InternalAxiosRequestConfig) => {
+//     console.log('API Request:', config.method?.toUpperCase(), config.url);
+//     console.log('Request data:', config.data);
+//     return config;
+//   },
+//   (error: AxiosError) => {
+//     return Promise.reject(error);
+//   }
+// );
 
-api.interceptors.response.use(
-  (response) => {
-    console.log('API Response:', response.status, response.config.url);
-    return response;
-  },
-  (error: AxiosError) => {
-    console.error('API Error:', error.response?.status, error.config?.url);
-    return Promise.reject(error);
-  }
-);
+// api.interceptors.response.use(
+//   (response) => {
+//     console.log('API Response:', response.status, response.config.url);
+//     return response;
+//   },
+//   (error: AxiosError) => {
+//     console.error('API Error:', error.response?.status, error.config?.url);
+//     return Promise.reject(error);
+//   }
+// );
 
 // API 함수들
 export const authAPI = {

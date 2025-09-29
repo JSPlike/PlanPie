@@ -51,11 +51,11 @@ const AppRoutes: React.FC = () => {
       <Route 
         path="/calendars" 
         element={
-          <PrivateRoute>
+          <PrivateRoute requireCalendar={true}>
             {/* <CalendarList /> */}
             <Calendar/>
           </PrivateRoute>
-        } 
+        }
       />
 
       <Route 

@@ -7,9 +7,9 @@ class CalendarTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = CalendarTag
         fields = [
-            'id', 'name', 'color', 'order', 'created_at'
+            'id', 'calendar', 'name', 'color', 'order', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at']
+        read_only_fields = ['id', 'calendar', 'created_at', 'updated_at']
 
 class CalendarMemberSerializer(serializers.ModelSerializer):
     """캘린더 멤버 시리얼라이저"""
@@ -26,6 +26,7 @@ class CalendarSerializer(serializers.ModelSerializer):
     """캘린더 시리얼라이저"""
     owner = UserSerializer(read_only=True)
     members = CalendarMemberSerializer(many=True, read_only=True)
+    tags = CalendarTagSerializer(many=True, read_only=True)
     member_count = serializers.SerializerMethodField()
     event_count = serializers.SerializerMethodField()
     share_url = serializers.SerializerMethodField()
@@ -38,7 +39,7 @@ class CalendarSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'description', 'calendar_type', 
             'image', 'color', 'owner',
-            'members', 'member_count', 'event_count', 
+            'members', 'tags', 'member_count', 'event_count', 
             'share_url', 'share_token', 
             'is_admin', 'can_leave', 'can_delete',
             'created_at', 'updated_at'

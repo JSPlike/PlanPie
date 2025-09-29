@@ -20,6 +20,20 @@ DEFAULT_TAG_COLORS = [
     '#BDBDBD',  # 쿨 그레이
 ]
 
+# 기본 태그 이름 (10개) - 색상 주석에 맞춘 영어 이름
+DEFAULT_TAG_NAMES = [
+    'Charcoal Black',
+    'Coral Red',
+    'Modern Blue',
+    'Sage Green',
+    'Mustard Yellow',
+    'Lavender Purple',
+    'Amber Orange',
+    'Sky Mint',
+    'Cherry Pink',
+    'Cool Gray',
+]
+
 # 기본 캘린더 캘린더를 생성한다
 class Calendar(models.Model):
     """캘린더 (공유 가능)"""
@@ -77,22 +91,7 @@ class Calendar(models.Model):
     def save(self, *args, **kwargs):
         if not self.share_token:
             self.share_token = secrets.token_urlsafe(32)
-        is_new = self.pk is None
         super().save(*args, **kwargs)
-        
-        # 새 캘린더 생성 시 기본 태그 10개 생성
-        if is_new:
-            self.create_default_tags()
-
-    def create_default_tags(self):
-        """캘린더 생성 시 기본 태그 10개 생성"""
-        for index, color in enumerate(DEFAULT_TAG_COLORS):
-            CalendarTag.objects.create(
-                calendar=self,
-                name=f"태그 {index + 1}",
-                color=color,
-                order=index
-            )
 
     def get_share_url(self):
         from django.urls import reverse

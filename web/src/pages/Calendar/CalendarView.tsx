@@ -1,5 +1,5 @@
 // src/pages/Calendar/CalendarView.tsx
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import styles from './CalendarView.module.css';
 import { toast } from 'react-toastify';
 import CalendarHeader from '../../components/Calendar/CalendarHeader';
@@ -27,71 +27,7 @@ const CalendarView: React.FC = () => {
   };
 
   // 캘린더 목록
-  const [calendars, setCalendars] = useState<Calendar[]>([
-    {
-        id: "1",
-        name: "개인 일정",
-        description: "개인적인 일정 관리용",
-        calendar_type: "personal",
-        image: undefined,
-        color: "#4A90E2",
-        owner: dummyUser,
-        members: [],
-        tags: [],
-        member_count: 1,
-        event_count: 0,
-        share_url: "",
-        share_token: "",
-        is_admin: true,
-        is_active: true,
-        can_leave: false,
-        can_delete: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: "2",
-        name: "업무",
-        description: "업무 관련 일정",
-        calendar_type: "shared",
-        image: undefined,
-        color: "#50C878",
-        owner: dummyUser,
-        members: [],
-        tags: [],
-        member_count: 3,
-        event_count: 5,
-        share_url: "",
-        share_token: "",
-        is_admin: true,
-        is_active: true,
-        can_leave: false,
-        can_delete: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: "3",
-        name: "가족 일정",
-        description: "가족 모임 및 행사",
-        calendar_type: "shared",
-        image: undefined,
-        color: "#FFB347",
-        owner: dummyUser,
-        members: [],
-        tags: [],
-        member_count: 4,
-        event_count: 2,
-        share_url: "",
-        share_token: "",
-        is_admin: false,
-        is_active: false,
-        can_leave: true,
-        can_delete: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    ]);
+  const [calendars, setCalendars] = useState<Calendar[]>([]);
 
     // 임시 태그 데이터를 CalendarView로 이동
     const MOCK_TAGS: CalendarTag[] = [
@@ -197,10 +133,15 @@ const CalendarView: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [tempEvent, setTempEvent] = useState<Event | null>(null); // 임시 이벤트 상태 추가
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
-  const [selectedCalendarId, setSelectedCalendarId] = useState<string>('1');
+  const [selectedCalendarId, setSelectedCalendarId] = useState<string>('');
   const [isLeftSideOpen, setIsLeftSideOpen] = useState(false);
   const [isRightSideOpen, setIsRightSideOpen] = useState(false);
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
+
+  // 페이지 로드 시 캘린더 데이터 가져오기
+  useEffect(() => {
+    fetchCalendars();
+  }, []);
 
   const getCalendarTags = (calendarId: string) => {
     const calendar = calendars.find(cal => cal.id === calendarId);
@@ -374,7 +315,13 @@ const CalendarView: React.FC = () => {
   const fetchCalendars = async () => {
     try {
       const response = await calendarAPI.getCalendars();
-      setCalendars(response.data);
+      const calendarsData = response.data;
+      setCalendars(calendarsData);
+      
+      // 첫 번째 캘린더를 기본으로 선택
+      if (calendarsData.length > 0 && !selectedCalendarId) {
+        setSelectedCalendarId(calendarsData[0].id);
+      }
     } catch (error) {
       console.error('캘린더 불러오기 실패:', error);
     }

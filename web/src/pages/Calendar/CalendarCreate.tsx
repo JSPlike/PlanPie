@@ -29,11 +29,9 @@ const CalendarCreate: React.FC<CalendarCreateProps> = ({ onCalendarCreated }) =>
     if (onCalendarCreated) {
       console.log('부모 콜백 호출:', onCalendarCreated);
       onCalendarCreated(calendarId);
-
-      navigate('/login');
     } else {
-      console.log('부모 콜백이 없음 - 기본 처리');
-
+      console.log('부모 콜백이 없음 - 캘린더 페이지로 이동');
+      // 캘린더 생성 완료 후 캘린더 페이지로 이동 (새로 생성된 캘린더 포함)
       navigate('/', { replace: true });
     }
   };
