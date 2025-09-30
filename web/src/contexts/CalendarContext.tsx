@@ -12,7 +12,10 @@ interface CalendarContextType {
   
   // 이벤트 관련 상태
   events: Event[];
-  
+  tempEvent: Event | null;
+  setTempEvent: (event: Event | null) => void;
+  updateTempEvent: (updates: Partial<Event>) => void;
+
   // 캘린더 액션
   setSelectedCalendarId: (id: string) => void;
   toggleCalendarVisibility: (calendarId: string) => void;
@@ -66,6 +69,7 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
   const [selectedCalendarId, setSelectedCalendarId] = useState<string>('');
   const [calendarVisibility, setCalendarVisibility] = useState<Record<string, boolean>>({});
   const [events, setEvents] = useState<Event[]>([]); // 빈 배열로 초기화
+  const [tempEvent, setTempEvent] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,9 +79,7 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
       setIsLoading(true);
       setError(null);
       
-      console.log('캘린더 목록 조회 시작...');
       const response = await calendarAPI.getCalendars() as CalendarAPIResponse;
-      console.log('캘린더 API 응답:', response);
       
       // 응답 구조 확인 - 타입 안전하게 처리
       let calendarsData: Calendar[] = [];
@@ -96,7 +98,6 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
         }
       }
       
-      console.log('처리된 캘린더 데이터:', calendarsData);
       setCalendars(calendarsData);
       
       // 모든 캘린더를 기본적으로 표시
@@ -111,8 +112,6 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
         setSelectedCalendarId(calendarsData[0].id);
       }
       
-      console.log('캘린더 목록 로드 완료:', calendarsData.length, '개');
-      
     } catch (err) {
       console.error('캘린더 불러오기 실패:', err);
       setError('캘린더를 불러오는데 실패했습니다.');
@@ -126,10 +125,8 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
   const fetchEvents = useCallback(async () => {
     try {
       setIsLoading(true);
-      console.log('이벤트 목록 조회 시작...');
       
       const response = await calendarAPI.getEvents() as EventAPIResponse;
-      console.log('이벤트 API 응답:', response);
       
       // 응답 구조 확인 - 타입 안전하게 처리
       let eventsData: Event[] = [];
@@ -147,10 +144,7 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
           }
         }
       }
-      
-      console.log('처리된 이벤트 데이터:', eventsData);
       setEvents(eventsData);
-      console.log('이벤트 목록 로드 완료:', eventsData.length, '개');
       
     } catch (err) {
       console.error('이벤트 불러오기 실패:', err);
@@ -162,6 +156,23 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
       setIsLoading(false);
     }
   }, []);
+
+  const updateTempEvent = (updates: Partial<Event>) => {
+    console.log('Context updateTempEvent 호출:', updates);
+  
+    if (tempEvent) {
+      const updatedEvent = {
+        ...tempEvent,
+        ...updates,
+        updated_at: new Date().toISOString()
+      };
+      
+      console.log('업데이트된 tempEvent:', updatedEvent);
+      setTempEvent(updatedEvent);
+    } else {
+      console.log('tempEvent가 null입니다');
+    }
+  };
 
   // 캘린더 표시/숨김 토글
   const toggleCalendarVisibility = useCallback((calendarId: string) => {
@@ -264,10 +275,6 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
 
   // 활성화된 캘린더의 이벤트만 필터링
   const visibleEvents = React.useMemo(() => {
-    console.log('visibleEvents 계산 중...');
-    console.log('events:', events, 'type:', typeof events, 'isArray:', Array.isArray(events));
-    console.log('calendarVisibility:', calendarVisibility);
-    
     // events가 배열이 아닌 경우 빈 배열 반환
     if (!Array.isArray(events)) {
       console.warn('Events is not an array, returning empty array');
@@ -279,16 +286,19 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
       return isVisible;
     });
     
-    console.log('필터된 이벤트:', filtered);
     return filtered;
   }, [events, calendarVisibility]);
 
   // 이벤트 색상 가져오기
   const getEventColor = useCallback((event: Event): string => {
+    if (tempEvent && event.id === tempEvent.id) {
+      return tempEvent.color || tempEvent.tag?.color || '#4A90E2';
+    }
+
     if (event.color) return event.color;
     const calendar = calendars.find(cal => cal.id === event.calendar);
     return calendar?.color || '#4A90E2';
-  }, [calendars]);
+  }, [calendars, tempEvent]);
 
   // 캘린더 태그 가져오기
   const getCalendarTags = useCallback((calendarId: string) => {
@@ -298,14 +308,12 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
 
   // 초기 데이터 로드
   useEffect(() => {
-    console.log('CalendarProvider 마운트됨');
     fetchCalendars();
   }, []);
 
   // 캘린더가 로드된 후 이벤트 로드
   useEffect(() => {
     if (calendars.length > 0) {
-      console.log('캘린더 로드 완료, 이벤트 조회 시작');
       fetchEvents();
     }
   }, [calendars.length]);
@@ -316,6 +324,10 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
     selectedCalendarId,
     calendarVisibility,
     events,
+    setTempEvent,
+    updateTempEvent,
+    
+    tempEvent,
     isLoading,
     error,
     

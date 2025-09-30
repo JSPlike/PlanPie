@@ -4,20 +4,21 @@ import styles from './CalendarGrid.module.css';
 import { format, parseISO, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek,
   startOfDay, differenceInDays } from 'date-fns';
 import { Event, Calendar } from '../../types/calendar.types';
+import { useCalendarContext } from '../../contexts/CalendarContext';
 
 interface CalendarGridProps {
   currentDate: Date;
   selectedDate: Date | null;
   selectedRange: {start: Date, end: Date} | null;
   events: Event[];
-  tempEvent: Event | null;
+  //tempEvent: Event | null;
   calendars: Calendar[];
   onDateClick: (date: Date) => void;
   onDateSelect: (date: Date) => void;
   onMonthChange: (date: Date) => void;
   onEventClick: (event: Event) => void;
   onEventDelete: (eventId: string) => void;
-  getEventColor: (event: Event) => string;
+  // getEventColor: (event: Event) => string;
 }
 
 interface EventBar {
@@ -42,21 +43,23 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   currentDate,
   selectedDate,
   events,
-  tempEvent,
+  // tempEvent,
   calendars,
   onDateClick,
   onDateSelect,
   onMonthChange,
   onEventClick,
   onEventDelete,
-  getEventColor
+  // getEventColor
 }) => {
   // 캘린더 날짜 범위 계산
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
   const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
-  
+
+  const { tempEvent, getEventColor } = useCalendarContext();
+
   const calendarDays = eachDayOfInterval({
     start: calendarStart,
     end: calendarEnd
@@ -110,18 +113,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
         });
         
         if (startDayIndex !== -1 && endDayIndex !== -1) {
-
-
-          console.log('=== 이벤트 바 생성 ===');
-          console.log('이벤트:', event.title);
-          console.log('주:', weekIndex);
-          console.log('시작 요일:', startDayIndex);
-          console.log('끝 요일:', endDayIndex);
-          console.log('기간:', endDayIndex - startDayIndex + 1, '일');
-          console.log('이벤트 시작일:', event.start_date.substring(0, 10));
-          console.log('이벤트 종료일:', event.end_date.substring(0, 10));
-          console.log('========================');
-
           eventBars.push({
             event,
             weekIndex,
@@ -200,10 +191,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   
     // 병합된 이벤트 바 적용
     const mergedEventBars = mergeConsecutiveEvents(eventBars);
-    
-    console.log('원본 이벤트 바:', eventBars.length);
-    console.log('병합된 이벤트 바:', mergedEventBars.length);
-    console.log('병합된 바들:', mergedEventBars);
   
     // 주별로 이벤트 바들을 그룹화하고 레이어 배치
     const weekLayers: WeekLayers = {};
@@ -380,6 +367,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                   const isTemp = tempEvent && bar.event.id === tempEvent.id;
                   const isAllDay = bar.event.all_day === true;
                   const eventColor = getEventColor(bar.event);
+                  console.log('eventColor ; ', eventColor)
 
                   const showText = bar.showText === true && dayIndex === bar.startDay;;
 

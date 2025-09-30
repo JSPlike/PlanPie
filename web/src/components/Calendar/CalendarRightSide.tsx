@@ -97,52 +97,6 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
       })
     : [];
 
-  // 폼 초기화
-  /*
-  useEffect(() => {
-    if (selectedEvent) {
-      setEventTitle(selectedEvent.title);
-      
-      const startDateTime = new Date(selectedEvent.start_date);
-      const endDateTime = new Date(selectedEvent.end_date);
-
-      // 날짜 설정
-      setStartDate(format(startDateTime, 'yyyy-MM-dd'));
-      setEndDate(format(endDateTime, 'yyyy-MM-dd'));
-
-      // 종일 여부 설정
-      setIsAllDay(selectedEvent.all_day);
-
-      // 시간 설정 (종일 여부에 관계없이 항상 설정하되, 종일일 때는 기본값)
-      setStartTime(selectedEvent.all_day ? '00:00' : format(startDateTime, 'HH:mm'));
-      setEndTime(selectedEvent.all_day ? '24:00' : format(endDateTime, 'HH:mm'));
-
-      setSelectedCalendarId(selectedEvent.calendar);
-      setSelectedTagId(selectedEvent.tag?.id || null);
-      setLocation(selectedEvent.location || '');
-      setShowMemo(!!selectedEvent.description);
-      setDescription(selectedEvent.description || '');
-    } else if (selectedDate) {
-      const dateStr = format(selectedDate, 'yyyy-MM-dd');
-      setEventTitle('');
-      setStartDate(dateStr);
-      setStartTime('09:00');
-      setEndDate(dateStr);
-      setEndTime('10:00');
-      setIsAllDay(true);
-      setSelectedCalendarId(calendars[0]?.id || ''); // 첫 번째 캘린더로 설정
-
-      // 첫 번째 태그를 기본값으로 설정
-      const firstCalendar = calendars[0];
-      const firstTag = firstCalendar?.tags?.[0] || MOCK_TAGS.find(tag => tag.calendar === calendars[0]?.id);
-      setSelectedTagId(firstTag?.id || null);
-      setLocation('');
-      setShowMemo(false);
-      setDescription('');
-    }
-  }, [selectedEvent, selectedDate, calendars, tempEvent]);
-  */
-
   // 폼 초기화 useEffect 수정
   useEffect(() => {
     // selectedEvent가 있으면 우선, 없으면 tempEvent 사용
