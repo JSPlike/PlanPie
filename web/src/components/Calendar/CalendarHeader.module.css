@@ -6,7 +6,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0px 20px;
+    padding: 0px 10px 0 0;
     background: white;
     border-bottom: 0.5px solid rgb(237, 237, 237);
     /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); */
@@ -28,6 +28,14 @@
     gap: 16px;
     height: 100%;
     margin-right: 50px;
+  }
+
+  .toggleDiv {
+    display: flex;
+    width: 60px;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
   }
   
   /* 사이드바 토글 버튼 */
@@ -84,7 +92,7 @@
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    font-weight: 500;
+    font-weight: 600;
     font-size: 14px;
     transition: all 0.2s;
     white-space: nowrap;
@@ -170,7 +178,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 7px 14px;
+    padding: 7px;
     background: #4A90E2;
     color: white;
     border: none;
@@ -215,7 +223,7 @@
     }
   
     .addEventButton {
-      padding: 7px 10px;
+      padding: 7px;
     }
   }
   

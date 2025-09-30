@@ -91,6 +91,7 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
 
 
               </div>
+              <span className={styles.tooltip}>{calendar.name}</span>
             </div>
             )
           })}
@@ -104,7 +105,7 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
     <div className={styles.sidebar}>
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
-          <h3>내 캘린더</h3>
+          <h3>Calendar List</h3>
         </div>
 
         <div className={styles.calendarList}>
@@ -160,20 +161,20 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
         </div>
       </div>
 
-      <div className={styles.section}>
+      {/* <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <h3>공유 캘린더</h3>
         </div>
         <div className={styles.emptyState}>
           <p>공유받은 캘린더가 없습니다</p>
         </div>
-      </div>
+      </div> */}
 
       <button className={styles.addCalendarButton} onClick={handleAddCalendar}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
           <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
         </svg>
-        새 캘린더
+        Add Calendar
       </button>
     </div>
   );

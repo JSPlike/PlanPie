@@ -149,8 +149,8 @@
   /* 태블릿 크기 */
   @media (max-width: 1200px) {
     .rightSideContainer.open {
-      width: 350px; /* 조금 더 작게 */
-      min-width: 350px;
+      width: 420px; /* 조금 더 작게 */
+      min-width: 420px;
     }
   }
   

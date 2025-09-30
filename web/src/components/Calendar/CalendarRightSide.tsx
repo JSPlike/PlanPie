@@ -1,5 +1,5 @@
 // src/components/CalendarRightSide/CalendarRightSide.tsx
-import React, { useState, useEffect }  from 'react';
+import React, { useState, useEffect, useMemo }  from 'react';
 import styles from './CalendarRightSide.module.css';
 import { Event, Calendar, CalendarTag, CreateUpdateEventRequest } from '../../types/calendar.types';
 import { format, parseISO, isSameDay } from 'date-fns';
@@ -284,7 +284,35 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     }
   };
 
-  const isFormValid = eventTitle.trim() && selectedCalendarId && startDate && endDate;
+  //const isFormValid = eventTitle.trim() && selectedCalendarId && startDate && endDate;
+
+  // 더 엄격한 폼 검증
+  const isFormValid = useMemo(() => {
+    if (!eventTitle.trim() || !selectedCalendarId || !startDate || !endDate) {
+      return false;
+    }
+    
+    // 날짜 검증
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate);
+    
+    if (startDateObj > endDateObj) {
+      return false;
+    }
+    
+    // 시간 검증 (종일이 아닌 경우)
+    if (!isAllDay) {
+      const startDateTime = new Date(`${startDate}T${startTime}`);
+      const endDateTime = new Date(`${endDate}T${endTime}`);
+      
+      if (startDateTime >= endDateTime) {
+        return false;
+      }
+    }
+    
+    return true;
+  }, [eventTitle, selectedCalendarId, startDate, endDate, startTime, endTime, isAllDay]);
+
   const availableTags = getSelectedCalendarTags();
 
   const handleTagSelect = (tag: CalendarTag) => {
@@ -307,6 +335,19 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     }
   };
 
+  const getNextHourTime = (addHours: number = 1) => {
+    const now = new Date();
+
+    // 한국 시간대로 현재 시간 가져오기 (올바른 방법)
+    const kstTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+    const currentMinutes = kstTime.getHours() * 60 + kstTime.getMinutes();
+    
+    // 다음 정시로 올림 (예: 12:30 → 13:00)
+    const nextHourMinutes = Math.ceil(currentMinutes / 60) * 60 + (addHours - 1) * 60;
+    const nextHour = Math.floor(nextHourMinutes / 60) % 24;
+    return `${nextHour.toString().padStart(2, '0')}:00`;
+  };
+
   const handleTitleChange = (newTitle: string) => {
     setEventTitle(newTitle);
     
@@ -319,14 +360,54 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     }
   };
 
+  // 시간 검증 함수 추가
+  const validateDateTime = () => {
+    if (!isAllDay) {
+      const startDateTime = new Date(`${startDate}T${startTime}`);
+      const endDateTime = new Date(`${endDate}T${endTime}`);
+      
+      if (startDateTime >= endDateTime) {
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleStartDateChange = (newDate: string) => {
     setStartDate(newDate);
     
     // selectedEvent가 있으면 tempEvent 업데이트 안함
     if (!selectedEvent && tempEvent) {
       const newDateTime = isAllDay 
-        ? `${newDate}T00:00:00Z`
-        : `${newDate}T${startTime}:00Z`;
+        ? `${newDate}T00:00:00+09:00`
+        : `${newDate}T${startTime}:00+09:00`;
+
+
+        console.log('rightside start_date', ' ', newDateTime, ' ', isAllDay)
+      onUpdateTempEvent({ start_date: newDateTime });
+    }
+  };
+
+  const handleStartTimeChange = (newTime: string) => {
+    setStartTime(newTime);
+
+    // 시작 시간이 종료 시간보다 늦으면 종료 시간을 1시간 후로 설정
+    const [startHour, startMin] = newTime.split(':').map(Number);
+    const [endHour, endMin] = endTime.split(':').map(Number);
+    
+    const startMinutes = startHour * 60 + startMin;
+    const endMinutes = endHour * 60 + endMin;
+    
+    if (startMinutes >= endMinutes) {
+      const newEndMinutes = startMinutes + 60;
+      const newEndHour = Math.floor(newEndMinutes / 60) % 24;
+      const newEndMin = newEndMinutes % 60;
+      const newEndTime = `${newEndHour.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`;
+      setEndTime(newEndTime);
+    }
+    
+    if (!selectedEvent && tempEvent && !isAllDay) {
+      const newDateTime = `${startDate}T${newTime}:00Z`;
       onUpdateTempEvent({ start_date: newDateTime });
     }
   };
@@ -336,18 +417,11 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     
     if (!selectedEvent && tempEvent) {
       const newDateTime = isAllDay 
-        ? `${newDate}T23:59:59Z`
-        : `${newDate}T${endTime}:00Z`;
-      onUpdateTempEvent({ end_date: newDateTime });
-    }
-  };
+        ? `${newDate}T23:59:59+09:00`
+        : `${newDate}T${endTime}:00+09:00`;
 
-  const handleStartTimeChange = (newTime: string) => {
-    setStartTime(newTime);
-    
-    if (!selectedEvent && tempEvent && !isAllDay) {
-      const newDateTime = `${startDate}T${newTime}:00Z`;
-      onUpdateTempEvent({ start_date: newDateTime });
+        console.log('rightside start_date', ' ', newDateTime, ' ', isAllDay)
+      onUpdateTempEvent({ end_date: newDateTime });
     }
   };
   
@@ -362,15 +436,31 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
 
   const handleAllDayChange = (checked: boolean) => {
     setIsAllDay(checked);
+    let newStartTime = startTime;
+    let newEndTime = endTime;
+
+    if (!checked) {
+      // 시간 지정으로 변경: 현재 시간 기준으로 설정
+      const nextHourTime = getNextHourTime(1); // 현재 시간 + 1시간
+      const twoHoursLaterTime = getNextHourTime(2); // 현재 시간 + 2시간
+      
+
+      newStartTime = nextHourTime;
+      newEndTime = twoHoursLaterTime;
+      console.log(newStartTime, ' ', newEndTime);
+      setStartTime(newStartTime);
+      setEndTime(newEndTime);
+    }
     
     if (!selectedEvent && tempEvent) {
       const startDateTime = checked 
-        ? `${startDate}T00:00:00Z`
-        : `${startDate}T${startTime}:00Z`;
+        ? `${startDate}T00:00:00+09:00`
+        : `${startDate}T${newStartTime}:00+09:00`; // 새로운 시간 사용
       const endDateTime = checked 
-        ? `${endDate}T23:59:59Z`
-        : `${endDate}T${endTime}:00Z`;
-      
+        ? `${endDate}T23:59:59+09:00`
+        : `${endDate}T${newEndTime}:00+09:00`;     // 새로운 시간 사용
+
+      console.log(startDateTime, ' ', endDateTime, ' ', checked)
       onUpdateTempEvent({ 
         all_day: checked,
         start_date: startDateTime,
@@ -421,7 +511,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                     <input
                       type="date"
                       value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
+                      onChange={(e) => handleStartDateChange(e.target.value)}
                       className={`${styles.dateInput} ${!isAllDay ? styles.fullWidth : ''}`}
                     />
                   </div>
@@ -430,7 +520,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                       <input
                         type="time"
                         value={startTime}
-                        onChange={(e) => setStartTime(e.target.value)}
+                        onChange={(e) => handleStartTimeChange(e.target.value)}
                         className={styles.timeInput}
                       />
                     </div>
@@ -445,7 +535,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                     <input
                       type="date"
                       value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
+                      onChange={(e) => handleEndDateChange(e.target.value)}
                       className={styles.dateInput}
                     />
                   </div>
@@ -454,7 +544,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                       <input
                         type="time"
                         value={endTime}
-                        onChange={(e) => setEndTime(e.target.value)}
+                        onChange={(e) => handleEndTimeChange(e.target.value)}
                         className={styles.timeInput}
                       />
                     </div>
@@ -467,7 +557,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                   <input
                     type="checkbox"
                     checked={isAllDay}
-                    onChange={(e) => setIsAllDay(e.target.checked)}
+                    onChange={(e) => handleAllDayChange(e.target.checked)}
                     className={styles.checkbox}
                   />
                   종일

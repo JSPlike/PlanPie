@@ -80,16 +80,17 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   return (
     <header className={styles.header}>
       <div className={styles.headerLeft}>
-        {/* 사이드바 토글 */}
-        <button 
-          className={`${styles.sidebarToggle} ${isLeftSideOpen ? styles.active : ''}`}
-          onClick={handleLeftToggle}
-          title="캘린더 목록"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        </button>
+        <div className={styles.toggleDiv}>
+          <button 
+            className={`${styles.sidebarToggle} ${isLeftSideOpen ? styles.active : ''}`}
+            onClick={handleLeftToggle}
+            title="캘린더 목록"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
 
         {/* 로고/타이틀 */}
         <h1 className={styles.logo}>📅 Plan Pie</h1>
@@ -97,7 +98,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
         {/* 날짜 네비게이션 */}
         <div className={styles.dateNavigation}>
           <button className={styles.todayButton} onClick={onToday}>
-            오늘
+            Today
           </button>
           
           <div className={styles.monthControls}>
@@ -148,7 +149,6 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           </svg>
-          <span>새 일정</span>
         </button>
       </div>
     </header>

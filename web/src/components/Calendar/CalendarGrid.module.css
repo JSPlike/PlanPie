@@ -136,23 +136,22 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     background: black;
     border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);
+    /* box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2); */
   }
   
   .dayNumber {
     font-size: 14px;
     font-weight: 500;
+    height: 30px;
     margin-top: 3px;
     margin-bottom: 8px;
     color: #333;
     user-select: none; /* 텍스트 선택 방지 */
   }
-  
-
   
   .dayEvents {
     display: flex;
@@ -190,9 +189,12 @@
   }
 
   .eventTitle {
+    flex: 1;
     font-size: 12px;
-    color: white;
     font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     user-select: none; /* 텍스트 선택 방지 */
   }
 
@@ -202,7 +204,6 @@
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 12px;
-    color: white;
     cursor: pointer;
     transition: all 0.2s;
     position: relative;
@@ -222,13 +223,6 @@
     opacity: 0.9;
     margin-right: 4px;
     font-weight: 500;
-  }
-  
-  .eventTitle {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
   
   .deleteButton {
@@ -257,22 +251,6 @@
   
   .deleteButton:hover {
     background: rgba(255, 255, 255, 0.5);
-  }
-  
-  .moreEvents {
-    font-size: 11px;
-    color: #666;
-    padding: 2px 6px;
-    background: #f0f0f0;
-    border-radius: 4px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .moreEvents:hover {
-    background: #e0e0e0;
-    color: #333;
   }
   
   /* 반응형 디자인 */

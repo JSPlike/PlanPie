@@ -3,7 +3,7 @@
 /* 플로팅 프로필 위젯 */
 .profile-widget {
     position: fixed;
-    top: 10px;
+    top: 5px;
     right: 10px;
     z-index: 1000;
   }
