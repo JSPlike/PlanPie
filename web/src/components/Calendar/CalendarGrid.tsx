@@ -2,8 +2,7 @@
 import React, { useMemo } from 'react';
 import styles from './CalendarGrid.module.css';
 import { format, parseISO, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek,
-  startOfDay, endOfDay, isWithinInterval, differenceInDays } from 'date-fns';
-import { ko } from 'date-fns/locale';
+  startOfDay, differenceInDays } from 'date-fns';
 import { Event, Calendar } from '../../types/calendar.types';
 
 interface CalendarGridProps {
@@ -29,6 +28,10 @@ interface EventBar {
   width: number;
   isMultiDay: boolean;
   layer: number;
+  showText?: boolean;
+  isFirst?: boolean;
+  isLast?: boolean;
+  isMiddle?: boolean;
 }
 
 interface WeekLayers {
@@ -38,7 +41,6 @@ interface WeekLayers {
 const CalendarGrid: React.FC<CalendarGridProps> = ({
   currentDate,
   selectedDate,
-  selectedRange,
   events,
   tempEvent,
   calendars,
@@ -49,7 +51,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   onEventDelete,
   getEventColor
 }) => {
-  // 캘린더에 표시할 날짜 배열 생성
+  // 캘린더 날짜 범위 계산
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
@@ -60,7 +62,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
     end: calendarEnd
   });
 
-  // 이벤트를 바 형태로 처리하는 로직 추가
+  // 이벤트 바 처리 로직
   const processEventBars = useMemo(() => {
     const allEvents = tempEvent ? [...events, tempEvent] : events;
     const eventBars: EventBar[] = [];
@@ -70,94 +72,16 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
     for (let i = 0; i < calendarDays.length; i += 7) {
       weeks.push(calendarDays.slice(i, i + 7));
     }
-
-    // 2025-09-26 events에서 allEvents로 변경
+  
+    // 모든 이벤트에 대해 이벤트 바 생성 (기존 로직 동일)
     allEvents.forEach(event => {
       const eventStart = parseISO(event.start_date);
       const eventEnd = parseISO(event.end_date);
       
-      // 이벤트가 달력 범위와 겹치는지 확인
       if (eventEnd < calendarStart || eventStart > calendarEnd) {
         return;
       }
-      /*
-      weeks.forEach((week, weekIndex) => {
-        const weekStart = startOfDay(week[0]);
-        const weekEnd = endOfDay(week[6]);
-        
-        console.log('주의 시작', ' ', weekStart);
-        console.log('주의 끝', ' ', weekEnd);
-        // 이벤트가 이 주와 겹치는지 확인
-        if (eventEnd >= weekStart && eventStart <= weekEnd) {
-          // 이벤트가 시작되는 날과 끝나는 날 찾기
-          let startDayIndex = -1;
-          let endDayIndex = -1;
-          
-          week.forEach((day, dayIndex) => {
-
-
-            // if (eventStart <= day && startDayIndex === -1) {
-            //   startDayIndex = dayIndex;
-            // }
-            // if (eventEnd >= day) {
-            //   endDayIndex = dayIndex;
-            // }
-
-            let shouldShow = false;
-          
-            if (event.all_day) {
-              // 종일 이벤트: 날짜만 비교
-              const dayStart = startOfDay(day);
-              const eventStartDay = startOfDay(eventStart);
-              const eventEndDay = startOfDay(eventEnd);
-              shouldShow = dayStart >= eventStartDay && dayStart <= eventEndDay;
-            } else {
-              // 시간 기반 이벤트: 해당 날짜에 이벤트 시간이 걸쳐있는지 확인
-              const dayStart = startOfDay(day);
-              const dayEnd = endOfDay(day);
-              shouldShow = eventStart <= dayEnd && eventEnd >= dayStart;
-            }
-            
-            if (shouldShow) {
-              if (startDayIndex === -1) {
-                startDayIndex = dayIndex;
-              }
-              endDayIndex = dayIndex;
-            }
-
-
-          });
-
-          // 주의 시작일보다 이벤트가 먼저 시작하는 경우
-          // if (eventStart < weekStart) {
-          //   startDayIndex = 0;
-          // }
-
-          // // 주의 종료일보다 이벤트가 늦게 끝나는 경우
-          // if (eventEnd > weekEnd) {
-          //   endDayIndex = 6;
-          // }
-          
-          if (startDayIndex <= endDayIndex) {
-            eventBars.push({
-              event,
-              weekIndex,
-              startDay: startDayIndex,
-              endDay: endDayIndex,
-              width: endDayIndex - startDayIndex + 1,
-              isMultiDay: differenceInDays(eventEnd, eventStart) > 0,
-              layer: 0 // 기본값
-            });
-          }
-        }
-      });
-      */
-
-
-
-
-
-
+  
       weeks.forEach((week, weekIndex) => {
         let startDayIndex = -1;
         let endDayIndex = -1;
@@ -166,23 +90,15 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
           let shouldShow = false;
         
           if (event.all_day) {
-            // 종일 이벤트: 날짜만 비교
             const dayDateString = format(day, 'yyyy-MM-dd');
-            const eventStartString = format(eventStart, 'yyyy-MM-dd');
-            const eventEndString = format(eventEnd, 'yyyy-MM-dd');
-
-
-            
+            const eventStartString = event.start_date.substring(0, 10);
+            const eventEndString = event.end_date.substring(0, 10);
             shouldShow = dayDateString >= eventStartString && dayDateString <= eventEndString;
           } else {
-            // 시간 기반 이벤트: 해당 날짜에 이벤트가 걸쳐있는지 확인
-            const dayStart = startOfDay(day);
-            const dayEnd = endOfDay(day);
-
-            console.log(
-              'not event.all_day   ', eventStart, eventEnd
-            )
-            shouldShow = (eventStart <= dayEnd) && (eventEnd >= dayStart);
+            const eventStartDay = startOfDay(eventStart);
+            const eventEndDay = startOfDay(eventEnd);
+            const currentDay = startOfDay(day);
+            shouldShow = currentDay >= eventStartDay && currentDay <= eventEndDay;
           }
           
           if (shouldShow) {
@@ -193,8 +109,19 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
           }
         });
         
-        // 해당 주에 표시할 날짜가 있으면 이벤트 바 생성
         if (startDayIndex !== -1 && endDayIndex !== -1) {
+
+
+          console.log('=== 이벤트 바 생성 ===');
+          console.log('이벤트:', event.title);
+          console.log('주:', weekIndex);
+          console.log('시작 요일:', startDayIndex);
+          console.log('끝 요일:', endDayIndex);
+          console.log('기간:', endDayIndex - startDayIndex + 1, '일');
+          console.log('이벤트 시작일:', event.start_date.substring(0, 10));
+          console.log('이벤트 종료일:', event.end_date.substring(0, 10));
+          console.log('========================');
+
           eventBars.push({
             event,
             weekIndex,
@@ -207,20 +134,90 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
         }
       });
     });
+  
+    // 연속된 이벤트 바 병합 처리
+    const mergeConsecutiveEvents = (eventBars: EventBar[]): EventBar[] => {
+      const eventGroups: { [eventId: string]: EventBar[] } = {};
+  
+      eventBars.forEach(bar => {
 
-    // 우선순위에 따른 정렬 및 레이어 배치
-    const weekLayers: WeekLayers = {};
+        if (!eventGroups[bar.event.id]) {
+          eventGroups[bar.event.id] = [];
+        }
+        eventGroups[bar.event.id].push(bar);
+      });
+
+      const mergedBars: EventBar[] = [];
+
+      Object.values(eventGroups).forEach(bars => {
+        
+        if (bars.length === 1) {
+          // 단일 바
+          mergedBars.push({
+            ...bars[0],
+            showText: true,
+            // isFirst, isLast, isMiddle 모두 설정하지 않음 (undefined)
+          });
+        } else {
+          bars.sort((a, b) => a.weekIndex - b.weekIndex || a.startDay - b.startDay);
+          
+          bars.forEach((bar, index) => {
+            
+            if (index === 0) {
+              // 첫 번째 바
+              mergedBars.push({
+                ...bar,
+                showText: true,
+                isFirst: true,
+                isLast: false,
+                isMiddle: false
+              });
+            } else if (index === bars.length - 1) {
+              // 마지막 바
+              mergedBars.push({
+                ...bar,
+                showText: false,
+                isFirst: false,
+                isLast: true,
+                isMiddle: false
+              });
+            } else {
+              // 중간 바들
+              mergedBars.push({
+                ...bar,
+                showText: false,
+                isFirst: false,
+                isLast: false,
+                isMiddle: true
+              });
+            }
+          });
+        }
+      });
+
+      return mergedBars;
+    };
+  
+    // 병합된 이벤트 바 적용
+    const mergedEventBars = mergeConsecutiveEvents(eventBars);
     
-    // 주별로 이벤트 바들을 그룹화
+    console.log('원본 이벤트 바:', eventBars.length);
+    console.log('병합된 이벤트 바:', mergedEventBars.length);
+    console.log('병합된 바들:', mergedEventBars);
+  
+    // 주별로 이벤트 바들을 그룹화하고 레이어 배치
+    const weekLayers: WeekLayers = {};
     const eventsByWeek: { [weekIndex: number]: EventBar[] } = {};
-    eventBars.forEach(bar => {
+    
+    // ✅ 중요: mergedEventBars 사용!
+    mergedEventBars.forEach(bar => {
       if (!eventsByWeek[bar.weekIndex]) {
         eventsByWeek[bar.weekIndex] = [];
       }
       eventsByWeek[bar.weekIndex].push(bar);
     });
-
-    // 각 주별로 우선순위 정렬 및 레이어 배치
+  
+    // 나머지 정렬 및 레이어 배치 로직은 동일...
     Object.keys(eventsByWeek).forEach(weekIndexStr => {
       const weekIndex = parseInt(weekIndexStr);
       const weekBars = eventsByWeek[weekIndex];
@@ -235,28 +232,22 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
         const aDuration = differenceInDays(aEnd, aStart);
         const bDuration = differenceInDays(bEnd, bStart);
         
-        // 임시 이벤트 확인
         const aIsTemp = tempEvent && a.event.id === tempEvent.id;
         const bIsTemp = tempEvent && b.event.id === tempEvent.id;
         
-        // 0. 임시 이벤트는 항상 맨 아래 (나중에 배치)
         if (aIsTemp && !bIsTemp) return 1;
         if (!aIsTemp && bIsTemp) return -1;
         
-        // 1. 종일 이벤트 우선
         if (a.event.all_day && !b.event.all_day) return -1;
         if (!a.event.all_day && b.event.all_day) return 1;
         
-        // 2. 종일 이벤트끼리는 기간이 긴 것 우선 (위에 배치)
         if (a.event.all_day && b.event.all_day) {
           if (aDuration !== bDuration) {
-            return bDuration - aDuration; // 긴 기간이 먼저 (위에)
+            return bDuration - aDuration;
           }
-          // 기간이 같으면 시작일이 빠른 것 우선
           return aStart.getTime() - bStart.getTime();
         }
         
-        // 3. 시간 이벤트끼리는 시작 시간 순
         if (!a.event.all_day && !b.event.all_day) {
           return aStart.getTime() - bStart.getTime();
         }
@@ -264,7 +255,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
         return 0;
       });
       
-      // 레이어 배치 (겹치지 않도록)
+      // 레이어 배치
       weekLayers[weekIndex] = [];
       
       weekBars.forEach(bar => {
@@ -288,7 +279,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
             layer++;
           }
           
-          // 무한 루프 방지
           if (layer > 10) {
             bar.layer = 10;
             if (!weekLayers[weekIndex][10]) {
@@ -302,41 +292,10 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
     });
     
     return weekLayers;
-  }, [events, calendarDays, calendarStart, calendarEnd]);
-
-  // 특정 날짜의 이벤트 가져오기
-  // const getEventsForDate = (date: Date) => {
-  //   const allEvents = tempEvent ? [...events, tempEvent] : events;
-  
-  //   return allEvents.filter(event => {
-  //     const eventStart = parseISO(event.start_date);
-  //     const eventEnd = parseISO(event.end_date);
-      
-  //     if (event.all_day) {
-  //       // 종일 이벤트는 날짜만 비교
-  //       const result = isSameDay(eventStart, date) || 
-  //                   (date >= eventStart && date <= eventEnd);
-  //       console.log('종일 이벤트 결과:', result);
-  //       return result;
-  //     } else {
-  //       // 시간이 있는 이벤트
-  //       // 시간 기반 이벤트: 해당 날짜에 이벤트가 포함되는지 확인
-  //       const dayStart = startOfDay(date);
-  //       const dayEnd = endOfDay(date);
-        
-  //       const result = isWithinInterval(eventStart, { start: dayStart, end: dayEnd }) ||
-  //                     isWithinInterval(eventEnd, { start: dayStart, end: dayEnd }) ||
-  //                     (eventStart <= dayStart && eventEnd >= dayEnd);
-        
-  //       console.log('시간 기반 이벤트 결과:', result);
-  //       return result;
-  //     }
-  //   });
-  // };
+  }, [events, tempEvent, calendarDays, calendarStart, calendarEnd]);
 
   // 날짜 셀 클릭 핸들러
   const handleDateCellClick = (date: Date, event: React.MouseEvent) => {
-    // 이벤트 버블링 방지 (이벤트 클릭과 구분)
     event.stopPropagation();
 
     const isSameDate = selectedDate && 
@@ -345,37 +304,16 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
       date.getDate() === selectedDate.getDate();
 
     if (isSameDate) {
-      // 이미 선택된 날짜 재클릭 → 오른쪽 섹션 열기
       onDateClick(date);
     } else {
-      // 새로운 날짜 클릭 → 선택만 하기
       onDateSelect(date);
     }
   };
 
-  // 날짜가 선택된 날짜인지 확인
-  const isSelectedDate = (date: Date) => {
-    if (!selectedDate) return false;
-    return date.getFullYear() === selectedDate.getFullYear() &&
-           date.getMonth() === selectedDate.getMonth() &&
-           date.getDate() === selectedDate.getDate();
-  };
-
+  // 유틸리티 함수들
   const isToday = (date: Date) => isSameDay(date, new Date());
   const isSelected = (date: Date) => selectedDate ? isSameDay(date, selectedDate) : false;
   const isCurrentMonth = (date: Date) => date.getMonth() === currentDate.getMonth();
-
-  const handlePrevMonth = () => {
-    onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
-  };
-
-  const handleNextMonth = () => {
-    onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
-  };
-
-  const handleToday = () => {
-    onMonthChange(new Date());
-  };
 
   return (
     <div className={styles.calendarGrid}>
@@ -393,23 +331,18 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
 
       {/* 날짜 그리드 */}
       <div className={styles.daysGrid}>
-      {/* 주별로 그룹화하여 렌더링 */}
         {calendarDays.map((date, dateIndex) => {
-          //const dayEvents = getEventsForDate(date);
           const weekIndex = Math.floor(dateIndex / 7);
           const dayIndex = dateIndex % 7;
 
-          // 해당 날짜에서 시작하는 이벤트 바들 찾기
+          // 해당 날짜에 표시될 이벤트 바들 찾기
           const dayEventBars = processEventBars[weekIndex] 
-          ? processEventBars[weekIndex].flat().filter(bar => {
-              // 이벤트가 이 날짜에 표시되어야 하는지 확인
-              const eventStartDate = new Date(parseISO(bar.event.start_date));
-              const eventEndDate = new Date(parseISO(bar.event.end_date));
-              // 이벤트가 이 날짜에 걸쳐있는지 확인
-              return date >= eventStartDate && date <= eventEndDate;
-            })
-          : [];
+            ? processEventBars[weekIndex].flat().filter(bar => {
+                return dayIndex >= bar.startDay && dayIndex <= bar.endDay;
+              })
+            : [];
           
+          // CSS 클래스명 생성
           const getClassNames = (date: Date) => {
             const isOtherMonth = !isCurrentMonth(date);
             const isSunday = date.getDay() === 0;
@@ -435,42 +368,72 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                 .map(([key]) => key)
                 .join(' ')
               }
-              // className={`
-              //   ${styles.dayCell} 
-              //   ${!isCurrentMonth(date) ? styles.otherMonth : ''}
-              //   ${isToday(date) ? styles.today : ''}
-              //   ${isSelected(date) ? styles.selected : ''}
-              //   ${isCurrentMonth(date) && date.getDay() === 0 ? styles.sunday : ''}
-              //   ${isCurrentMonth(date) && date.getDay() === 6 ? styles.saturday : ''}
-              //   ${!isCurrentMonth(date) && date.getDay() === 0 ? styles.otherSunday : ''}
-              //   ${!isCurrentMonth(date) && date.getDay() === 6 ? styles.otherSaturday : ''}
-              // `}
               onClick={(e) => handleDateCellClick(date, e)}
             >
               <div className={styles.dayNumber}>
                 {format(date, 'd')}
               </div>
-               {/* 이벤트 바들을 날짜 셀 내부에 표시 */}
+              
+              {/* 이벤트 바들 표시 */}
               <div className={styles.dayEvents}>
                 {dayEventBars.map((bar, barIndex) => {
                   const isTemp = tempEvent && bar.event.id === tempEvent.id;
                   const isAllDay = bar.event.all_day === true;
+                  const eventColor = getEventColor(bar.event);
 
-                  let eventColor = getEventColor(bar.event);
+                  const showText = bar.showText === true && dayIndex === bar.startDay;;
+
+                  // 같은 이벤트의 인접한 바 확인
+                  const isFirst = dayIndex === bar.startDay;
+                  const isLast = dayIndex === bar.endDay;
+                  const isSingle = bar.width === 1;
+                  
+                  // 오른쪽에 같은 이벤트가 계속되는지 확인
+                  const hasRightContinuation = dayIndex < bar.endDay;
+                  // 왼쪽에 같은 이벤트가 계속되는지 확인  
+                  const hasLeftContinuation = dayIndex > bar.startDay;
+
+                  const isSaturdayWithContinuation = dayIndex === 6 && bar.isFirst && !bar.isLast;
+                  const isSundayWithContinuation = dayIndex === 0 && !bar.isFirst && bar.isLast;
+
+
+                  if (dayIndex === 6 || dayIndex === 0) {
+                    console.log('주말 디버깅:', {
+                      eventTitle: bar.event.title,
+                      dayIndex,
+                      isFirst,
+                      isLast,
+                      hasRightContinuation,
+                      hasLeftContinuation,
+                      isSaturdayWithContinuation,
+                      isSundayWithContinuation,
+                      startDay: bar.startDay,
+                      endDay: bar.endDay,
+                      width: bar.width
+                    });
+                  }
+
                   return (
                     <div
                       key={`${bar.event.id}-${barIndex}`}
                       className={`
                         ${styles.eventBar} 
                         ${isTemp ? styles.tempEvent : ''}
+                        ${isSingle ? styles.single : ''}
+                        ${isFirst && !isSingle && !isSundayWithContinuation ? styles.first : ''}
+                        ${isLast && !isSingle && !isSaturdayWithContinuation ? styles.last : ''}
+                        ${hasRightContinuation ? styles.continueRight : ''}
+                        ${hasLeftContinuation ? styles.continueLeft : ''}
+                        ${isSaturdayWithContinuation ? styles.weekEndContinue : ''}
+                        ${isSundayWithContinuation ? styles.weekStartContinue : ''}
                       `}
                       style={{
-                        backgroundColor: isAllDay 
+                        backgroundColor: (isAllDay || bar.width > 1) 
                           ? eventColor 
                           : eventColor.includes('rgb') 
                             ? eventColor.replace('rgb(', 'rgba(').replace(')', ', 0.1)')
-                            : `${eventColor}1A`, // hex 색상의 경우 투명도 추가
-                        color: isAllDay ? 'white' : eventColor,
+                            : `${eventColor}1A`,
+                        color: (isAllDay || bar.width > 1) ? 'white' : eventColor,
                         fontWeight: isTemp ? '700' : '300',
                       }}
                       onClick={(e) => {
@@ -480,12 +443,11 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                         }
                       }}
                     >
-                      <span className={styles.eventTitle}
-                        // style={{
-                        //   color: `${isAllDay ? 'white' : eventColor} !important`,
-                        // }}
-                      >
-                        {isTemp ? tempEvent?.title || 'New Event' : bar.event.title}
+                      <span className={styles.eventTitle}>
+                        {showText ? 
+                          (isTemp ? tempEvent?.title || 'New Event' : bar.event.title) : 
+                          ''
+                        }
                       </span>
                     </div>
                   );

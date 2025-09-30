@@ -493,6 +493,7 @@ import { CalendarProvider, useCalendarContext } from '../../contexts/CalendarCon
 import { CreateUpdateEventRequest, Event } from '../../types/calendar.types';
 import { User } from '../../types/auth.types';
 import { calendarAPI } from '../../services/calendarApi';
+import { format } from 'date-fns';
 
 // Context를 사용하는 내부 컴포넌트
 const CalendarViewContent: React.FC = () => {
@@ -542,8 +543,16 @@ const CalendarViewContent: React.FC = () => {
     title?: string;
     tag?: any;
   }) => {
+    //console.log('handleCreateNewEvent ', startDate)
     const calendarTags = getCalendarTags(selectedCalendarId) || [];
     const firstTag = calendarTags[0];
+
+    const formatLocalDate = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}T00:00:00+09:00`;
+    };
 
     const temp: Event = {
       id: 'temp-' + Date.now(),
@@ -551,8 +560,10 @@ const CalendarViewContent: React.FC = () => {
       title: preserveData?.title || '',
       description: '',
       location: '',
-      start_date: startDate.toISOString(),
-      end_date: endDate ? endDate.toISOString() : startDate.toISOString(),
+      //start_date: startDate.toISOString(),
+      //end_date: endDate ? endDate.toISOString() : startDate.toISOString(),
+      start_date: formatLocalDate(startDate),
+      end_date: endDate ? formatLocalDate(endDate) : formatLocalDate(startDate),
       all_day: true,
       color: '',
       tag: preserveData?.tag || (firstTag ? {
@@ -706,7 +717,6 @@ const CalendarViewContent: React.FC = () => {
             onMonthChange={setCurrentDate}
             getEventColor={getEventColor} // Context 함수 사용
             onEventClick={(event) => {
-              console.log("이벤트 클릭:", event);
             }}
             onEventDelete={deleteEvent} // Context 함수 사용
           />

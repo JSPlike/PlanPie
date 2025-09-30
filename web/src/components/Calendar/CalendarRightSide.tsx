@@ -381,9 +381,6 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
       const newDateTime = isAllDay 
         ? `${newDate}T00:00:00+09:00`
         : `${newDate}T${startTime}:00+09:00`;
-
-
-        console.log('rightside start_date', ' ', newDateTime, ' ', isAllDay)
       onUpdateTempEvent({ start_date: newDateTime });
     }
   };
@@ -419,8 +416,6 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
       const newDateTime = isAllDay 
         ? `${newDate}T23:59:59+09:00`
         : `${newDate}T${endTime}:00+09:00`;
-
-        console.log('rightside start_date', ' ', newDateTime, ' ', isAllDay)
       onUpdateTempEvent({ end_date: newDateTime });
     }
   };
@@ -447,7 +442,6 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
 
       newStartTime = nextHourTime;
       newEndTime = twoHoursLaterTime;
-      console.log(newStartTime, ' ', newEndTime);
       setStartTime(newStartTime);
       setEndTime(newEndTime);
     }
@@ -460,7 +454,6 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
         ? `${endDate}T23:59:59+09:00`
         : `${endDate}T${newEndTime}:00+09:00`;     // 새로운 시간 사용
 
-      console.log(startDateTime, ' ', endDateTime, ' ', checked)
       onUpdateTempEvent({ 
         all_day: checked,
         start_date: startDateTime,
