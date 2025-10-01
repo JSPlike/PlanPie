@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo }  from 'react';
 import styles from './CalendarRightSide.module.css';
 import { Event, Calendar, CalendarTag, CreateUpdateEventRequest } from '../../types/calendar.types';
-import { format, parseISO, isSameDay } from 'date-fns';
+import { format, parseISO, isSameDay, formatDate } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
 interface CalendarRightSideProps {
@@ -16,6 +16,8 @@ interface CalendarRightSideProps {
   onUpdateTempEvent: (updates: Partial<Event>) => void; // 추가
   onSaveEvent: (eventData: CreateUpdateEventRequest & { id?: string }) => void;
   onDeleteEvent: (eventId: string) => void;
+  onDateErrorChange?: (hasError: boolean) => void;
+  isLoading?: boolean;
   onClose: () => void;
 }
 
@@ -29,6 +31,8 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   onUpdateTempEvent,
   onSaveEvent,
   onDeleteEvent,
+  onDateErrorChange,
+  isLoading = false,
   onClose
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -45,11 +49,33 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   const [description, setDescription] = useState('');
   const [showTagEditor, setShowTagEditor] = useState(false);
 
+  //const [isLoading, setIsLoading] = useState(false);
+
   // rightside 캘린더 목록
   const [showCalendarDropdown, setShowCalendarDropdown] = useState(false);
 
   // 태그 드롭다운 상태 추가
   const [showTagDropdown, setShowTagDropdown] = useState(false);
+
+  const hasDateError = useMemo(() => {
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate);
+    
+    if (startDateObj > endDateObj) {
+      return true;
+    }
+    
+    if (!isAllDay) {
+      const startDateTime = new Date(`${startDate}T${startTime}`);
+      const endDateTime = new Date(`${endDate}T${endTime}`);
+      
+      if (startDateTime >= endDateTime) {
+        return true;
+      }
+    }
+    
+    return false;
+  }, [startDate, endDate, startTime, endTime, isAllDay]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -151,6 +177,12 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     }
   }, [selectedCalendarId]);
 
+  useEffect(() => {
+    if (onDateErrorChange) {
+      onDateErrorChange(hasDateError);
+    }
+  }, [hasDateError, onDateErrorChange]);
+
   // 임시 태그 데이터
   const MOCK_TAGS: CalendarTag[] = [
     {
@@ -200,7 +232,10 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     }
   ];  
 
-  const handleSave = () => {
+  const handleSave = async () => {
+
+    console.log('CalendarRightSide ======> handleSave 저장버튼 클릭')
+    //setIsLoading(true);
     // 날짜와 시간을 조합하여 ISO 문자열 생성
     let startDateTime: string;
     let endDateTime: string;
@@ -214,9 +249,20 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
       startDateTime = `${startDate}T${startTime}:00Z`;
       endDateTime = `${endDate}T${endTime}:00Z`;
     }
+
+    let eventId: string;
+    if (selectedEvent?.id) {
+      eventId = selectedEvent.id; // 기존 이벤트 수정
+    } else if (tempEvent?.id) {
+      eventId = tempEvent.id; // 새 이벤트 생성 (temp-xxx)
+    } else {
+      console.error('이벤트 ID가 없습니다!');
+      alert('이벤트 정보가 올바르지 않습니다.');
+      return; // 저장 중단
+    }
     
-    const eventData: CreateUpdateEventRequest & { id?: string } = {
-      ...(selectedEvent?.id && { id: selectedEvent.id }), // 수정 시에만 ID 포함
+    const eventData: CreateUpdateEventRequest = {
+      id: eventId,
       title: eventTitle,
       start_date: startDateTime,
       end_date: endDateTime,
@@ -227,7 +273,11 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
       location: location
     };
   
+    console.log(eventData)
+
+
     onSaveEvent(eventData); // 하나의 함수로 처리
+    //setIsLoading(false);
     onClose();
   };
 
@@ -237,8 +287,6 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
       onClose();
     }
   };
-
-  //const isFormValid = eventTitle.trim() && selectedCalendarId && startDate && endDate;
 
   // 더 엄격한 폼 검증
   const isFormValid = useMemo(() => {
@@ -314,28 +362,81 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     }
   };
 
-  // 시간 검증 함수 추가
-  const validateDateTime = () => {
-    if (!isAllDay) {
-      const startDateTime = new Date(`${startDate}T${startTime}`);
-      const endDateTime = new Date(`${endDate}T${endTime}`);
-      
-      if (startDateTime >= endDateTime) {
-        return false;
-      }
-    }
-    return true;
+  // 날짜 포맷 헬퍼
+  const formatDate = (date: Date): string => {
+    return date.toISOString().split('T')[0];
   };
 
+  // 시작일 변경 이벤트
   const handleStartDateChange = (newDate: string) => {
-    setStartDate(newDate);
-    
+    const currentStartDate = new Date(startDate); // 현재 시작일
+    const currentEndDate = new Date(endDate); // 현재 종료일
+    const newStartDateObj = new Date(newDate); // 새로운 시작일
+  
+    // 현재 범위 계산 (일 단위)
+    const currentRange = Math.ceil((currentEndDate.getTime() - currentStartDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (hasDateError) {
+      setStartDate(newDate);
+      setEndDate(newDate); // 종료일도 같은 날짜로 설정
+      
+      console.log('날짜 오류 상태 - 단일 날짜로 설정:', newDate);
+      
+      if (!selectedEvent && tempEvent) {
+        const startDateTime = isAllDay 
+          ? `${newDate}T00:00:00+09:00`
+          : `${newDate}T${startTime}:00+09:00`;
+        const endDateTime = isAllDay 
+          ? `${newDate}T23:59:59+09:00`
+          : `${newDate}T${endTime}:00+09:00`;
+        
+        onUpdateTempEvent({ 
+          start_date: startDateTime, 
+          end_date: endDateTime 
+        });
+      }
+      return;
+    }
+
+    // 새로운 시작일이 현재 시작일보다 큰경우
+    //if(newStartDateObj > currentStartDate) {
+    if(currentRange > 0) {
+      const newEndDate = new Date(newStartDateObj);
+      newEndDate.setDate(newEndDate.getDate() + currentRange);
+      
+      setStartDate(newDate);
+      setEndDate(formatDate(newEndDate));
+      
+      console.log(`범위 유지: ${newDate} ~ ${formatDate(newEndDate)} (${currentRange}일)`);
+    } else {
+      setStartDate(newDate);
+    }
     // selectedEvent가 있으면 tempEvent 업데이트 안함
     if (!selectedEvent && tempEvent) {
-      const newDateTime = isAllDay 
+      // const startateTime = isAllDay 
+      //   ? `${newDate}T00:00:00+09:00`
+      //   : `${newDate}T${startTime}:00+09:00`;
+      // const endDateTime = isAllDay 
+      //   ? `${endDate}T23:59:59+09:00`
+      //   : `${endDate}T${endTime}:00+09:00`; 
+
+      const startDateTime = isAllDay 
         ? `${newDate}T00:00:00+09:00`
         : `${newDate}T${startTime}:00+09:00`;
-      onUpdateTempEvent({ start_date: newDateTime });
+      
+      let endDateTime;
+      if(currentRange > 0) {
+        const newEndDate = new Date(newStartDateObj);
+        newEndDate.setDate(newEndDate.getDate() + currentRange);
+        endDateTime = isAllDay 
+          ? `${format(newEndDate, 'yyyy-MM-dd')}T23:59:59+09:00`
+          : `${format(newEndDate, 'yyyy-MM-dd')}T${endTime}:00+09:00`;
+      } else {
+        endDateTime = isAllDay 
+          ? `${newDate}T23:59:59+09:00`
+          : `${newDate}T${endTime}:00+09:00`;
+      }
+      onUpdateTempEvent({ start_date: startDateTime, end_date: endDateTime });
     }
   };
 
@@ -477,13 +578,21 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
 
               <div className={styles.dateTimeGroup}>
                 <label className={styles.smallLabel}>종료</label>
-                <div className={styles.dateTimeInputs}>
-                  <div className={styles.dateDiv}>
+                <div className={styles.dateTimeInputs}
+                >
+                  <div className={styles.dateDiv}
+                  >
                     <input
                       type="date"
                       value={endDate}
                       onChange={(e) => handleEndDateChange(e.target.value)}
                       className={styles.dateInput}
+                      style={{
+                        backgroundColor: hasDateError
+                          ? 'rgba(231, 59, 59, 0.1)'  // 문자열로 감싸야 함
+                          : 'rgb(250, 250, 250)',     // 문자열로 감싸야 함
+                        fontWeight: hasDateError ? '700' : '300',
+                      }}
                     />
                   </div>
                   {!isAllDay && (
@@ -493,6 +602,12 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                         value={endTime}
                         onChange={(e) => handleEndTimeChange(e.target.value)}
                         className={styles.timeInput}
+                        style={{
+                          backgroundColor: hasDateError
+                            ? 'rgba(231, 59, 59, 0.1)'  // 문자열로 감싸야 함
+                            : 'rgb(250, 250, 250)',     // 문자열로 감싸야 함
+                          fontWeight: hasDateError ? '700' : '300',
+                        }}
                       />
                     </div>
                   )}
@@ -670,10 +785,11 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                 <button
                   type="button"
                   onClick={handleSave}
-                  disabled={!isFormValid}
+                  disabled={!isFormValid || hasDateError || isLoading}
                   className={`${styles.saveButton} ${!isFormValid ? styles.disabled : ''}`}
                 >
-                  {selectedEvent ? '수정' : '저장'}
+                  {/* {selectedEvent ? '수정' : '저장'} */}
+                  {isLoading ? '저장 중...' : '저장'}
                 </button>
 
                 {selectedEvent && selectedEvent.can_delete && (

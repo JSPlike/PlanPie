@@ -123,26 +123,38 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
 
   // 이벤트 목록 불러오기
   const fetchEvents = useCallback(async () => {
+    console.log('fetchEvents ========> 저장된 이벤트를 불러오는 중.....')
     try {
       setIsLoading(true);
       
       const response = await calendarAPI.getEvents() as EventAPIResponse;
-      
+      console.log('응답결과 ===>', response)
       // 응답 구조 확인 - 타입 안전하게 처리
       let eventsData: Event[] = [];
       
       if (response.data) {
-        if (Array.isArray(response.data)) {
+        if (response.data.results && Array.isArray(response.data.results)) {
+          eventsData = response.data.results;
+          console.log('불러온 이벤트 개수:', eventsData.length);
+          console.log('이벤트 목록:', eventsData);
+        } else if (Array.isArray(response.data)) {
+          // 혹시 직접 배열로 오는 경우를 위한 fallback
           eventsData = response.data;
         } else {
-          // 객체인 경우 안전하게 접근
-          const responseData = response.data as any;
-          if (responseData.events && Array.isArray(responseData.events)) {
-            eventsData = responseData.events;
-          } else if (responseData.data && Array.isArray(responseData.data)) {
-            eventsData = responseData.data;
-          }
+          console.warn('예상하지 못한 응답 구조:', response.data);
         }
+
+        // if (Array.isArray(response.data)) {
+        //   eventsData = response.data;
+        // } else {
+        //   // 객체인 경우 안전하게 접근
+        //   const responseData = response.data as any;
+        //   if (responseData.events && Array.isArray(responseData.events)) {
+        //     eventsData = responseData.events;
+        //   } else if (responseData.data && Array.isArray(responseData.data)) {
+        //     eventsData = responseData.data;
+        //   }
+        // }
       }
       setEvents(eventsData);
       
