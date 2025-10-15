@@ -28,6 +28,7 @@ const CalendarViewContent: React.FC = () => {
     getCalendarTags,
     deleteEvent,
     fetchEvents,
+    addEvent,
 
     tempEvent,
     setTempEvent,
@@ -135,48 +136,6 @@ const CalendarViewContent: React.FC = () => {
   const formatDate = (date: Date): string => {
     return date.toISOString().split('T')[0];
   };
-  /*
-  // 날짜 클릭 핸들러
-  const handleDateSelect = (date: Date) => {
-    if (isRightSideOpen && tempEvent && !hasDateError) {
-      const currentStart = new Date(tempEvent.start_date);
-      const currentEnd = new Date(tempEvent.end_date);
-      const startDateOnly = new Date(currentStart.getFullYear(), currentStart.getMonth(), currentStart.getDate());
-      const endDateOnly = new Date(currentEnd.getFullYear(), currentEnd.getMonth(), currentEnd.getDate());
-
-      // 실제 날짜 차이 계산 (시간 무시)
-      const rangeDays = Math.round((endDateOnly.getTime() - startDateOnly.getTime()) / (1000 * 60 * 60 * 24));
-
-      const newEndDate = new Date(date);
-      newEndDate.setDate(newEndDate.getDate() + rangeDays);
-      setSelectedDate(date);
-
-      const currentTitle = tempEvent?.title || '';
-      const currentTag = tempEvent?.tag || '';
-      const allDay = tempEvent.all_day;
-
-      const preservedData = {
-        title: currentTitle,
-        tag: currentTag,
-        all_day: allDay,
-      };
-
-      if (tempEvent) {
-        setTempEvent(null);
-      }
-
-      setTimeout(() => {
-        handleCreateNewEvent(date, newEndDate, preservedData);
-      }, 0);
-
-    } else {
-      setSelectedDate(date);
-      if (tempEvent) {
-        setTempEvent(null);
-      }
-    }
-  };
-  */
 
   const handleDateSelect = (date: Date) => {
     console.log('=======캘린더 날짜 첫번째 클릭');
@@ -289,26 +248,7 @@ const CalendarViewContent: React.FC = () => {
     //setIsLoading(true);
 
     console.log('CalendarView ======> handleSaveEvent 실행')
-    /*
-    try {
-      if (eventData.id) {
-        await calendarAPI.updateEvent(eventData.id, eventData);
-        toast.success('일정이 수정되었습니다.');
-      } else {
-        await calendarAPI.createEvent(eventData);
-        toast.success('일정이 생성되었습니다.');
-      }
-      
-      setTempEvent(null);
-      // Context의 fetchEvents를 사용하여 이벤트 목록 새로고침
-      await fetchEvents();
-      
-    } catch (error) {
-      console.error('이벤트 저장 실패:', error);
-      toast.error(eventData.id ? '일정 수정에 실패했습니다.' : '일정 생성에 실패했습니다.');
-    }
-
-    */
+   
     try {
       console.log('저장할 이벤트 데이터:', eventData);
       
@@ -316,63 +256,19 @@ const CalendarViewContent: React.FC = () => {
         // 새 이벤트 생성
         console.log('새 이벤트 생성 중...');
         
-        // API 호출 (실제 백엔드가 있다면)
-        // const response = await fetch('/api/events', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify(eventData)
-        // });
-        
-        await calendarAPI.createEvent(eventData);
+        const response = await calendarAPI.createEvent(eventData as any);
+        const savedEvent = (response as any)?.data || response;
+        if (savedEvent) {
+          // 화면 깜빡임 없이 즉시 추가
+          addEvent(savedEvent);
+        }
         toast.success('일정이 생성되었습니다.');
-        // 임시로 로컬에서 처리 (실제 API 대신)
-        /*
-        const newEvent: Event = {
-          id: 'event-' + Date.now(), // 실제로는 서버에서 생성된 ID
-          title: eventData.title,
-          start_date: eventData.start_date,
-          end_date: eventData.end_date,
-          all_day: eventData.all_day,
-          calendar: eventData.calendar,
-          tag: eventData.tag_id ? {
-            id: eventData.tag_id,
-            name: 'Selected Tag', // 실제로는 태그 정보를 가져와야 함
-            color: '#FF6B6B',
-            order: 0,
-            calendar: eventData.calendar,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          } : undefined,
-          description: eventData.description || '',
-          location: eventData.location || '',
-          color: '#FF6B6B', // 실제로는 태그나 캘린더 색상
-          created_by: {
-            id: 'user-1',
-            name: 'Current User',
-            email: 'user@example.com'
-          },
-          can_edit: true,
-          can_delete: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        */
-        // events 배열에 추가
-        //setEvents(prev => [...prev, newEvent]);
-        
-        // tempEvent 제거
+        // temp 이벤트는 실제 이벤트가 추가된 후 제거 (겹침 방지)
         setTempEvent(null);
         
       } else if (eventData.id) {
         // 기존 이벤트 수정
         console.log('이벤트 수정 중...');
-        
-        // API 호출 (실제 백엔드가 있다면)
-        // const response = await fetch(`/api/events/${eventData.id}`, {
-        //   method: 'PUT',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify(eventData)
-        // });
         
         // 임시로 로컬에서 처리
         setEvents(prev => 
@@ -390,10 +286,8 @@ const CalendarViewContent: React.FC = () => {
       setIsRightSideOpen(false);
       setSelectedEvent(null);
       
-      // 성공 메시지 (선택사항)
-      alert('이벤트가 성공적으로 저장되었습니다!');
-      console.log('이벤트 저장완료후 저장된 이벤트를 불러옵니다....');
-      await fetchEvents();
+      // 백그라운드 동기화 (화면 끊김 없이)
+      fetchEvents();
       
     } catch (error) {
       console.error('이벤트 저장 오류:', error);

@@ -134,16 +134,18 @@
     position: relative;
     background: white;
     height: 100%;
-    transition: width 0.3s ease;
+    transition: width 0.3s ease, opacity 0.3s ease;
     z-index: 20;
     overflow: hidden; /* overflow-y -> overflow로 수정 */
     width: 0; /* 기본 닫힌 상태 */
     flex-shrink: 0; /* 축소되지 않도록 */
+    opacity: 0; /* 부드러운 페이드 아웃 */
   }
   
   .rightSideContainer.open {
     width: 420px;
     min-width: 420px;
+    opacity: 1; /* 부드러운 페이드 인 */
   }
   
   /* 태블릿 크기 */

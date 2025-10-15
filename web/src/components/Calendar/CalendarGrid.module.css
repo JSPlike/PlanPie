@@ -154,12 +154,10 @@
   }
   
   .dayEvents {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    display: block; /* absolute children stack; vertical spacing controlled by top in JS */
     margin-top: 4px;
-    overflow: visible; /* 이미 설정됨 */
-    position: relative; /* 추가 */
+    overflow: visible;
+    position: relative;
     height: 100%;
   }
 
@@ -170,7 +168,8 @@
   }
 
   .eventBar {
-    padding: 2px 6px;
+    position:absolute;
+    padding: 1px 6px;
     border-radius: 0;
     margin: 0;
     border: none;
@@ -181,14 +180,18 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     min-height: 16px;
-    align-items: center;
+    display: flex; /* 세로 중앙 정렬을 위해 플렉스 */
+    align-items: center; /* 세로 중앙 */
     text-align: left;
     z-index: 10;
+    left: 0;
+    right: 0;
+    width: auto;
   }
 
   /* 오른쪽으로 계속되는 바 - 오른쪽 border 덮기 */
   .eventBar.continueRight {
-    margin-right: -1px;
+    /* margin-right: -1px; */
     z-index: 10;
   }
 
@@ -200,12 +203,14 @@
 
   /* 첫 번째 바만 왼쪽 모서리 둥글게 */
   .eventBar.first {
+    margin-left: 2px;
     border-top-left-radius: 4px;
     border-bottom-left-radius: 4px;
   }
   
   /* 마지막 바만 오른쪽 모서리 둥글게 */
   .eventBar.last {
+    margin-right: 2px;
     border-top-right-radius: 4px;
     border-bottom-right-radius: 4px;
   }
@@ -217,18 +222,20 @@
 
   /* 토요일에서 계속되는 바 - 오른쪽 직각 */
   .eventBar.weekEndContinue {
-    border-top-left-radius: 4px;
-    border-bottom-left-radius: 4px;
-    border-top-right-radius: 0 !important;
-    border-bottom-right-radius: 0 !important;
+    margin-right: 2px;
+    /* border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px; */
+    border-top-right-radius: 4px !important;
+    border-bottom-right-radius: 4px !important;
   }
 
   /* 일요일에서 시작되는 바 - 왼쪽 직각 */
   .eventBar.weekStartContinue {
-    border-top-left-radius: 0 !important;
-    border-bottom-left-radius: 0 !important;
-    border-top-right-radius: 4px;
-    border-bottom-right-radius: 4px;
+    margin-left: 2px;
+    border-top-left-radius: 4px !important;
+    border-bottom-left-radius: 4px !important;
+    /* border-top-right-radius: 4px; */
+    /* border-bottom-right-radius: 4px; */
   }
 
   .tempBar {
@@ -243,14 +250,14 @@
   .eventTitle {
     flex: 1;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 800;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     user-select: none; /* 텍스트 선택 방지 */
   }
 
-  .eventItem {
+  /* .eventItem {
     display: flex;
     align-items: center;
     padding: 2px 6px;
@@ -268,14 +275,14 @@
   .eventItem:hover {
     transform: translateX(2px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
+  } */
   
-  .eventTime {
+  /* .eventTime {
     font-size: 11px;
     opacity: 0.9;
     margin-right: 4px;
     font-weight: 500;
-  }
+  } */
   
   .deleteButton {
     position: absolute;
@@ -326,10 +333,6 @@
   
     .daysGrid {
       grid-auto-rows: minmax(80px, 1fr);
-    }
-  
-    .dayCell {
-      padding: 4px;
     }
   
     .dayNumber {

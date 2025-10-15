@@ -241,13 +241,13 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     let endDateTime: string;
 
     if (isAllDay) {
-      // 종일 이벤트: 시간을 00:00:00과 23:59:59로 설정
-      startDateTime = `${startDate}T00:00:00Z`;
-      endDateTime = `${endDate}T23:59:59Z`;
+      // 종일 이벤트: KST 고정으로 저장하여 날짜 넘어감 방지
+      startDateTime = `${startDate}T00:00:00+09:00`;
+      endDateTime = `${endDate}T23:59:59+09:00`;
     } else {
-      // 시간 지정 이벤트: 입력된 시간 사용
-      startDateTime = `${startDate}T${startTime}:00Z`;
-      endDateTime = `${endDate}T${endTime}:00Z`;
+      // 시간 지정 이벤트: KST 고정 오프셋 사용
+      startDateTime = `${startDate}T${startTime}:00+09:00`;
+      endDateTime = `${endDate}T${endTime}:00+09:00`;
     }
 
     let eventId: string;
@@ -272,9 +272,6 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
       description: showMemo ? description : '',
       location: location
     };
-  
-    console.log(eventData)
-
 
     onSaveEvent(eventData); // 하나의 함수로 처리
     //setIsLoading(false);
@@ -413,12 +410,6 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     }
     // selectedEvent가 있으면 tempEvent 업데이트 안함
     if (!selectedEvent && tempEvent) {
-      // const startateTime = isAllDay 
-      //   ? `${newDate}T00:00:00+09:00`
-      //   : `${newDate}T${startTime}:00+09:00`;
-      // const endDateTime = isAllDay 
-      //   ? `${endDate}T23:59:59+09:00`
-      //   : `${endDate}T${endTime}:00+09:00`; 
 
       const startDateTime = isAllDay 
         ? `${newDate}T00:00:00+09:00`
@@ -459,7 +450,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     }
     
     if (!selectedEvent && tempEvent && !isAllDay) {
-      const newDateTime = `${startDate}T${newTime}:00Z`;
+      const newDateTime = `${startDate}T${newTime}:00+09:00`;
       onUpdateTempEvent({ start_date: newDateTime });
     }
   };
@@ -479,7 +470,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     setEndTime(newTime);
     
     if (!selectedEvent && tempEvent && !isAllDay) {
-      const newDateTime = `${endDate}T${newTime}:00Z`;
+      const newDateTime = `${endDate}T${newTime}:00+09:00`;
       onUpdateTempEvent({ end_date: newDateTime });
     }
   };
@@ -591,7 +582,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                         backgroundColor: hasDateError
                           ? 'rgba(231, 59, 59, 0.1)'  // 문자열로 감싸야 함
                           : 'rgb(250, 250, 250)',     // 문자열로 감싸야 함
-                        fontWeight: hasDateError ? '700' : '300',
+                        fontWeight: hasDateError ? '700' : '400',
                       }}
                     />
                   </div>
@@ -606,7 +597,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                           backgroundColor: hasDateError
                             ? 'rgba(231, 59, 59, 0.1)'  // 문자열로 감싸야 함
                             : 'rgb(250, 250, 250)',     // 문자열로 감싸야 함
-                          fontWeight: hasDateError ? '700' : '300',
+                          fontWeight: hasDateError ? '700' : '400',
                         }}
                       />
                     </div>

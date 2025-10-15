@@ -135,28 +135,24 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
       if (response.data) {
         if (response.data.results && Array.isArray(response.data.results)) {
           eventsData = response.data.results;
-          console.log('불러온 이벤트 개수:', eventsData.length);
-          console.log('이벤트 목록:', eventsData);
         } else if (Array.isArray(response.data)) {
-          // 혹시 직접 배열로 오는 경우를 위한 fallback
           eventsData = response.data;
         } else {
           console.warn('예상하지 못한 응답 구조:', response.data);
         }
-
-        // if (Array.isArray(response.data)) {
-        //   eventsData = response.data;
-        // } else {
-        //   // 객체인 경우 안전하게 접근
-        //   const responseData = response.data as any;
-        //   if (responseData.events && Array.isArray(responseData.events)) {
-        //     eventsData = responseData.events;
-        //   } else if (responseData.data && Array.isArray(responseData.data)) {
-        //     eventsData = responseData.data;
-        //   }
-        // }
       }
-      setEvents(eventsData);
+
+      const uniqueEvents = eventsData.filter((event, index, self) => {
+        const firstIndex = self.findIndex(e => 
+          e.id === event.id || 
+          (e.title === event.title && 
+           e.start_date === event.start_date && 
+           e.end_date === event.end_date)
+        );
+        return index === firstIndex;
+      });
+
+      setEvents(() => uniqueEvents); 
       
     } catch (err) {
       console.error('이벤트 불러오기 실패:', err);

@@ -200,15 +200,7 @@
   }
   
   /* 반응형 디자인 */
-  @media (max-width: 1024px) {
-    .header {
-      padding: 10px 16px;
-    }
-  
-    .headerLeft {
-      gap: 12px;
-    }
-  
+  @media (max-width: 1024px) {  
     .logo {
       font-size: 18px;
     }
@@ -228,15 +220,6 @@
   }
   
   @media (max-width: 768px) {
-    .header {
-      padding: 8px 12px;
-      height: 52px;
-    }
-  
-    .headerLeft {
-      gap: 8px;
-    }
-  
     .logo {
       display: none;
     }
