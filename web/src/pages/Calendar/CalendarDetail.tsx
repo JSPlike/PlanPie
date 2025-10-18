@@ -4,6 +4,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Calendar, Event } from '../../types/calendar.types';
 import { calendarAPI } from '../../services/calendarApi';
 import Loading from '../../components/Common/Loading';
+import CalendarGrid from '../../components/Calendar/CalendarGrid';
+import CalendarGridW from '../../components/Calendar/CalendarGridW';
 //import './CalendarDetail.css';
 
 const CalendarDetail: React.FC = () => {
@@ -44,6 +46,23 @@ const CalendarDetail: React.FC = () => {
   const handleEventCreate = () => {
     // 이벤트 생성 모달 열기
     console.log('Create event');
+  };
+
+  const handleDateSelect = (date: Date) => {
+    console.log('Date selected:', date);
+  };
+
+  const handleDateClick = (date: Date) => {
+    console.log('Date clicked:', date);
+  };
+
+  const handleEventClick = (event: Event) => {
+    console.log('Event clicked:', event);
+  };
+
+  const handleEventDelete = (eventId: string) => {
+    console.log('Delete event:', eventId);
+    setEvents(prev => prev.filter(e => e.id !== eventId));
   };
 
   const handleCalendarSettings = () => {
@@ -144,22 +163,67 @@ const CalendarDetail: React.FC = () => {
       </div>
 
       <div className="calendar-content">
-        {/* 실제 캘린더 뷰 컴포넌트가 들어갈 자리 */}
-        <div className="calendar-placeholder">
-          <p>캘린더 뷰 ({view})</p>
+        {/* 실제 캘린더 뷰 컴포넌트 */}
+        {view === 'month' ? (
+          <CalendarGrid
+            currentDate={currentDate}
+            selectedDate={null}
+            selectedRange={null}
+            events={events}
+            calendars={calendar ? [calendar] : []}
+            onDateSelect={handleDateSelect}
+            onDateClick={handleDateClick}
+            onMonthChange={setCurrentDate}
+            onEventClick={handleEventClick}
+            onEventDelete={handleEventDelete}
+          />
+        ) : view === 'week' ? (
+          <CalendarGridW
+            currentDate={currentDate}
+            selectedDate={null}
+            events={events}
+            calendars={calendar ? [calendar] : []}
+            onDateSelect={handleDateSelect}
+            onDateClick={handleDateClick}
+            onEventClick={handleEventClick}
+            onEventDelete={handleEventDelete}
+          />
+        ) : (
+          <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+            일별 뷰는 아직 구현되지 않았습니다.
+          </div>
+        )}
+
+        {/* 이벤트 목록 (모든 뷰에서 보여주기) */}
+        <div className="events-summary" style={{ marginTop: '20px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+          <h3>이번 달 일정</h3>
           <div className="events-list">
             {events.length === 0 ? (
-              <p className="no-events">등록된 일정이 없습니다.</p>
+              <p className="no-events" style={{ color: '#666', fontStyle: 'italic' }}>등록된 일정이 없습니다.</p>
             ) : (
               events.map(event => (
-                <div key={event.id} className="event-item">
+                <div key={event.id} className="event-item" style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  padding: '8px 0', 
+                  borderBottom: '1px solid #eee',
+                  cursor: 'pointer'
+                }} onClick={() => handleEventClick(event)}>
                   <div 
                     className="event-color"
-                    style={{ backgroundColor: event.color }}
+                    style={{ 
+                      backgroundColor: event.color, 
+                      width: '12px', 
+                      height: '12px', 
+                      borderRadius: '50%', 
+                      marginRight: '12px' 
+                    }}
                   />
                   <div className="event-info">
-                    <h4>{event.title}</h4>
-                    <p>{new Date(event.start_date).toLocaleString('ko-KR')}</p>
+                    <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '500' }}>{event.title}</h4>
+                    <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>
+                      {new Date(event.start_date).toLocaleString('ko-KR')}
+                    </p>
                   </div>
                 </div>
               ))
