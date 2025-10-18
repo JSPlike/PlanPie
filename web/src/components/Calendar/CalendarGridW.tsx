@@ -263,8 +263,8 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
                       style={{
                         backgroundColor: eventColor,
                         color: 'white',
-                        top: `${bar.lane * 22 + 6}px`,
-                        fontWeight: isTemp ? '700' : '400'
+                        top: `${bar.lane * 24 + 2}px`,
+                        fontWeight: isTemp ? '700' : '500'
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -274,7 +274,13 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
                       }}
                     >
                       {shouldShowText && (
-                        <span>
+                        <span style={{ 
+                          whiteSpace: 'nowrap', 
+                          overflow: 'hidden', 
+                          textOverflow: 'ellipsis',
+                          maxWidth: '100%',
+                          display: 'block'
+                        }}>
                           {isTemp ? tempEvent?.title || 'New Event' : bar.event.title}
                         </span>
                       )}

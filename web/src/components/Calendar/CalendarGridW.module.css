@@ -78,36 +78,49 @@
   align-items: center;
   padding: 0 6px;
   top: 0; /* lane 계산으로 top 지정됨 */
-  left: 6px;
-  right: 6px;
+  left: 4px;
+  right: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
 }
 
 .allDayPill.first {
   border-top-left-radius: 6px;
   border-bottom-left-radius: 6px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .allDayPill.last {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
   border-top-right-radius: 6px;
-  margin-right: 6px;
   border-bottom-right-radius: 6px;
 }
 
 .allDayPill.single {
   border-radius: 6px;
-  margin: 0 6px;
+  left: 6px;
+  right: 6px;
 }
 
 .allDayPill.continueLeft {
-  margin-left: 0;
+  left: 0;
   border-top-left-radius: 0 !important;
   border-bottom-left-radius: 0 !important;
 }
 
 .allDayPill.continueRight {
-  margin-right: 0;
+  right: 0;
   border-top-right-radius: 0 !important;
   border-bottom-right-radius: 0 !important;
+}
+
+/* 중간 부분 (양쪽 모두 연결) */
+.allDayPill.continueLeft.continueRight {
+  left: 0;
+  right: 0;
+  border-radius: 0 !important;
 }
 
 .timeScroll {
