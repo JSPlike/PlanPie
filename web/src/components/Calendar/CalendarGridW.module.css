@@ -1,0 +1,284 @@
+.weekView {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.weekHeader {
+  display: grid;
+  grid-template-columns: 80px repeat(7, 1fr); /* time gutter + 7 days */
+  border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 5;
+}
+
+.timeGutterHeader {
+  border-right: 1px solid #f0f0f0;
+}
+
+.weekHeaderCell {
+  padding: 8px 12px;
+  text-align: center;
+  color: #666;
+}
+
+.weekHeaderDay {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.weekHeaderDate {
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.weekHeaderDate.today {
+  background: black;
+  color: white;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.allDayRow {
+  display: grid;
+  grid-template-columns: 80px repeat(7, 1fr);
+  border-bottom: 1px solid #f0f0f0;
+  overflow: visible;
+}
+
+.timeGutter {
+  width: 80px;
+  border-right: 1px solid #f0f0f0;
+}
+
+.allDayCell {
+  border-right: 0.5px solid #f5f5f5;
+  padding: 6px 8px;
+  position: relative;
+  min-height: 60px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.allDayCell:hover {
+  background-color: #f8f9fa;
+}
+
+.allDayLaneContainer {
+  position: relative;
+  background-image: none;
+}
+
+.allDayPill {
+  position: absolute;
+  height: 20px;
+  border-radius: 0;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  top: 0; /* lane 계산으로 top 지정됨 */
+  left: 0;
+  right: 0;
+  margin: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-weight: 500;
+}
+
+.allDayPill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+/* 단일 이벤트 - 양쪽 모서리 둥글게 */
+.allDayPill.single {
+  border-radius: 6px;
+  margin: 0 4px;
+  left: 4px;
+  right: 4px;
+}
+
+/* 연결된 이벤트의 첫 번째 세그먼트 */
+.allDayPill.first {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-left: 4px;
+  left: 4px;
+  right: -1px; /* 다음 셀과 연결되도록 */
+}
+
+/* 연결된 이벤트의 마지막 세그먼트 */
+.allDayPill.last {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+  margin-right: 4px;
+  left: -1px; /* 이전 셀과 연결되도록 */
+  right: 4px;
+}
+
+/* 연결된 이벤트의 중간 세그먼트들 */
+.allDayPill:not(.single):not(.first):not(.last) {
+  border-radius: 0;
+  left: -1px;
+  right: -1px;
+}
+
+/* 주 경계를 넘어서 계속되는 경우 */
+.allDayPill.continueLeft {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  margin-left: 0 !important;
+  left: 0 !important;
+}
+
+.allDayPill.continueRight {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  margin-right: 0 !important;
+  right: 0 !important;
+}
+
+.timeScroll {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  flex: 1;
+  overflow: hidden;
+}
+
+.timeColumns {
+  overflow: scroll;
+}
+
+.timeDayColumn {
+  display: inline-block;
+  width: calc(100% / 7);
+  vertical-align: top;
+  border-right: 0.5px solid #f5f5f5;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.timeDayColumn:hover {
+  background-color: rgba(248, 249, 250, 0.5);
+}
+
+.timeGrid {
+  position: relative;
+  background-image:
+    linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px);
+  background-size: calc(100% / 7) 100%, 100% 44px; /* vertical lines, hour rows */
+  background-position: 0 0, 0 0;
+}
+
+.timeHourRow {
+  border-bottom: 0.5px solid #f0f0f0;
+}
+
+.timeGutterRow {
+  border-bottom: 0.5px solid #f0f0f0;
+  padding: 0 8px;
+  font-size: 11px;
+  color: #777;
+  display: flex;
+  align-items: flex-start;
+  padding-top: -10px;
+}
+
+.timedEvent {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  background: #fafafa;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  z-index: 1;
+}
+
+.timedEvent:hover {
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+.dayColumn {
+  border-right: 0.5px solid #f5f5f5;
+  border-bottom: 0.5px solid #f5f5f5;
+  padding: 8px;
+}
+
+.dayColumn.selected {
+  background: #f8f9fa;
+}
+
+.eventTitle {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .weekHeaderCell {
+    padding: 6px 8px;
+  }
+  
+  .weekHeaderDay {
+    font-size: 11px;
+  }
+  
+  .weekHeaderDate {
+    font-size: 12px;
+  }
+  
+  .allDayPill {
+    font-size: 11px;
+    padding: 0 6px;
+  }
+  
+  .timedEvent {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+  
+  .timeGutter {
+    width: 60px;
+  }
+  
+  .weekHeader {
+    grid-template-columns: 60px repeat(7, 1fr);
+  }
+  
+  .allDayRow {
+    grid-template-columns: 60px repeat(7, 1fr);
+  }
+  
+  .timeScroll {
+    grid-template-columns: 60px 1fr;
+  }
+}
