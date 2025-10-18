@@ -1,153 +1,365 @@
 // src/components/Calendar/CalendarGridW.tsx
 import React, { useMemo } from 'react';
 import styles from './CalendarGridW.module.css';
-import { addDays, endOfWeek, format, isSameDay, parseISO, startOfDay, startOfWeek, differenceInMinutes } from 'date-fns';
-import { Event } from '../../types/calendar.types';
+import { format, parseISO, isSameDay, startOfWeek, endOfWeek, eachDayOfInterval, 
+  addHours, startOfDay, isSameWeek, differenceInMinutes, subDays } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import { Event, Calendar } from '../../types/calendar.types';
 import { useCalendarContext } from '../../contexts/CalendarContext';
 
-interface CalendarGridWrops {
+interface CalendarGridWProps {
   currentDate: Date;
   selectedDate: Date | null;
   events: Event[];
+  calendars: Calendar[];
+  onDateClick: (date: Date) => void;
   onDateSelect: (date: Date) => void;
+  onTimeSlotClick?: (date: Date, hour: number) => void;
   onEventClick: (event: Event) => void;
-  onDateDoubleClick?: (date: Date) => void;
+  onEventDelete: (eventId: string) => void;
 }
 
-const CalendarGridW: React.FC<CalendarGridWrops> = ({ currentDate, selectedDate, events, onDateSelect, onEventClick, onDateDoubleClick }) => {
+interface AllDayEventBar {
+  event: Event;
+  dayIndex: number;
+  width: number;
+  lane: number;
+  isFirst?: boolean;
+  isLast?: boolean;
+  isSingle?: boolean;
+  continueLeft?: boolean;
+  continueRight?: boolean;
+}
+
+interface TimedEvent {
+  event: Event;
+  dayIndex: number;
+  top: number;
+  height: number;
+  width?: number;
+  isFirst?: boolean;
+  isLast?: boolean;
+  isSingle?: boolean;
+  continueLeft?: boolean;
+  continueRight?: boolean;
+}
+
+const CalendarGridW: React.FC<CalendarGridWProps> = ({
+  currentDate,
+  selectedDate,
+  events,
+  calendars,
+  onDateClick,
+  onDateSelect,
+  onTimeSlotClick,
+  onEventClick,
+  onEventDelete,
+}) => {
   const { tempEvent, getEventColor } = useCalendarContext();
-  const HOUR_ROW_HEIGHT = 44; // px per hour
-  const ALLDAY_LANE_HEIGHT = 24; // px per all-day lane
-  const HEADER_HEIGHT = 48; // px, matches sticky header top in CSS
 
-  const weekDays = useMemo(() => {
-    const start = startOfWeek(currentDate, { weekStartsOn: 0 });
-    return Array.from({ length: 7 }, (_, i) => addDays(start, i));
-  }, [currentDate]);
+  // 주의 시작과 끝 계산
+  const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
+  const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
+  const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
-  // 주간 전체 이벤트 목록 (temp 포함)
-  const allWeekEvents = useMemo(() => (tempEvent ? [...events, tempEvent] : events), [events, tempEvent]);
+  // 시간 슬롯 생성 (0시 ~ 23시)
+  const timeSlots = useMemo(() => {
+    const slots = [];
+    for (let hour = 0; hour < 24; hour++) {
+      slots.push({
+        hour,
+        label: format(addHours(startOfDay(new Date()), hour), 'H:mm')
+      });
+    }
+    return slots;
+  }, []);
 
-  // 종일 이벤트에 대한 주 단위 레인 배치 (같은 이벤트는 같은 줄 유지)
-  const allDayBars = useMemo(() => {
-    type Bar = {
-      event: Event;
-      startDay: number; // 0..6
-      endDay: number;   // 0..6
-      lane: number;
-    };
-
-    const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
-    const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
-    const bars: Omit<Bar, 'lane'>[] = [];
-
-    allWeekEvents.filter(e => e.all_day).forEach(e => {
-      const es = parseISO(e.start_date);
-      const ee = parseISO(e.end_date);
-      if (ee < weekStart || es > weekEnd) return;
-      let startIdx = Math.max(0, Math.floor((startOfDay(es).getTime() - startOfDay(weekStart).getTime()) / (24*60*60*1000)));
-      let endIdx = Math.min(6, Math.floor((startOfDay(ee).getTime() - startOfDay(weekStart).getTime()) / (24*60*60*1000)));
-      if (startIdx > 6 || endIdx < 0) return;
-      bars.push({ event: e, startDay: Math.max(0, startIdx), endDay: Math.min(6, endIdx) });
+  // 이벤트를 종일 이벤트와 시간 이벤트로 분리
+  const { allDayEvents, timedEvents } = useMemo(() => {
+    const allEvents = tempEvent ? [...events, tempEvent] : events;
+    const currentWeekEvents = allEvents.filter(event => {
+      const eventStart = parseISO(event.start_date);
+      const eventEnd = parseISO(event.end_date);
+      return isSameWeek(eventStart, weekStart, { weekStartsOn: 0 }) || 
+             isSameWeek(eventEnd, weekStart, { weekStartsOn: 0 }) ||
+             (eventStart <= weekStart && eventEnd >= weekEnd);
     });
 
-    // 정렬: 시작일 오름차순, 길이 내림차순
-    bars.sort((a, b) => a.startDay - b.startDay || (b.endDay - b.startDay) - (a.endDay - a.startDay));
+    const allDay: Event[] = [];
+    const timed: Event[] = [];
 
-    const occupancy: boolean[][] = []; // occupancy[lane][day]
-    const assigned: Bar[] = [];
-    bars.forEach(bar => {
-      let lane = 0;
-      while (true) {
-        if (!occupancy[lane]) occupancy[lane] = [false,false,false,false,false,false,false];
-        let conflict = false;
-        for (let d = bar.startDay; d <= bar.endDay; d++) {
-          if (occupancy[lane][d]) { conflict = true; break; }
-        }
-        if (!conflict) {
-          for (let d = bar.startDay; d <= bar.endDay; d++) occupancy[lane][d] = true;
-          assigned.push({ ...bar, lane });
-          break;
-        }
-        lane++;
+    currentWeekEvents.forEach(event => {
+      if (event.all_day) {
+        allDay.push(event);
+      } else {
+        timed.push(event);
       }
     });
 
-    return assigned;
-  }, [allWeekEvents, currentDate]);
+    return { allDayEvents: allDay, timedEvents: timed };
+  }, [events, tempEvent, weekStart, weekEnd]);
 
-  const maxAllDayLane = useMemo(() => {
-    return allDayBars.reduce((m, b) => Math.max(m, b.lane), -1);
-  }, [allDayBars]);
-  const allDayHeightPx = (maxAllDayLane + 1) * ALLDAY_LANE_HEIGHT;
+  // 종일 이벤트 바 처리
+  const allDayEventBars = useMemo(() => {
+    const bars: AllDayEventBar[] = [];
+    const lanes: AllDayEventBar[][] = []; // 레인별로 이벤트 바 관리
 
-  // 시간 지정 이벤트: 요일별로 단순 그룹 (후속으로 겹침 분할 가능)
-  const timedEventsByDay = useMemo(() => {
-    const map: Record<number, Event[]> = { 0:[],1:[],2:[],3:[],4:[],5:[],6:[] };
-    const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
-    const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
-    allWeekEvents.filter(e => !e.all_day).forEach(e => {
-      const es = parseISO(e.start_date);
-      const ee = parseISO(e.end_date);
-      if (ee < weekStart || es > weekEnd) return;
-      // 이벤트가 걸치는 각 날짜에 배치
-      weekDays.forEach((day, dayIdx) => {
-        const dayStart = startOfDay(day);
-        const dayEnd = new Date(dayStart.getTime() + 24*60*60*1000 - 1);
-        if (!(ee < dayStart || es > dayEnd)) {
-          map[dayIdx].push(e);
+    allDayEvents.forEach(event => {
+      const eventStart = parseISO(event.start_date);
+      // 자정 종료(00:00:00...)는 전날까지로 간주
+      const endsAtMidnight = /T00:00:00/.test(event.end_date);
+      const eventEnd = endsAtMidnight ? subDays(parseISO(event.end_date), 1) : parseISO(event.end_date);
+
+      let startDayIndex = -1;
+      let endDayIndex = -1;
+
+      weekDays.forEach((day, dayIndex) => {
+        const dayDateString = format(day, 'yyyy-MM-dd');
+        const eventStartString = format(eventStart, 'yyyy-MM-dd');
+        const eventEndString = format(eventEnd, 'yyyy-MM-dd');
+        
+        if (dayDateString >= eventStartString && dayDateString <= eventEndString) {
+          if (startDayIndex === -1) startDayIndex = dayIndex;
+          endDayIndex = dayIndex;
         }
       });
-    });
-    return map;
-  }, [allWeekEvents, currentDate, weekDays]);
 
-  // 시간 그리드 전체 높이
-  const timeGridHeight = 24 * HOUR_ROW_HEIGHT;
+      if (startDayIndex !== -1 && endDayIndex !== -1) {
+        const width = endDayIndex - startDayIndex + 1;
+        const eventBar: AllDayEventBar = {
+          event,
+          dayIndex: startDayIndex,
+          width,
+          lane: 0, // 레인은 나중에 할당
+          isSingle: width === 1,
+          isFirst: startDayIndex === 0 && eventStart < weekStart,
+          isLast: endDayIndex === 6 && eventEnd > weekEnd,
+          continueLeft: eventStart < weekStart,
+          continueRight: eventEnd > weekEnd
+        };
+
+        // 레인 할당
+        let assignedLane = -1;
+        for (let laneIndex = 0; laneIndex < lanes.length; laneIndex++) {
+          const lane = lanes[laneIndex];
+          let hasConflict = false;
+          
+          for (const existingBar of lane) {
+            if (!(endDayIndex < existingBar.dayIndex || startDayIndex > existingBar.dayIndex + existingBar.width - 1)) {
+              hasConflict = true;
+              break;
+            }
+          }
+          
+          if (!hasConflict) {
+            assignedLane = laneIndex;
+            break;
+          }
+        }
+
+        if (assignedLane === -1) {
+          assignedLane = lanes.length;
+          lanes.push([]);
+        }
+
+        eventBar.lane = assignedLane;
+        lanes[assignedLane].push(eventBar);
+        bars.push(eventBar);
+      }
+    });
+
+    return bars;
+  }, [allDayEvents, weekDays, weekStart, weekEnd]);
+
+  // 시간 이벤트 처리 (여러 날짜에 걸친 이벤트 연결 지원)
+  const processedTimedEvents = useMemo(() => {
+    const processed: TimedEvent[] = [];
+
+    timedEvents.forEach(event => {
+      const eventStart = parseISO(event.start_date);
+      const eventEnd = parseISO(event.end_date);
+
+      // 이벤트가 여러 날에 걸쳐 있는지 확인
+      let startDayIndex = -1;
+      let endDayIndex = -1;
+      let eventStartTime = 0;
+      let eventEndTime = 0;
+
+      weekDays.forEach((day, dayIndex) => {
+        const dayStart = startOfDay(day);
+        const dayEnd = addHours(dayStart, 24);
+
+        // 이벤트가 이 날에 걸치는지 확인
+        if (eventStart < dayEnd && eventEnd > dayStart) {
+          if (startDayIndex === -1) {
+            startDayIndex = dayIndex;
+            const displayStart = eventStart > dayStart ? eventStart : dayStart;
+            eventStartTime = displayStart.getHours() * 60 + displayStart.getMinutes();
+          }
+          endDayIndex = dayIndex;
+          const displayEnd = eventEnd < dayEnd ? eventEnd : dayEnd;
+          eventEndTime = displayEnd.getHours() * 60 + displayEnd.getMinutes();
+        }
+      });
+
+      if (startDayIndex !== -1 && endDayIndex !== -1) {
+        const width = endDayIndex - startDayIndex + 1;
+        const isMultiDay = width > 1;
+
+        if (isMultiDay) {
+          // 여러 날에 걸친 이벤트 - 연결된 바로 표시
+          const timedEvent: TimedEvent = {
+            event,
+            dayIndex: startDayIndex,
+            top: (eventStartTime / 60) * 44,
+            height: Math.max(44, 20), // 여러 날 이벤트는 최소 1시간 높이
+            width,
+            isSingle: false,
+            isFirst: startDayIndex === 0 && eventStart < weekStart,
+            isLast: endDayIndex === 6 && eventEnd > weekEnd,
+            continueLeft: eventStart < weekStart,
+            continueRight: eventEnd > weekEnd
+          };
+          processed.push(timedEvent);
+        } else {
+          // 단일 날짜 이벤트 - 기존 방식
+          weekDays.forEach((day, dayIndex) => {
+            const dayStart = startOfDay(day);
+            const dayEnd = addHours(dayStart, 24);
+
+            if (eventStart < dayEnd && eventEnd > dayStart) {
+              const displayStart = eventStart > dayStart ? eventStart : dayStart;
+              const displayEnd = eventEnd < dayEnd ? eventEnd : dayEnd;
+              
+              const startMinutes = displayStart.getHours() * 60 + displayStart.getMinutes();
+              const durationMinutes = differenceInMinutes(displayEnd, displayStart);
+              
+              processed.push({
+                event,
+                dayIndex,
+                top: (startMinutes / 60) * 44,
+                height: Math.max((durationMinutes / 60) * 44, 20),
+                isSingle: true
+              });
+            }
+          });
+        }
+      }
+    });
+
+    return processed;
+  }, [timedEvents, weekDays, weekStart, weekEnd]);
+
+  // 종일 이벤트 영역의 높이 계산
+  const allDayHeight = Math.max(allDayEventBars.length > 0 ? 
+    Math.max(...allDayEventBars.map(bar => bar.lane)) * 26 + 32 : 32, 32);
+
+  const handleDateCellClick = (date: Date, event: React.MouseEvent) => {
+    event.stopPropagation();
+    
+    const isSameDate = selectedDate && isSameDay(date, selectedDate);
+    
+    if (isSameDate) {
+      onDateClick(date);
+    } else {
+      onDateSelect(date);
+    }
+  };
+
+  const handleTimeSlotClick = (date: Date, hour: number, event: React.MouseEvent) => {
+    event.stopPropagation();
+    
+    if (onTimeSlotClick) {
+      onTimeSlotClick(date, hour);
+    } else {
+      // fallback to regular date click
+      const isSameDate = selectedDate && isSameDay(date, selectedDate);
+      if (isSameDate) {
+        onDateClick(date);
+      } else {
+        onDateSelect(date);
+      }
+    }
+  };
+
+  const isToday = (date: Date) => isSameDay(date, new Date());
+  const isSelected = (date: Date) => selectedDate ? isSameDay(date, selectedDate) : false;
 
   return (
     <div className={styles.weekView}>
-      {/* 요일 헤더 */}
+      {/* 주 헤더 */}
       <div className={styles.weekHeader}>
-        <div className={styles.timeGutterHeader} />
-        {weekDays.map((day) => (
+        <div className={styles.timeGutterHeader}></div>
+        {weekDays.map((day, index) => (
           <div key={day.toISOString()} className={styles.weekHeaderCell}>
-            <div className={styles.weekHeaderDay}>{format(day, 'EEE')}</div>
-            <div className={`${styles.weekHeaderDate} ${isSameDay(day, new Date()) ? styles.today : ''}`}>{format(day, 'd')}</div>
+            <div className={styles.weekHeaderDay}>
+              {format(day, 'E', { locale: ko })}
+            </div>
+            <div className={`${styles.weekHeaderDate} ${isToday(day) ? styles.today : ''}`}>
+              {format(day, 'd')}
+            </div>
           </div>
         ))}
       </div>
 
-      {/* 종일 섹션: 주 단위 레인 고정 */}
-      <div className={styles.allDayRow}>
-        <div className={styles.timeGutter} />
-        {weekDays.map((_, dayIdx) => (
-          <div
-            key={dayIdx}
-            className={styles.allDayCell}
-            onClick={() => onDateSelect(weekDays[dayIdx])}
-            onDoubleClick={() => onDateDoubleClick && onDateDoubleClick(weekDays[dayIdx])}
-          >
-            <div className={styles.allDayLaneContainer} style={{ height: `${allDayHeightPx}px` }}>
-              {allDayBars
-                .filter(b => dayIdx >= b.startDay && dayIdx <= b.endDay)
-                .map(b => {
-                  const color = getEventColor(b.event);
-                  const isStart = dayIdx === b.startDay;
-                  const isEnd = dayIdx === b.endDay;
-                  const isSingle = b.startDay === b.endDay;
+      {/* 종일 이벤트 영역 */}
+      <div className={styles.allDayRow} style={{ height: `${allDayHeight}px` }}>
+        <div className={styles.timeGutter}>
+          <div style={{ padding: '8px', fontSize: '12px', color: '#666' }}>
+            종일
+          </div>
+        </div>
+        {weekDays.map((day, dayIndex) => (
+          <div key={`allday-${dayIndex}`} className={styles.allDayCell}>
+            <div className={styles.allDayLaneContainer} style={{ height: `${allDayHeight - 12}px` }}>
+              {allDayEventBars
+                .filter(bar => dayIndex >= bar.dayIndex && dayIndex < bar.dayIndex + bar.width)
+                .map((bar, barIndex) => {
+                  const isTemp = tempEvent && bar.event.id === tempEvent.id;
+                  const eventColor = getEventColor(bar.event);
+                  const shouldShowText = dayIndex === bar.dayIndex;
+
+                  const isFirstSegment = dayIndex === bar.dayIndex;
+                  const isLastSegment = dayIndex === bar.dayIndex + bar.width - 1;
+                  const isMiddleSegment = !isFirstSegment && !isLastSegment && bar.width > 2;
+                  
                   return (
                     <div
-                      key={`${b.event.id}-${b.lane}-${dayIdx}`}
-                      className={`${styles.allDayPill} ${isSingle ? styles.single : ''} ${isStart && !isSingle ? styles.first : ''} ${isEnd && !isSingle ? styles.last : ''} ${dayIdx > b.startDay ? styles.continueLeft : ''} ${dayIdx < b.endDay ? styles.continueRight : ''}`}
+                      key={`${bar.event.id}-${barIndex}`}
+                      className={`
+                        ${styles.allDayPill}
+                        ${bar.isSingle ? styles.single : ''}
+                        ${isFirstSegment ? styles.first : ''}
+                        ${isLastSegment ? styles.last : ''}
+                        ${bar.continueLeft && isFirstSegment ? styles.continueLeft : ''}
+                        ${bar.continueRight && isLastSegment ? styles.continueRight : ''}
+                        ${isMiddleSegment ? styles.middle : ''}
+                      `}
                       style={{
-                        top: `${b.lane * ALLDAY_LANE_HEIGHT}px`,
-                        backgroundColor: color,
-                        color: 'white'
+                        backgroundColor: eventColor,
+                        color: 'white',
+                        top: `${bar.lane * 24 + 2}px`,
+                        fontWeight: isTemp ? '700' : '500',
+                        zIndex: isTemp ? 15 : 5
                       }}
-                      onClick={(ev) => { ev.stopPropagation(); onEventClick(b.event); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isTemp) {
+                          onEventClick(bar.event);
+                        }
+                      }}
                     >
-                      {isStart ? b.event.title : ''}
+                      {shouldShowText && (
+                        <span style={{ 
+                          whiteSpace: 'nowrap', 
+                          overflow: 'hidden', 
+                          textOverflow: 'ellipsis',
+                          maxWidth: '100%',
+                          display: 'block'
+                        }}>
+                          {isTemp ? tempEvent?.title || 'New Event' : bar.event.title}
+                        </span>
+                      )}
                     </div>
                   );
                 })}
@@ -156,52 +368,97 @@ const CalendarGridW: React.FC<CalendarGridWrops> = ({ currentDate, selectedDate,
         ))}
       </div>
 
-      {/* 시간 그리드 (스크롤) */}
-      <div className={styles.timeScroll} style={{ height: `calc(100% - ${HEADER_HEIGHT}px - ${allDayHeightPx}px)` }}>
+      {/* 시간 영역 */}
+      <div className={styles.timeScroll}>
+        {/* 시간 가터 */}
         <div className={styles.timeGutter}>
-          <div style={{ position: 'relative', height: timeGridHeight }}>
-            {Array.from({ length: 24 }, (_, h) => (
-              <div key={h} className={styles.timeGutterRow} style={{ height: HOUR_ROW_HEIGHT }}>
-                {format(new Date(2000,1,1,h), h === 0 ? 'hh a' : 'hh a')}
+          {timeSlots.map((slot, index) => (
+            <div key={slot.hour} className={styles.timeGutterRow} style={{ height: '44px' }}>
+              {index > 0 && slot.label}
+            </div>
+          ))}
+        </div>
+
+        {/* 시간 컬럼들 */}
+        <div className={styles.timeColumns}>
+          <div className={styles.timeGrid} style={{ height: `${timeSlots.length * 44}px` }}>
+            {weekDays.map((day, dayIndex) => (
+              <div key={`time-${dayIndex}`} className={styles.timeDayColumn}>
+                {/* 시간 슬롯들 */}
+                {timeSlots.map((slot) => (
+                  <div 
+                    key={`${dayIndex}-${slot.hour}`} 
+                    className={styles.timeHourRow} 
+                    style={{ height: '44px' }}
+                    onClick={(e) => handleTimeSlotClick(day, slot.hour, e)}
+                  />
+                ))}
+                
+                {/* 시간 이벤트들 */}
+                {processedTimedEvents
+                  .filter(timedEvent => {
+                    if (timedEvent.width && timedEvent.width > 1) {
+                      // 여러 날 이벤트는 시작 날짜부터 끝 날짜까지 모든 날에 표시
+                      return dayIndex >= timedEvent.dayIndex && dayIndex < timedEvent.dayIndex + timedEvent.width;
+                    } else {
+                      // 단일 날 이벤트는 해당 날짜에만 표시
+                      return timedEvent.dayIndex === dayIndex;
+                    }
+                  })
+                  .map((timedEvent, eventIndex) => {
+                    const isTemp = tempEvent && timedEvent.event.id === tempEvent.id;
+                    const eventColor = getEventColor(timedEvent.event);
+                    const isMultiDay = timedEvent.width && timedEvent.width > 1;
+                    const shouldShowText = !isMultiDay || dayIndex === timedEvent.dayIndex;
+                    const isFirstSegment = isMultiDay && dayIndex === timedEvent.dayIndex;
+                    const isLastSegment = isMultiDay && dayIndex === timedEvent.dayIndex + (timedEvent.width || 1) - 1;
+                    const isMiddleSegment = isMultiDay && !isFirstSegment && !isLastSegment && (timedEvent.width || 1) > 2;
+                    
+                    return (
+                      <div
+                        key={`${timedEvent.event.id}-${eventIndex}`}
+                        className={`
+                          ${styles.timedEvent}
+                          ${isMultiDay ? styles.multiDayTimedEvent : ''}
+                          ${isMultiDay && timedEvent.isSingle ? styles.single : ''}
+                          ${isFirstSegment ? styles.first : ''}
+                          ${isLastSegment ? styles.last : ''}
+                          ${isMultiDay && timedEvent.continueLeft && isFirstSegment ? styles.continueLeft : ''}
+                          ${isMultiDay && timedEvent.continueRight && isLastSegment ? styles.continueRight : ''}
+                          ${isMiddleSegment ? styles.middle : ''}
+                        `}
+                        style={{
+                          top: `${timedEvent.top}px`,
+                          height: `${timedEvent.height}px`,
+                          backgroundColor: eventColor,
+                          color: 'rgba(33, 33, 33, 0.6);',
+                          fontWeight: isTemp ? '700' : '400',
+                          zIndex: isTemp ? 15 : (isMultiDay ? 8 : 5)
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!isTemp) {
+                            onEventClick(timedEvent.event);
+                          }
+                        }}
+                      >
+                        {shouldShowText && (
+                          <>
+                            <div className={styles.eventTitle}>
+                              {isTemp ? tempEvent?.title || 'New Event' : timedEvent.event.title}
+                            </div>
+                            <div style={{ fontSize: '10px', opacity: 0.9 }}>
+                              {format(parseISO(timedEvent.event.start_date), 'HH:mm')} - 
+                              {format(parseISO(timedEvent.event.end_date), 'HH:mm')}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
               </div>
             ))}
           </div>
-        </div>
-        <div className={styles.timeColumns}>
-          {weekDays.map((day, dayIdx) => (
-            <div
-              key={day.toISOString()}
-              className={styles.timeDayColumn}
-              onClick={() => onDateSelect(day)}
-              onDoubleClick={() => onDateDoubleClick && onDateDoubleClick(day)}
-            >
-              <div className={styles.timeGrid} style={{ height: timeGridHeight }}>
-                {Array.from({ length: 24 }, (_, h) => (
-                  <div key={h} className={styles.timeHourRow} style={{ height: HOUR_ROW_HEIGHT }} />
-                ))}
-                {/* 시간 이벤트 배치 (대략적) */}
-                {timedEventsByDay[dayIdx].map(e => {
-                  const es = parseISO(e.start_date);
-                  const ee = parseISO(e.end_date);
-                  const startM = es.getHours() * 60 + es.getMinutes();
-                  const endM = ee.getHours() * 60 + ee.getMinutes();
-                  const top = (startM / 60) * HOUR_ROW_HEIGHT;
-                  const height = Math.max(20, ((Math.max(0, endM - startM)) / 60) * HOUR_ROW_HEIGHT);
-                  const color = getEventColor(e);
-                  return (
-                    <div
-                      key={`${e.id}-t-${dayIdx}`}
-                      className={styles.timedEvent}
-                      style={{ top, height, borderLeft: `3px solid ${color}` }}
-                      onClick={(ev) => { ev.stopPropagation(); onEventClick(e); }}
-                    >
-                      <span className={styles.eventTitle}>{e.title}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </div>
@@ -209,5 +466,3 @@ const CalendarGridW: React.FC<CalendarGridWrops> = ({ currentDate, selectedDate,
 };
 
 export default CalendarGridW;
-
-
