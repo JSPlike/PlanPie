@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import CalendarHeader from '../../components/Calendar/CalendarHeader';
 import CalendarLeftSide from '../../components/Calendar/CalendarLeftSide';
 import CalendarGrid from '../../components/Calendar/CalendarGrid';
+import CalendarGridW from '../../components/Calendar/CalendarGridW';
 import CalendarRightSide from '../../components/Calendar/CalendarRightSide';
 import { CalendarProvider, useCalendarContext } from '../../contexts/CalendarContext';
 import { CreateUpdateEventRequest, Event } from '../../types/calendar.types';
@@ -331,21 +332,37 @@ const CalendarViewContent: React.FC = () => {
         </div>
 
         <div className={styles.calendarMain}>
-          <CalendarGrid
-            currentDate={currentDate}
-            selectedDate={selectedDate}
-            selectedRange={selectedRange}
-            events={visibleEvents} // Context에서 필터된 이벤트 사용
-            //tempEvent={tempEvent}
-            calendars={calendars}
-            onDateSelect={handleDateSelect}
-            onDateClick={handleDateClick}
-            onMonthChange={setCurrentDate}
-            //getEventColor={getEventColor} // Context 함수 사용
-            onEventClick={(event) => {
-            }}
-            onEventDelete={deleteEvent} // Context 함수 사용
-          />
+          {view === 'month' ? (
+            <CalendarGrid
+              currentDate={currentDate}
+              selectedDate={selectedDate}
+              selectedRange={selectedRange}
+              events={visibleEvents}
+              calendars={calendars}
+              onDateSelect={handleDateSelect}
+              onDateClick={handleDateClick}
+              onMonthChange={setCurrentDate}
+              onEventClick={(event) => {}}
+              onEventDelete={deleteEvent}
+            />
+          ) : (
+            <CalendarGridW
+              currentDate={currentDate}
+              selectedDate={selectedDate}
+              events={visibleEvents}
+              onDateSelect={setSelectedDate}
+              onEventClick={(event) => setSelectedEvent(event)}
+              onDateDoubleClick={(date) => {
+                setSelectedDate(date);
+                // 월별과 동일하게: temp 초기화 후 새 이벤트 모드
+                if (tempEvent) setTempEvent(null);
+                setTimeout(() => {
+                  handleCreateNewEvent(date);
+                }, 0);
+                setIsRightSideOpen(true);
+              }}
+            />
+          )}
         </div>
 
         <div className={`${styles.rightSideContainer} ${isRightSideOpen ? styles.open : ''}`}>
