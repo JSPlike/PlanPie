@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import CalendarHeader from '../../components/Calendar/CalendarHeader';
 import CalendarLeftSide from '../../components/Calendar/CalendarLeftSide';
 import CalendarGrid from '../../components/Calendar/CalendarGrid';
+import CalendarGridW from '../../components/Calendar/CalendarGridW';
 import CalendarRightSide from '../../components/Calendar/CalendarRightSide';
 import { CalendarProvider, useCalendarContext } from '../../contexts/CalendarContext';
 import { CreateUpdateEventRequest, Event } from '../../types/calendar.types';
@@ -331,21 +332,41 @@ const CalendarViewContent: React.FC = () => {
         </div>
 
         <div className={styles.calendarMain}>
-          <CalendarGrid
-            currentDate={currentDate}
-            selectedDate={selectedDate}
-            selectedRange={selectedRange}
-            events={visibleEvents} // Context에서 필터된 이벤트 사용
-            //tempEvent={tempEvent}
-            calendars={calendars}
-            onDateSelect={handleDateSelect}
-            onDateClick={handleDateClick}
-            onMonthChange={setCurrentDate}
-            //getEventColor={getEventColor} // Context 함수 사용
-            onEventClick={(event) => {
-            }}
-            onEventDelete={deleteEvent} // Context 함수 사용
-          />
+          {view === 'month' ? (
+            <CalendarGrid
+              currentDate={currentDate}
+              selectedDate={selectedDate}
+              selectedRange={selectedRange}
+              events={visibleEvents} // Context에서 필터된 이벤트 사용
+              //tempEvent={tempEvent}
+              calendars={calendars}
+              onDateSelect={handleDateSelect}
+              onDateClick={handleDateClick}
+              onMonthChange={setCurrentDate}
+              //getEventColor={getEventColor} // Context 함수 사용
+              onEventClick={(event) => {
+              }}
+              onEventDelete={deleteEvent} // Context 함수 사용
+            />
+          ) : view === 'week' ? (
+            <CalendarGridW
+              currentDate={currentDate}
+              selectedDate={selectedDate}
+              events={visibleEvents}
+              calendars={calendars}
+              onDateSelect={handleDateSelect}
+              onDateClick={handleDateClick}
+              onEventClick={(event) => {
+                setSelectedEvent(event);
+                setIsRightSideOpen(true);
+              }}
+              onEventDelete={deleteEvent}
+            />
+          ) : (
+            <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+              일별 뷰는 아직 구현되지 않았습니다.
+            </div>
+          )}
         </div>
 
         <div className={`${styles.rightSideContainer} ${isRightSideOpen ? styles.open : ''}`}>
