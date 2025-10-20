@@ -56,6 +56,7 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
   onEventDelete,
 }) => {
   const { tempEvent, getEventColor } = useCalendarContext();
+  const [hoveredEventId, setHoveredEventId] = React.useState<string | null>(null);
 
   // 주의 시작과 끝 계산
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
@@ -322,6 +323,7 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
                   const isFirstSegment = dayIndex === bar.dayIndex;
                   const isLastSegment = dayIndex === bar.dayIndex + bar.width - 1;
                   const isMiddleSegment = !isFirstSegment && !isLastSegment && bar.width > 2;
+                  const isHovered = hoveredEventId === bar.event.id;
                   
                   return (
                     <div
@@ -334,14 +336,18 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
                         ${bar.continueLeft && isFirstSegment ? styles.continueLeft : ''}
                         ${bar.continueRight && isLastSegment ? styles.continueRight : ''}
                         ${isMiddleSegment ? styles.middle : ''}
+                        ${isHovered ? styles.hovered : ''}
                       `}
                       style={{
                         backgroundColor: eventColor,
                         color: 'white',
                         top: `${bar.lane * 24 + 2}px`,
                         fontWeight: isTemp ? '700' : '500',
-                        zIndex: isTemp ? 15 : 5
+                        zIndex: isTemp ? 15 : (isHovered ? 10 : 5),
+                        transform: isHovered ? 'translateY(-1px)' : 'none'
                       }}
+                      onMouseEnter={() => setHoveredEventId(bar.event.id)}
+                      onMouseLeave={() => setHoveredEventId(null)}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (!isTemp) {
@@ -413,6 +419,7 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
                     const isFirstSegment = isMultiDay && dayIndex === timedEvent.dayIndex;
                     const isLastSegment = isMultiDay && dayIndex === timedEvent.dayIndex + (timedEvent.width || 1) - 1;
                     const isMiddleSegment = isMultiDay && !isFirstSegment && !isLastSegment && (timedEvent.width || 1) > 2;
+                    const isHovered = hoveredEventId === timedEvent.event.id;
                     
                     return (
                       <div
@@ -426,6 +433,7 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
                           ${isMultiDay && timedEvent.continueLeft && isFirstSegment ? styles.continueLeft : ''}
                           ${isMultiDay && timedEvent.continueRight && isLastSegment ? styles.continueRight : ''}
                           ${isMiddleSegment ? styles.middle : ''}
+                          ${isHovered ? styles.hovered : ''}
                         `}
                         style={{
                           top: `${timedEvent.top}px`,
@@ -433,8 +441,11 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
                           backgroundColor: eventColor,
                           color: 'rgba(33, 33, 33, 0.6);',
                           fontWeight: isTemp ? '700' : '400',
-                          zIndex: isTemp ? 15 : (isMultiDay ? 8 : 5)
+                          zIndex: isTemp ? 15 : (isHovered ? 10 : (isMultiDay ? 8 : 5)),
+                          transform: isHovered ? 'translateY(-1px)' : 'none'
                         }}
+                        onMouseEnter={() => setHoveredEventId(timedEvent.event.id)}
+                        onMouseLeave={() => setHoveredEventId(null)}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (!isTemp) {

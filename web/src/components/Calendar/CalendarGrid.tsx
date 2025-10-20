@@ -52,6 +52,8 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   onEventDelete,
   // getEventColor
 }) => {
+  const [hoveredEventId, setHoveredEventId] = React.useState<string | null>(null);
+  
   // 캘린더 날짜 범위 계산
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -371,7 +373,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
 
                   const isSaturdayWithContinuation = dayIndex === 6 && bar.isFirst && !bar.isLast;
                   const isSundayWithContinuation = dayIndex === 0 && !bar.isFirst && bar.isLast;
-
+                  const isHovered = hoveredEventId === bar.event.id;
 
                   return (
                     <div
@@ -386,6 +388,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                         ${hasLeftContinuation ? styles.continueLeft : ''}
                         ${isSaturdayWithContinuation ? styles.weekEndContinue : ''}
                         ${isSundayWithContinuation ? styles.weekStartContinue : ''}
+                        ${isHovered ? styles.hovered : ''}
                       `}
                       style={{
                         backgroundColor: (isAllDay || bar.width > 1) 
@@ -397,7 +400,11 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                         fontWeight: isTemp ? '700' : '300',
                         top: `${bar.layer * LAYER_ROW_HEIGHT_PX}px`,
                         height: `${LAYER_ROW_HEIGHT_PX - 6}px`,
+                        transform: isHovered ? 'translateY(-1px)' : 'none',
+                        zIndex: isHovered ? 15 : 10,
                       }}
+                      onMouseEnter={() => setHoveredEventId(bar.event.id)}
+                      onMouseLeave={() => setHoveredEventId(null)}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (!isTemp) {

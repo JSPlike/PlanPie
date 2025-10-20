@@ -30,6 +30,7 @@ const CalendarViewContent: React.FC = () => {
     deleteEvent,
     fetchEvents,
     addEvent,
+    updateEvent,
 
     tempEvent,
     setTempEvent,
@@ -69,10 +70,12 @@ const CalendarViewContent: React.FC = () => {
     setHasDateError(hasError);
   };
 
+
   // 시간 슬롯 클릭 핸들러
   const handleTimeSlotClick = (date: Date, hour: number) => {
     console.log('=======시간 슬롯 클릭', date, hour);
     setSelectedDate(date);
+    setSelectedEvent(null); // 새 이벤트 생성이므로 기존 선택 이벤트 초기화
     
     if (tempEvent) {
       setTempEvent(null);
@@ -288,6 +291,7 @@ const CalendarViewContent: React.FC = () => {
     }
 
     setSelectedDate(date);
+    setSelectedEvent(null); // 새 이벤트 생성이므로 기존 선택 이벤트 초기화
     console.log('=======캘린더 날짜 두번째 클릭')
     if (tempEvent) {
       setTempEvent(null);
@@ -344,24 +348,36 @@ const CalendarViewContent: React.FC = () => {
         // 기존 이벤트 수정
         console.log('이벤트 수정 중...');
         
-        // 임시로 로컬에서 처리
-        setEvents(prev => 
-          prev.map(event => 
-            event.id === eventData.id 
-              ? { ...event, ...eventData, updated_at: new Date().toISOString() }
-              : event
-          )
-        );
+        // 낙관적 업데이트: API 호출 전에 먼저 UI 업데이트
+        updateEvent(eventData.id, eventData);
         
-        console.log('이벤트 수정 완료');
+        try {
+          // 서버에 실제 업데이트 요청
+          const response = await calendarAPI.updateEvent(eventData.id, eventData as any);
+          const updatedEvent = (response as any)?.data || response;
+          
+          if (updatedEvent) {
+            // 서버 응답으로 최종 업데이트 (서버에서 추가된 정보가 있을 수 있음)
+            updateEvent(eventData.id, updatedEvent);
+          }
+          
+          toast.success('일정이 수정되었습니다.');
+          console.log('이벤트 수정 완료');
+        } catch (error) {
+          // API 실패 시 원래 상태로 롤백
+          console.error('이벤트 수정 실패:', error);
+          // 원래 이벤트 데이터로 롤백하려면 여기서 fetchEvents() 호출
+          fetchEvents();
+          throw error; // 에러를 다시 던져서 catch 블록에서 처리
+        }
       }
       
       // 저장 성공 후 UI 정리
       setIsRightSideOpen(false);
       setSelectedEvent(null);
       
-      // 백그라운드 동기화 (화면 끊김 없이)
-      fetchEvents();
+      // 백그라운드 동기화는 필요한 경우에만 (새 이벤트 생성 시에는 이미 추가했으므로 불필요)
+      // fetchEvents();
       
     } catch (error) {
       console.error('이벤트 저장 오류:', error);
@@ -418,6 +434,11 @@ const CalendarViewContent: React.FC = () => {
               onMonthChange={setCurrentDate}
               //getEventColor={getEventColor} // Context 함수 사용
               onEventClick={(event) => {
+                if (tempEvent) {
+                  setTempEvent(null);
+                }
+                setSelectedEvent(event);
+                setIsRightSideOpen(true);
               }}
               onEventDelete={deleteEvent} // Context 함수 사용
             />
@@ -464,6 +485,7 @@ const CalendarViewContent: React.FC = () => {
             }}
           />
         </div>
+
       </div>
     </div>
   );

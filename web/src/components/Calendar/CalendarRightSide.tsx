@@ -35,6 +35,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   isLoading = false,
   onClose
 }) => {
+  const [mode, setMode] = useState<'detail' | 'edit'>('detail'); // 상세/수정 모드 구분
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [eventTitle, setEventTitle] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -182,6 +183,33 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
       onDateErrorChange(hasDateError);
     }
   }, [hasDateError, onDateErrorChange]);
+
+  // 모드 설정 useEffect
+  useEffect(() => {
+    if (selectedEvent && !tempEvent) {
+      // 기존 이벤트 클릭 시 상세 모드
+      setMode('detail');
+    } else {
+      // 새 이벤트 생성 시 수정 모드
+      setMode('edit');
+    }
+  }, [selectedEvent, tempEvent]);
+
+  // 상세 모드 핸들러들
+  const handleEditClick = () => {
+    setMode('edit');
+  };
+
+  const handleDeleteClick = () => {
+    if (selectedEvent && window.confirm(`'${selectedEvent.title}' 일정을 삭제하시겠습니까?\n\n삭제된 일정은 복구할 수 없습니다.`)) {
+      onDeleteEvent(selectedEvent.id);
+      onClose();
+    }
+  };
+
+  const handleBackToDetail = () => {
+    setMode('detail');
+  };
 
   // 임시 태그 데이터
   const MOCK_TAGS: CalendarTag[] = [
@@ -508,8 +536,171 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     }
   };
 
+  // 상세 모드 렌더링
+  if (mode === 'detail' && selectedEvent) {
+    const eventCalendar = calendars.find(cal => cal.id === selectedEvent.calendar);
+    
+    const formatEventDate = (startDate: string, endDate: string, allDay: boolean) => {
+      const start = parseISO(startDate);
+      const end = parseISO(endDate);
+      
+      if (allDay) {
+        if (format(start, 'yyyy-MM-dd') === format(end, 'yyyy-MM-dd')) {
+          return format(start, 'M월 d일 (E)', { locale: ko });
+        } else {
+          return `${format(start, 'M월 d일', { locale: ko })} - ${format(end, 'M월 d일 (E)', { locale: ko })}`;
+        }
+      } else {
+        if (format(start, 'yyyy-MM-dd') === format(end, 'yyyy-MM-dd')) {
+          return `${format(start, 'M월 d일 (E) HH:mm', { locale: ko })} - ${format(end, 'HH:mm', { locale: ko })}`;
+        } else {
+          return `${format(start, 'M월 d일 HH:mm', { locale: ko })} - ${format(end, 'M월 d일 HH:mm', { locale: ko })}`;
+        }
+      }
+    };
+
+    return (
+      <div className={styles.sidebar}>
+        <div className={styles.detailHeader}>
+          <h2 className={styles.headerTitle}>일정 상세</h2>
+          <div className={styles.headerActions}>
+            <div className={styles.menuContainer}>
+              <button 
+                type="button"
+                className={styles.menuButton}
+                onClick={() => setShowTagDropdown(!showTagDropdown)}
+              >
+                ⋮
+              </button>
+              {showTagDropdown && (
+                <div className={styles.dropdown}>
+                  <button type="button" onClick={handleEditClick} className={styles.dropdownItem}>
+                    ✏️ 수정
+                  </button>
+                  <button type="button" onClick={handleDeleteClick} className={styles.dropdownItem}>
+                    🗑️ 삭제
+                  </button>
+                </div>
+              )}
+            </div>
+            <button type="button" onClick={onClose} className={styles.closeButton}>×</button>
+          </div>
+        </div>
+
+        <div className={styles.detailContent}>
+          {/* 참여자 */}
+          <div className={styles.section}>
+            <div className={styles.participants}>
+              <div className={styles.participant}>
+                <div className={styles.avatar}>박</div>
+                <span>박준영</span>
+              </div>
+              <div className={styles.participant}>
+                <div className={styles.avatar}>김</div>
+                <span>김개발</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 이벤트 정보 */}
+          <div className={styles.section}>
+            <h3 className={styles.eventTitle}>{selectedEvent.title}</h3>
+            <div className={styles.eventInfo}>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>📅 일정</span>
+                <span className={styles.infoValue}>
+                  {formatEventDate(selectedEvent.start_date, selectedEvent.end_date, selectedEvent.all_day)}
+                </span>
+              </div>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>📋 캘린더</span>
+                <span className={styles.infoValue}>{eventCalendar?.name || '알 수 없음'}</span>
+              </div>
+              {selectedEvent.tag && (
+                <div className={styles.infoItem}>
+                  <span className={styles.infoLabel}>🏷️ 태그</span>
+                  <span 
+                    className={styles.tag}
+                    style={{ backgroundColor: selectedEvent.tag.color }}
+                  >
+                    {selectedEvent.tag.name}
+                  </span>
+                </div>
+              )}
+              {selectedEvent.location && (
+                <div className={styles.infoItem}>
+                  <span className={styles.infoLabel}>📍 장소</span>
+                  <span className={styles.infoValue}>{selectedEvent.location}</span>
+                </div>
+              )}
+              {selectedEvent.description && (
+                <div className={styles.infoItem}>
+                  <span className={styles.infoLabel}>📝 설명</span>
+                  <span className={styles.infoValue}>{selectedEvent.description}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 수정 로그 */}
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>수정 기록</h3>
+            <div className={styles.editLogs}>
+              <div className={styles.logItem}>
+                <div className={styles.logHeader}>
+                  <span className={styles.logAction}>생성</span>
+                  <span className={styles.logUser}>박준영</span>
+                  <span className={styles.logTime}>11월 30일 14:20</span>
+                </div>
+                <div className={styles.logContent}>이벤트가 생성되었습니다.</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 댓글 */}
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>댓글</h3>
+            <div className={styles.comments}>
+              <div className={styles.comment}>
+                <div className={styles.commentHeader}>
+                  <div className={styles.commentAvatar}>박</div>
+                  <div className={styles.commentInfo}>
+                    <span className={styles.commentAuthor}>박준영</span>
+                    <span className={styles.commentTime}>12월 1일 10:30</span>
+                  </div>
+                </div>
+                <div className={styles.commentContent}>회의 자료 준비 완료했습니다.</div>
+              </div>
+            </div>
+            
+            <div className={styles.commentInput}>
+              <div className={styles.inputAvatar}>박</div>
+              <div className={styles.inputContainer}>
+                <textarea
+                  placeholder="댓글을 입력하세요..."
+                  className={styles.textarea}
+                />
+                <button type="button" className={styles.submitButton}>
+                  게시
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 수정 모드 렌더링
   return (
     <div className={styles.sidebar}>
+      {mode === 'edit' && selectedEvent && (
+        <div className={styles.editModeHeader}>
+          <button type="button" onClick={handleBackToDetail} className={styles.backButton}>
+            ← 상세보기
+          </button>
+        </div>
+      )}
       <form className={styles.eventForm}>
         <div className={styles.sidebarHeader}>
         {isEditingTitle ? (
