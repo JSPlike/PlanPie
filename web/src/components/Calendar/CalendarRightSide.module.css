@@ -310,8 +310,8 @@
     border: 2px solid #e2e8f0;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
-    max-height: calc(60vh);
+    z-index: 9999;
+    max-height: calc(40vh);
     overflow-x: hidden;
     overflow-y: auto;
     margin-top: 4px;
@@ -320,11 +320,11 @@
   .dropdownItem {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
+    padding: 8px 14px;
     cursor: pointer;
     transition: all 0.2s ease;
     border-bottom: 1px solid #f1f5f9;
+    min-height: 38px;
   }
   
   .dropdownItem:last-child {
@@ -333,18 +333,21 @@
   
   .dropdownItem:hover {
     background: #f8fafc;
+    color: black;
   }
   
   .dropdownItem.selected {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
   }
+  .dropdownItem.selected:hover {
+    color: black;
+  }
 
   .calendarInfo {
     display: flex;
     align-items: center;
     gap: 12px;
-    flex: 1;
   }
   
   .calendarImage {
@@ -353,19 +356,21 @@
     border-radius: 6px;
     object-fit: cover;
     border: 1px solid #e2e8f0;
+    flex-shrink: 0;
   }
   
   .calendarName {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     overflow: hidden; /* 추가 */
     text-overflow: ellipsis; /* 추가 */
     white-space: nowrap; /* 추가 */
+    line-height: 1.2;
   }
   
   .radioButton {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     border: 2px solid #cbd5e0;
     border-radius: 50%;
     display: flex;
@@ -373,20 +378,23 @@
     justify-content: center;
     transition: all 0.2s ease;
     flex-shrink: 0;
+    margin-left: auto;
   }
   
   .dropdownItem.selected .radioButton {
     border-color: white;
+    background: white;
   }
   
   .radioSelected {
-    width: 6px;
-    height: 6px;
-    background: white;
+    width: 8px;
+    height: 8px;
+    background: #667eea;
     border-radius: 50%;
+    transition: all 0.2s ease;
   }
   
-  .dropdownItem:not(.selected) .radioSelected {
+  .dropdownItem.selected .radioSelected {
     background: #667eea;
   }
   
@@ -488,27 +496,6 @@
     font-weight: 500;
   }
 
-  .radioButton {
-    width: 20px;
-    height: 20px;
-    border: 2px solid #cbd5e0;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-  }
-
-  .tagItem.selected .radioButton {
-    border-color: white;
-  }
-
-  .radioSelected {
-    width: 8px;
-    height: 8px;
-    background: white;
-    border-radius: 50%;
-  }
 
   /* 텍스트 에어리어 */
   .textarea {
@@ -737,7 +724,7 @@
   min-width: 120px;
 }
 
-.dropdownItem {
+.dropdownEditItem {
   display: block;
   width: 100%;
   padding: 12px 16px;
@@ -749,15 +736,15 @@
   transition: background-color 0.2s;
 }
 
-.dropdownItem:hover {
+.dropdownEditItem:hover {
   background: #f5f5f5;
 }
 
-.dropdownItem:first-child {
+.dropdownEditItem:first-child {
   border-radius: 8px 8px 0 0;
 }
 
-.dropdownItem:last-child {
+.dropdownEditItem:last-child {
   border-radius: 0 0 8px 8px;
 }
 

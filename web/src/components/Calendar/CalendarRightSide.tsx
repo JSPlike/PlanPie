@@ -81,7 +81,8 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
-      if (!target.closest(`.${styles.customSelect}`)) {
+      if (!target.closest(`.${styles.customSelect}`) && 
+          !target.closest(`.${styles.menuContainer}`)) {
         setShowCalendarDropdown(false);
         setShowTagDropdown(false); // 태그 드롭다운도 닫기
       }
@@ -574,10 +575,10 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
               </button>
               {showTagDropdown && (
                 <div className={styles.dropdown}>
-                  <button type="button" onClick={handleEditClick} className={styles.dropdownItem}>
+                  <button type="button" onClick={handleEditClick} className={styles.dropdownEditItem}>
                     ✏️ 수정
                   </button>
-                  <button type="button" onClick={handleDeleteClick} className={styles.dropdownItem}>
+                  <button type="button" onClick={handleDeleteClick} className={styles.dropdownEditItem}>
                     🗑️ 삭제
                   </button>
                 </div>
@@ -822,14 +823,22 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                     <input
                       type="text"
                       value={calendars.find(cal => cal.id === selectedCalendarId)?.name || ''}
-                      onClick={() => setShowCalendarDropdown(!showCalendarDropdown)}
+                      onClick={() => {
+                        const newState = !showCalendarDropdown;
+                        setShowCalendarDropdown(newState);
+                        setShowTagDropdown(false);
+                      }}
                       readOnly
                       placeholder="캘린더를 선택하세요"
                       className={styles.selectInput}
                     />
                     <div 
                       className={styles.dropdownArrow}
-                      onClick={() => setShowCalendarDropdown(!showCalendarDropdown)}
+                      onClick={() => {
+                        const newState = !showCalendarDropdown;
+                        setShowCalendarDropdown(newState);
+                        setShowTagDropdown(false);
+                      }}
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                         <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -887,14 +896,22 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                   <input
                     type="text"
                     value={selectedTagId ? availableTags.find(tag => tag.id === selectedTagId)?.name || availableTags[0]?.name : '태그 없음'}
-                    onClick={() => setShowTagDropdown(!showTagDropdown)}
+                    onClick={() => {
+                      const newState = !showTagDropdown;
+                      setShowTagDropdown(newState);
+                      setShowCalendarDropdown(false);
+                    }}
                     readOnly
                     placeholder="태그를 선택하세요"
                     className={styles.selectInput}
                   />
                   <div 
                     className={styles.dropdownArrow}
-                    onClick={() => setShowTagDropdown(!showTagDropdown)}
+                    onClick={() => {
+                      const newState = !showTagDropdown;
+                      setShowTagDropdown(newState);
+                      setShowCalendarDropdown(false);
+                    }}
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                       <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
