@@ -287,7 +287,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   const isSelected = (date: Date) => selectedDate ? isSameDay(date, selectedDate) : false;
   const isCurrentMonth = (date: Date) => date.getMonth() === currentDate.getMonth();
 
-  const LAYER_ROW_HEIGHT_PX = 26; // fixed vertical spacing per layer to avoid overlaps
+  const LAYER_ROW_HEIGHT_PX = 24; // fixed vertical spacing per layer to avoid overlaps
 
   return (
     <div className={styles.calendarGrid}>
@@ -349,7 +349,12 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
               onClick={(e) => handleDateCellClick(date, e)}
             >
               <div className={styles.dayNumber}>
-                {format(date, 'd')}
+                <div className={styles.dayNumberMain}>
+                  {format(date, 'd')}
+                </div>
+                <div className={styles.dayNumberSub}>
+                  {format(date, 'M.d')}
+                </div>
               </div>
               
               {/* 이벤트 바들 표시 */}

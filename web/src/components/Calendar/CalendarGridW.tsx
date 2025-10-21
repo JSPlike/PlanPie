@@ -63,16 +63,38 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
-  // 시간 슬롯 생성 (0시 ~ 23시)
+  // 시간 슬롯 생성 (30분 단위)
   const timeSlots = useMemo(() => {
     const slots = [];
-    for (let hour = 0; hour < 24; hour++) {
+    for (let halfHour = 0; halfHour < 48; halfHour++) { // 48개 = 24시간 * 2 (30분 단위)
+      const hour = Math.floor(halfHour / 2);
+      const minutes = (halfHour % 2) * 30;
+      
       slots.push({
         hour,
-        label: format(addHours(startOfDay(new Date()), hour), 'H:mm')
+        minutes,
+        halfHour,
+        actualHour: hour + (minutes / 60) // 클릭 시 사용할 실제 시간 (0, 0.5, 1, 1.5, 2, 2.5...)
       });
     }
     return slots;
+  }, []);
+
+  // 시간 라벨 생성 (1시간 단위, 0AM은 빈칸, 1AM부터 표시)
+  const timeLabels = useMemo(() => {
+    const labels = [];
+    for (let hour = 0; hour < 24; hour++) { // 0시부터 23시까지
+      const ampmLabel = hour === 0 ? '' : // 0AM은 빈칸
+                       hour < 12 ? `${hour}AM` : 
+                       hour === 12 ? '12PM' : 
+                       `${hour - 12}PM`;
+      
+      labels.push({
+        hour,
+        label: ampmLabel
+      });
+    }
+    return labels;
   }, []);
 
   // 이벤트를 종일 이벤트와 시간 이벤트로 분리
@@ -212,8 +234,8 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
           const timedEvent: TimedEvent = {
             event,
             dayIndex: startDayIndex,
-            top: (eventStartTime / 60) * 44,
-            height: Math.max(44, 20), // 여러 날 이벤트는 최소 1시간 높이
+            top: (eventStartTime / 60) * 90, // 1시간 = 90px (2격자 × 45px)
+            height: Math.max(90, 45), // 여러 날 이벤트는 최소 1시간 높이
             width,
             isSingle: false,
             isFirst: startDayIndex === 0 && eventStart < weekStart,
@@ -238,8 +260,8 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
               processed.push({
                 event,
                 dayIndex,
-                top: (startMinutes / 60) * 44,
-                height: Math.max((durationMinutes / 60) * 44, 20),
+                top: (startMinutes / 60) * 90, // 1시간 = 90px (2격자 × 45px)
+                height: Math.max((durationMinutes / 60) * 90, 45), // 최소 30분 높이
                 isSingle: true
               });
             }
@@ -378,26 +400,34 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
       <div className={styles.timeScroll}>
         {/* 시간 가터 */}
         <div className={styles.timeGutter}>
-          {timeSlots.map((slot, index) => (
-            <div key={slot.hour} className={styles.timeGutterRow} style={{ height: '44px' }}>
-              {index > 0 && slot.label}
+          {timeLabels.map((label, index) => (
+            <div key={label.hour} className={styles.timeGutterRow} style={{ height: '90px' }}>
+              <time className={styles.timeText}>{label.label}</time>
             </div>
           ))}
         </div>
 
         {/* 시간 컬럼들 */}
         <div className={styles.timeColumns}>
-          <div className={styles.timeGrid} style={{ height: `${timeSlots.length * 44}px` }}>
+          <div className={styles.timeGrid} style={{ height: `${timeLabels.length * 90}px` }}>
             {weekDays.map((day, dayIndex) => (
               <div key={`time-${dayIndex}`} className={styles.timeDayColumn}>
-                {/* 시간 슬롯들 */}
-                {timeSlots.map((slot) => (
-                  <div 
-                    key={`${dayIndex}-${slot.hour}`} 
-                    className={styles.timeHourRow} 
-                    style={{ height: '44px' }}
-                    onClick={(e) => handleTimeSlotClick(day, slot.hour, e)}
-                  />
+                {/* 시간 블록들 - 1시간당 2개의 30분 격자 */}
+                {timeLabels.map((label, labelIndex) => (
+                  <div key={`${dayIndex}-hour-${label.hour}`} style={{ height: '90px' }}>
+                    {/* 첫 번째 30분 (정시) */}
+                    <div 
+                      className={styles.timeHourRow} 
+                      style={{ height: '45px' }}
+                      onClick={(e) => handleTimeSlotClick(day, label.hour, e)}
+                    />
+                    {/* 두 번째 30분 (30분) */}
+                    <div 
+                      className={styles.timeHourRow} 
+                      style={{ height: '45px' }}
+                      onClick={(e) => handleTimeSlotClick(day, label.hour + 0.5, e)}
+                    />
+                  </div>
                 ))}
                 
                 {/* 시간 이벤트들 */}

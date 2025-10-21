@@ -37,8 +37,8 @@
     border: none; /* 보더 제거 */
     outline: none;
     flex: 1;
-    height: 40px; /* 고정 높이 */
-    line-height: 40px; /* 세로 중앙 정렬 */
+    height: 20px; /* 고정 높이 */
+    line-height: 20px; /* 세로 중앙 정렬 */
     border-radius: 8px;
     user-select: none;
   }
