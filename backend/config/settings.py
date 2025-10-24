@@ -104,8 +104,8 @@ DATABASES = {
         'NAME': 'plan_pie_db',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
-        # 'HOST': '127.0.0.1',
-        'HOST': 'db',
+        'HOST': '127.0.0.1',  # 로컬 개발용
+        # 'HOST': 'db',  # Docker용
         'PORT': '5432'
     }
 }
