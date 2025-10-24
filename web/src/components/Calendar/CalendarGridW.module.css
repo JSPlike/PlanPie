@@ -168,6 +168,7 @@
   vertical-align: top;
   border-right: 0.5px solid #f5f5f5;
   position: relative;
+  height: 100%;
 }
 
 .timeGrid {
@@ -177,17 +178,27 @@
   background-image:
     linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px);
-  background-size: calc(100% / 7) 100%, 100% 90px; /* 7 days vertical lines, 1-hour rows (2 x 45px) */
+  background-size: calc(100% / 7) 100%, 100% 45px; /* 7 days vertical lines, 30-minute rows (2 x 45px) */
   background-position: 0 0, 0 0;
+  align-items: flex-start;
 }
 
 .timeHourRow {
   border-bottom: 0.5px solid #f0f0f0;
   cursor: pointer;
+  transition: background-color 0.1s ease;
+  position: relative;
+  box-sizing: border-box;
 }
 
 .timeHourRow:hover {
   background-color: rgba(0, 0, 0, 0.02);
+  border-color: #e0e0e0;
+}
+
+/* 30분 단위 구분을 위한 스타일 */
+.timeHourRow:nth-child(2n) {
+  border-bottom: 1px solid #e8e8e8; /* 30분마다 더 진한 선 */
 }
 
 .timeGutterRow {
@@ -198,11 +209,12 @@
   align-items: flex-start;
   justify-content: flex-end;
   text-align: right;
-  margin-right: 12px
+  margin-right: 12px;
+  height: 90px;
+  padding-top: 2px; /* 시간 라벨을 약간 아래로 이동하여 하단 정렬 */
 }
 
 .timeText {
-  transform: translateY(-7px);
   font-style: normal;
 }
 
@@ -212,7 +224,7 @@
   right: 6px;
   background: #fafafa;
   opacity: 0.7;
-  padding: 4px 6px;
+  padding: 0 6px;
   font-size: 12px;
   cursor: pointer;
 }
@@ -298,6 +310,7 @@
 }
 
 .eventTitle {
+  margin-top: 4px;
   font-weight: 600;
 }
 

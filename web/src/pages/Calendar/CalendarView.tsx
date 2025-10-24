@@ -70,6 +70,12 @@ const CalendarViewContent: React.FC = () => {
     setHasDateError(hasError);
   };
 
+  // 달력 날짜 변경 핸들러
+  const handleCalendarDateChange = (date: Date) => {
+    setCurrentDate(date);
+    console.log('달력 날짜가 시작일에 맞춰 변경됨:', date);
+  };
+
 
   // 시간 슬롯 클릭 핸들러
   const handleTimeSlotClick = (date: Date, hour: number) => {
@@ -98,8 +104,12 @@ const CalendarViewContent: React.FC = () => {
       if (isAllDay) {
         return isEnd ? `${year}-${month}-${day}T23:59:59+09:00` : `${year}-${month}-${day}T00:00:00+09:00`;
       } else {
-        const hourStr = String(specificHour ?? (isEnd ? 23 : 0)).padStart(2, '0');
-        return `${year}-${month}-${day}T${hourStr}:00:00+09:00`;
+        // 30분 단위 처리: 9.5 -> 09:30, 9.0 -> 09:00
+        const hours = Math.floor(specificHour ?? (isEnd ? 23 : 0));
+        const minutes = (specificHour ?? 0) % 1 === 0.5 ? 30 : 0;
+        const hourStr = String(hours).padStart(2, '0');
+        const minuteStr = String(minutes).padStart(2, '0');
+        return `${year}-${month}-${day}T${hourStr}:${minuteStr}:00+09:00`;
       }
     };
 
@@ -478,6 +488,7 @@ const CalendarViewContent: React.FC = () => {
             onSaveEvent={handleSaveEvent}
             isLoading={isLoading}
             onDateErrorChange={handleDateErrorChange}
+            onCalendarDateChange={handleCalendarDateChange}
             onClose={() => {
               setIsRightSideOpen(false);
               setSelectedEvent(null);

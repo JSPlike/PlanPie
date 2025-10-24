@@ -4,6 +4,8 @@ import styles from './CalendarRightSide.module.css';
 import { Event, Calendar, CalendarTag, CreateUpdateEventRequest } from '../../types/calendar.types';
 import { format, parseISO, isSameDay, formatDate } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import CustomDatePicker from './CustomDatePicker';
+import CustomTimePicker from './CustomTimePicker';
 
 interface CalendarRightSideProps {
   isOpen: boolean;
@@ -17,6 +19,7 @@ interface CalendarRightSideProps {
   onSaveEvent: (eventData: CreateUpdateEventRequest & { id?: string }) => void;
   onDeleteEvent: (eventId: string) => void;
   onDateErrorChange?: (hasError: boolean) => void;
+  onCalendarDateChange?: (date: Date) => void; // 달력 날짜 변경 콜백
   isLoading?: boolean;
   onClose: () => void;
 }
@@ -24,6 +27,7 @@ interface CalendarRightSideProps {
 const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   isOpen,
   selectedDate,
+  selectedRange,
   selectedEvent,
   calendars,
   events,
@@ -32,6 +36,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   onSaveEvent,
   onDeleteEvent,
   onDateErrorChange,
+  onCalendarDateChange,
   isLoading = false,
   onClose
 }) => {
@@ -49,8 +54,34 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   const [showMemo, setShowMemo] = useState(false);
   const [description, setDescription] = useState('');
   const [showTagEditor, setShowTagEditor] = useState(false);
+  
+  // 커스텀 피커 상태
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [activePicker, setActivePicker] = useState<'start' | 'end' | null>(null);
 
   //const [isLoading, setIsLoading] = useState(false);
+
+
+  // 30분 단위로 시간을 제한하는 함수
+  const validateAndFormatTime = (time: string): string => {
+    if (!time) return '';
+    
+    const [hours, minutes] = time.split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes)) return time;
+    
+    // 분이 이미 30분 단위인지 확인
+    if (minutes === 0 || minutes === 30) {
+      return time; // 이미 30분 단위면 그대로 반환
+    }
+    
+    // 분을 30분 단위로 반올림
+    const roundedMinutes = Math.round(minutes / 30) * 30;
+    const finalMinutes = roundedMinutes === 60 ? 0 : roundedMinutes;
+    const finalHours = roundedMinutes === 60 ? hours + 1 : hours;
+    
+    return `${finalHours.toString().padStart(2, '0')}:${finalMinutes.toString().padStart(2, '0')}`;
+  };
 
   // rightside 캘린더 목록
   const [showCalendarDropdown, setShowCalendarDropdown] = useState(false);
@@ -58,9 +89,63 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   // 태그 드롭다운 상태 추가
   const [showTagDropdown, setShowTagDropdown] = useState(false);
 
+  // 날짜 형식 오류 체크 함수
+  const checkDateFormatError = (date: string): boolean => {
+    if (!date) return false;
+    
+    // 완전한 YYYY-MM-DD 형식인지 확인
+    const completeDateRegex = /^(\d{4})-(\d{2})-(\d{2})$/;
+    const completeMatch = date.match(completeDateRegex);
+    
+    if (completeMatch) {
+      const [, year, month, day] = completeMatch;
+      const yearNum = parseInt(year);
+      const monthNum = parseInt(month);
+      const dayNum = parseInt(day);
+      
+      // 연도 제한 (1900-2099)
+      if (yearNum < 1900 || yearNum > 2099) {
+        return true;
+      }
+      
+      // 월 제한 (01-12)
+      if (monthNum < 1 || monthNum > 12) {
+        return true;
+      }
+      
+      // 일 제한 (01-31)
+      if (dayNum < 1 || dayNum > 31) {
+        return true;
+      }
+      
+      // 실제 날짜 유효성 검증
+      const dateObj = new Date(yearNum, monthNum - 1, dayNum);
+      if (dateObj.getFullYear() !== yearNum || 
+          dateObj.getMonth() !== monthNum - 1 || 
+          dateObj.getDate() !== dayNum) {
+        return true;
+      }
+    }
+    
+    return false;
+  };
+
   const hasDateError = useMemo(() => {
+    // 완전한 날짜 형식인지 먼저 확인
+    const startDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    const endDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    
+    if (!startDateRegex.test(startDate) || !endDateRegex.test(endDate)) {
+      return false; // 부분 입력 중에는 오류로 간주하지 않음
+    }
+    
     const startDateObj = new Date(startDate);
     const endDateObj = new Date(endDate);
+    
+    // 유효하지 않은 날짜인 경우 오류로 간주하지 않음
+    if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+      return false;
+    }
     
     if (startDateObj > endDateObj) {
       return true;
@@ -70,6 +155,10 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
       const startDateTime = new Date(`${startDate}T${startTime}`);
       const endDateTime = new Date(`${endDate}T${endTime}`);
       
+      if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+        return false; // 유효하지 않은 날짜/시간인 경우 오류로 간주하지 않음
+      }
+      
       if (startDateTime >= endDateTime) {
         return true;
       }
@@ -77,6 +166,94 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     
     return false;
   }, [startDate, endDate, startTime, endTime, isAllDay]);
+
+  // 포커스 상태 추가
+  const [startDateFocused, setStartDateFocused] = useState(false);
+  const [endDateFocused, setEndDateFocused] = useState(false);
+
+  // 개별 날짜 형식 오류 상태 - 포커스 상태에 따라 다르게 체크
+  const hasStartDateFormatError = useMemo(() => {
+    // 포커스 중이면 오류 표시하지 않음
+    if (startDateFocused) {
+      return false;
+    }
+    
+    // 포커스가 벗어났을 때는 부분 입력도 검증
+    if (!startDate) return false;
+    
+    // 완전한 YYYY-MM-DD 형식인 경우
+    const completeDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (completeDateRegex.test(startDate)) {
+      return checkDateFormatError(startDate);
+    }
+    
+    // 부분 입력인 경우 연도 형식 체크
+    const yearRegex = /^\d{4}$/;
+    const yearMonthRegex = /^\d{4}-\d{2}$/;
+    const yearMonthDayRegex = /^\d{4}-\d{2}-\d{1,2}$/;
+    
+    if (yearRegex.test(startDate)) {
+      const year = parseInt(startDate);
+      return year < 1900 || year > 2099;
+    }
+    
+    if (yearMonthRegex.test(startDate)) {
+      const [year, month] = startDate.split('-').map(Number);
+      return year < 1900 || year > 2099 || month < 1 || month > 12;
+    }
+    
+    if (yearMonthDayRegex.test(startDate)) {
+      const [year, month, day] = startDate.split('-').map(Number);
+      return year < 1900 || year > 2099 || month < 1 || month > 12 || day < 1 || day > 31;
+    }
+    
+    // 다른 형식은 오류로 간주
+    return startDate.length > 0;
+  }, [startDate, startDateFocused]);
+
+  const hasEndDateFormatError = useMemo(() => {
+    // 포커스 중이면 오류 표시하지 않음
+    if (endDateFocused) {
+      return false;
+    }
+    
+    // 포커스가 벗어났을 때는 부분 입력도 검증
+    if (!endDate) return false;
+    
+    // 완전한 YYYY-MM-DD 형식인 경우
+    const completeDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (completeDateRegex.test(endDate)) {
+      return checkDateFormatError(endDate);
+    }
+    
+    // 부분 입력인 경우 연도 형식 체크
+    const yearRegex = /^\d{4}$/;
+    const yearMonthRegex = /^\d{4}-\d{2}$/;
+    const yearMonthDayRegex = /^\d{4}-\d{2}-\d{1,2}$/;
+    
+    if (yearRegex.test(endDate)) {
+      const year = parseInt(endDate);
+      return year < 1900 || year > 2099;
+    }
+    
+    if (yearMonthRegex.test(endDate)) {
+      const [year, month] = endDate.split('-').map(Number);
+      return year < 1900 || year > 2099 || month < 1 || month > 12;
+    }
+    
+    if (yearMonthDayRegex.test(endDate)) {
+      const [year, month, day] = endDate.split('-').map(Number);
+      return year < 1900 || year > 2099 || month < 1 || month > 12 || day < 1 || day > 31;
+    }
+    
+    // 다른 형식은 오류로 간주
+    return endDate.length > 0;
+  }, [endDate, endDateFocused]);
+
+  // 전체 날짜 형식 오류 상태 (저장 버튼용)
+  const hasDateFormatError = useMemo(() => {
+    return hasStartDateFormatError || hasEndDateFormatError;
+  }, [hasStartDateFormatError, hasEndDateFormatError]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -390,81 +567,104 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
 
   // 날짜 포맷 헬퍼
   const formatDate = (date: Date): string => {
+    // 유효하지 않은 날짜인 경우 빈 문자열 반환
+    if (isNaN(date.getTime())) {
+      return '';
+    }
     return date.toISOString().split('T')[0];
   };
 
   // 시작일 변경 이벤트
   const handleStartDateChange = (newDate: string) => {
-    const currentStartDate = new Date(startDate); // 현재 시작일
-    const currentEndDate = new Date(endDate); // 현재 종료일
-    const newStartDateObj = new Date(newDate); // 새로운 시작일
+    // 날짜 형식 검증
+    const validatedDate = validateDateFormat(newDate);
+    
+    // 유효하지 않은 날짜인 경우 처리
+    const currentStartDate = new Date(startDate);
+    const currentEndDate = new Date(endDate);
+    const newStartDateObj = new Date(validatedDate);
+    
+    // 유효하지 않은 날짜인 경우 기본값 사용
+    if (isNaN(newStartDateObj.getTime())) {
+      setStartDate(validatedDate);
+      return;
+    }
   
-    // 현재 범위 계산 (일 단위)
+    // 현재 범위 계산 (일 단위) - 유효한 날짜인 경우에만
     const currentRange = Math.ceil((currentEndDate.getTime() - currentStartDate.getTime()) / (1000 * 60 * 60 * 24));
 
     if (hasDateError) {
-      setStartDate(newDate);
-      setEndDate(newDate); // 종료일도 같은 날짜로 설정
+      setStartDate(validatedDate);
+      // 오류가 있을 때는 종료일을 변경하지 않음
       
-      console.log('날짜 오류 상태 - 단일 날짜로 설정:', newDate);
+      console.log('날짜 오류 상태 - 시작일만 변경:', newDate);
       
       if (!selectedEvent && tempEvent) {
-        const startDateTime = isAllDay 
-          ? `${newDate}T00:00:00+09:00`
-          : `${newDate}T${startTime}:00+09:00`;
-        const endDateTime = isAllDay 
-          ? `${newDate}T23:59:59+09:00`
-          : `${newDate}T${endTime}:00+09:00`;
-        
-        onUpdateTempEvent({ 
-          start_date: startDateTime, 
-          end_date: endDateTime 
-        });
+        // 완전한 날짜 형식인지 확인
+        const completeDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (completeDateRegex.test(validatedDate)) {
+          const startDateTime = isAllDay 
+            ? `${validatedDate}T00:00:00+09:00`
+            : `${validatedDate}T${startTime}:00+09:00`;
+          
+          onUpdateTempEvent({ 
+            start_date: startDateTime
+          });
+        }
       }
       return;
     }
 
-    // 새로운 시작일이 현재 시작일보다 큰경우
-    //if(newStartDateObj > currentStartDate) {
-    if(currentRange > 0) {
-      const newEndDate = new Date(newStartDateObj);
-      newEndDate.setDate(newEndDate.getDate() + currentRange);
-      
-      setStartDate(newDate);
-      setEndDate(formatDate(newEndDate));
-      
-      console.log(`범위 유지: ${newDate} ~ ${formatDate(newEndDate)} (${currentRange}일)`);
-    } else {
-      setStartDate(newDate);
+    // 시작일 변경
+    setStartDate(validatedDate);
+    
+    // 달력 날짜도 시작일에 맞춰 조정
+    const validatedStartDateObj = new Date(validatedDate);
+    if (!isNaN(validatedStartDateObj.getTime()) && onCalendarDateChange) {
+      onCalendarDateChange(validatedStartDateObj);
+      console.log('달력 날짜를 시작일에 맞춰 조정:', validatedDate);
     }
+    
+    // 종료일이 시작일보다 작으면 자동으로 조정
+    const currentEndDateObj = new Date(endDate);
+    
+    if (!isNaN(validatedStartDateObj.getTime()) && !isNaN(currentEndDateObj.getTime())) {
+      if (validatedStartDateObj > currentEndDateObj) {
+        setEndDate(validatedDate);
+        console.log('종료일이 시작일보다 작아서 자동 조정:', validatedDate);
+      }
+    }
+    
     // selectedEvent가 있으면 tempEvent 업데이트 안함
     if (!selectedEvent && tempEvent) {
-
-      const startDateTime = isAllDay 
-        ? `${newDate}T00:00:00+09:00`
-        : `${newDate}T${startTime}:00+09:00`;
-      
-      let endDateTime;
-      if(currentRange > 0) {
-        const newEndDate = new Date(newStartDateObj);
-        newEndDate.setDate(newEndDate.getDate() + currentRange);
-        endDateTime = isAllDay 
-          ? `${format(newEndDate, 'yyyy-MM-dd')}T23:59:59+09:00`
-          : `${format(newEndDate, 'yyyy-MM-dd')}T${endTime}:00+09:00`;
-      } else {
-        endDateTime = isAllDay 
-          ? `${newDate}T23:59:59+09:00`
-          : `${newDate}T${endTime}:00+09:00`;
+      // 완전한 날짜 형식인지 확인
+      const completeDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (completeDateRegex.test(validatedDate)) {
+        const startDateTime = isAllDay 
+          ? `${validatedDate}T00:00:00+09:00`
+          : `${validatedDate}T${startTime}:00+09:00`;
+        
+        // 종료일도 조정되었는지 확인
+        const finalEndDate = validatedStartDateObj > currentEndDateObj ? validatedDate : endDate;
+        const endDateTime = isAllDay 
+          ? `${finalEndDate}T23:59:59+09:00`
+          : `${finalEndDate}T${endTime}:00+09:00`;
+        
+        onUpdateTempEvent({ 
+          start_date: startDateTime,
+          end_date: endDateTime
+        });
       }
-      onUpdateTempEvent({ start_date: startDateTime, end_date: endDateTime });
     }
   };
 
   const handleStartTimeChange = (newTime: string) => {
-    setStartTime(newTime);
+    // 30분 단위로 제한
+    const formattedTime = validateAndFormatTime(newTime);
+    setStartTime(formattedTime);
 
     // 시작 시간이 종료 시간보다 늦으면 종료 시간을 1시간 후로 설정
-    const [startHour, startMin] = newTime.split(':').map(Number);
+    const [startHour, startMin] = formattedTime.split(':').map(Number);
     const [endHour, endMin] = endTime.split(':').map(Number);
     
     const startMinutes = startHour * 60 + startMin;
@@ -479,32 +679,113 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     }
     
     if (!selectedEvent && tempEvent && !isAllDay) {
-      const newDateTime = `${startDate}T${newTime}:00+09:00`;
+      const newDateTime = `${startDate}T${formattedTime}:00+09:00`;
       onUpdateTempEvent({ start_date: newDateTime });
     }
   };
 
   const handleEndDateChange = (newDate: string) => {
-    setEndDate(newDate);
+    // 날짜 형식 검증
+    const validatedDate = validateDateFormat(newDate);
+    setEndDate(validatedDate);
+    
+    // 유효하지 않은 날짜인 경우 tempEvent 업데이트 안함
+    const endDateObj = new Date(validatedDate);
+    if (isNaN(endDateObj.getTime())) {
+      return;
+    }
     
     if (!selectedEvent && tempEvent) {
-      const newDateTime = isAllDay 
-        ? `${newDate}T23:59:59+09:00`
-        : `${newDate}T${endTime}:00+09:00`;
-      onUpdateTempEvent({ end_date: newDateTime });
+      // 완전한 날짜 형식인지 확인
+      const completeDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (completeDateRegex.test(validatedDate)) {
+        const newDateTime = isAllDay 
+          ? `${validatedDate}T23:59:59+09:00`
+          : `${validatedDate}T${endTime}:00+09:00`;
+        onUpdateTempEvent({ end_date: newDateTime });
+      }
     }
+  };
+
+  // 포커스 이벤트 핸들러
+  const handleStartDateFocus = () => {
+    setStartDateFocused(true);
+  };
+
+  const handleStartDateBlur = () => {
+    setStartDateFocused(false);
+  };
+
+  const handleEndDateFocus = () => {
+    setEndDateFocused(true);
+  };
+
+  const handleEndDateBlur = () => {
+    setEndDateFocused(false);
   };
   
   const handleEndTimeChange = (newTime: string) => {
-    setEndTime(newTime);
+    // 30분 단위로 제한
+    const formattedTime = validateAndFormatTime(newTime);
+    setEndTime(formattedTime);
     
     if (!selectedEvent && tempEvent && !isAllDay) {
-      const newDateTime = `${endDate}T${newTime}:00+09:00`;
+      const newDateTime = `${endDate}T${formattedTime}:00+09:00`;
       onUpdateTempEvent({ end_date: newDateTime });
     }
   };
 
-  const handleAllDayChange = (checked: boolean) => {
+  // 커스텀 피커 핸들러들
+  const handleDatePickerOpen = (type: 'start' | 'end') => {
+    setActivePicker(type);
+    setShowDatePicker(true);
+  };
+
+  const handleTimePickerOpen = (type: 'start' | 'end') => {
+    setActivePicker(type);
+    setShowTimePicker(true);
+  };
+
+  const handleDatePickerClose = () => {
+    setShowDatePicker(false);
+    setActivePicker(null);
+  };
+
+  const handleTimePickerClose = () => {
+    setShowTimePicker(false);
+    setActivePicker(null);
+  };
+
+  const handleCustomDateChange = (date: string) => {
+    if (activePicker === 'start') {
+      handleStartDateChange(date);
+    } else if (activePicker === 'end') {
+      handleEndDateChange(date);
+    }
+  };
+
+  const handleCustomTimeChange = (time: string) => {
+    if (activePicker === 'start') {
+      handleStartTimeChange(time);
+    } else if (activePicker === 'end') {
+      handleEndTimeChange(time);
+    }
+  };
+
+  // 날짜 형식 검증 함수 - 1자리부터 허용
+  const validateDateFormat = (date: string): string => {
+    if (!date) return '';
+    
+    // 1자리부터 허용하되, 완전한 형식일 때만 상세 검증
+    return date;
+  };
+
+  const handleAllDayChange = (checked: boolean, event?: React.ChangeEvent<HTMLInputElement>) => {
+    // 이벤트 전파 막기
+    if (event) {
+      event.stopPropagation();
+    }
+    
     setIsAllDay(checked);
     let newStartTime = startTime;
     let newEndTime = endTime;
@@ -739,21 +1020,58 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                 <label className={styles.smallLabel}>시작</label>
                 <div className={styles.dateTimeInputs}>
                   <div className={styles.dateDiv}>
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => handleStartDateChange(e.target.value)}
-                      className={`${styles.dateInput} ${!isAllDay ? styles.fullWidth : ''}`}
-                    />
+                    <div className={styles.dateInputContainer}>
+                      <input
+                        type="text"
+                        value={startDate}
+                        onChange={(e) => handleStartDateChange(e.target.value)}
+                        onFocus={handleStartDateFocus}
+                        onBlur={handleStartDateBlur}
+                        className={`${styles.dateInput} ${styles.dateInputField} ${!isAllDay ? styles.fullWidth : ''}`}
+                        placeholder="YYYY-MM-DD"
+                        title="YYYY-MM-DD 형식으로 입력하세요"
+                        style={{
+                          backgroundColor: hasStartDateFormatError
+                            ? 'rgba(231, 59, 59, 0.1)'
+                            : 'white',
+                          fontWeight: hasStartDateFormatError ? '700' : '400',
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className={styles.datePickerButton}
+                        onClick={() => handleDatePickerOpen('start')}
+                        title="달력 열기"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
+                          <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="2"/>
+                          <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="2"/>
+                          <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="2"/>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                   {!isAllDay && (
                     <div className={styles.timeDiv}>
-                      <input
-                        type="time"
-                        value={startTime}
-                        onChange={(e) => handleStartTimeChange(e.target.value)}
-                        className={styles.timeInput}
-                      />
+                      <div className={styles.timeInputContainer}>
+                        <input
+                          type="time"
+                          value={startTime}
+                          onChange={(e) => handleStartTimeChange(e.target.value)}
+                          className={`${styles.timeInput} ${styles.timeInputField}`}
+                          step="1800"
+                          placeholder="HH:MM"
+                        />
+                        <button
+                          type="button"
+                          className={styles.timePickerButton}
+                          onClick={() => handleTimePickerOpen('start')}
+                          title="시간 선택기 열기"
+                        >
+                          🕐
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -765,48 +1083,79 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                 >
                   <div className={styles.dateDiv}
                   >
-                    <input
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => handleEndDateChange(e.target.value)}
-                      className={styles.dateInput}
-                      style={{
-                        backgroundColor: hasDateError
-                          ? 'rgba(231, 59, 59, 0.1)'  // 문자열로 감싸야 함
-                          : 'rgb(250, 250, 250)',     // 문자열로 감싸야 함
-                        fontWeight: hasDateError ? '700' : '400',
-                      }}
-                    />
+                    <div className={styles.dateInputContainer}>
+                      <input
+                        type="text"
+                        value={endDate}
+                        onChange={(e) => handleEndDateChange(e.target.value)}
+                        onFocus={handleEndDateFocus}
+                        onBlur={handleEndDateBlur}
+                        className={`${styles.dateInput} ${styles.dateInputField}`}
+                        placeholder="YYYY-MM-DD"
+                        title="YYYY-MM-DD 형식으로 입력하세요"
+                        style={{
+                          backgroundColor: hasDateError || hasEndDateFormatError
+                            ? 'rgba(231, 59, 59, 0.1)'
+                            : 'white',
+                          fontWeight: hasDateError || hasEndDateFormatError ? '700' : '400',
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className={styles.datePickerButton}
+                        onClick={() => handleDatePickerOpen('end')}
+                        title="달력 열기"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
+                          <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="2"/>
+                          <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="2"/>
+                          <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="2"/>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                   {!isAllDay && (
                     <div className={styles.timeDiv}>
-                      <input
-                        type="time"
-                        value={endTime}
-                        onChange={(e) => handleEndTimeChange(e.target.value)}
-                        className={styles.timeInput}
-                        style={{
-                          backgroundColor: hasDateError
-                            ? 'rgba(231, 59, 59, 0.1)'  // 문자열로 감싸야 함
-                            : 'rgb(250, 250, 250)',     // 문자열로 감싸야 함
-                          fontWeight: hasDateError ? '700' : '400',
-                        }}
-                      />
+                      <div className={styles.timeInputContainer}>
+                        <input
+                          type="time"
+                          value={endTime}
+                          onChange={(e) => handleEndTimeChange(e.target.value)}
+                          className={`${styles.timeInput} ${styles.timeInputField}`}
+                          step="1800"
+                          placeholder="HH:MM"
+                          style={{
+                            backgroundColor: hasDateError
+                              ? 'rgba(231, 59, 59, 0.1)'
+                              : 'white',
+                            fontWeight: hasDateError ? '700' : '400',
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className={styles.timePickerButton}
+                          onClick={() => handleTimePickerOpen('end')}
+                          title="시간 선택기 열기"
+                        >
+                          🕐
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
               
               <div className={styles.checkboxGroup}>
-                <label className={styles.checkboxLabel}>
+                <div className={styles.checkboxLabel}>
                   <input
                     type="checkbox"
                     checked={isAllDay}
-                    onChange={(e) => handleAllDayChange(e.target.checked)}
+                    onChange={(e) => handleAllDayChange(e.target.checked, e)}
                     className={styles.checkbox}
                   />
-                  종일
-                </label>
+                  <span>종일</span>
+                </div>
               </div>
             </div>
           </div>
@@ -984,7 +1333,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                 <button
                   type="button"
                   onClick={handleSave}
-                  disabled={!isFormValid || hasDateError || isLoading}
+                  disabled={!isFormValid || hasDateError || hasDateFormatError || isLoading}
                   className={`${styles.saveButton} ${!isFormValid ? styles.disabled : ''}`}
                 >
                   {/* {selectedEvent ? '수정' : '저장'} */}
@@ -1005,6 +1354,21 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
           </div>
         </div>
       </form>
+
+      {/* 커스텀 피커들 */}
+      <CustomDatePicker
+        value={activePicker === 'start' ? startDate : endDate}
+        onChange={handleCustomDateChange}
+        onClose={handleDatePickerClose}
+        isOpen={showDatePicker}
+      />
+
+      <CustomTimePicker
+        value={activePicker === 'start' ? startTime : endTime}
+        onChange={handleCustomTimeChange}
+        onClose={handleTimePickerClose}
+        isOpen={showTimePicker}
+      />
     </div>
   );
 };

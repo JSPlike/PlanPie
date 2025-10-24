@@ -99,7 +99,8 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
 
   // 이벤트를 종일 이벤트와 시간 이벤트로 분리
   const { allDayEvents, timedEvents } = useMemo(() => {
-    const allEvents = tempEvent ? [...events, tempEvent] : events;
+    // tempEvent는 종일 이벤트에만 포함, 시간 이벤트에는 제외
+    const allEvents = tempEvent && tempEvent.all_day ? [...events, tempEvent] : events;
     const currentWeekEvents = allEvents.filter(event => {
       const eventStart = parseISO(event.start_date);
       const eventEnd = parseISO(event.end_date);
@@ -292,7 +293,19 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
   const handleTimeSlotClick = (date: Date, hour: number, event: React.MouseEvent) => {
     event.stopPropagation();
     
+    // 30분 단위 처리: 0.5는 30분으로 변환
+    const clickedTime = new Date(date);
+    const hours = Math.floor(hour);
+    const minutes = hour % 1 === 0.5 ? 30 : 0; // 0.5일 때만 30분, 나머지는 0분
+    
+    clickedTime.setHours(hours, minutes, 0, 0);
+    
+    // 시간 표시 포맷
+    const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    console.log(`시간 슬롯 클릭: ${clickedTime.toLocaleString()}, 시간: ${timeString}, 원본 hour: ${hour}`);
+    
     if (onTimeSlotClick) {
+      // 30분 단위 값을 그대로 전달 (부모 컴포넌트에서 처리)
       onTimeSlotClick(date, hour);
     } else {
       // fallback to regular date click
@@ -307,6 +320,21 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
 
   const isToday = (date: Date) => isSameDay(date, new Date());
   const isSelected = (date: Date) => selectedDate ? isSameDay(date, selectedDate) : false;
+
+  // 배경색에 따라 최적의 텍스트 색상을 반환하는 함수
+  const getContrastColor = (backgroundColor: string): string => {
+    // hex 색상을 rgb로 변환
+    const hex = backgroundColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    
+    // 상대적 밝기 계산 (0-255)
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    
+    // 밝기가 128보다 크면 어두운 텍스트, 작으면 밝은 텍스트
+    return brightness > 128 ? '#333333' : '#ffffff';
+  };
 
   return (
     <div className={styles.weekView}>
@@ -362,7 +390,7 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
                       `}
                       style={{
                         backgroundColor: eventColor,
-                        color: 'white',
+                        color: getContrastColor(eventColor),
                         top: `${bar.lane * 24 + 2}px`,
                         fontWeight: isTemp ? '700' : '500',
                         zIndex: isTemp ? 15 : (isHovered ? 10 : 5),
@@ -420,12 +448,14 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
                       className={styles.timeHourRow} 
                       style={{ height: '45px' }}
                       onClick={(e) => handleTimeSlotClick(day, label.hour, e)}
+                      title={`${label.hour}:00`}
                     />
                     {/* 두 번째 30분 (30분) */}
                     <div 
                       className={styles.timeHourRow} 
                       style={{ height: '45px' }}
                       onClick={(e) => handleTimeSlotClick(day, label.hour + 0.5, e)}
+                      title={`${label.hour}:30`}
                     />
                   </div>
                 ))}
@@ -442,7 +472,6 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
                     }
                   })
                   .map((timedEvent, eventIndex) => {
-                    const isTemp = tempEvent && timedEvent.event.id === tempEvent.id;
                     const eventColor = getEventColor(timedEvent.event);
                     const isMultiDay = timedEvent.width && timedEvent.width > 1;
                     const shouldShowText = !isMultiDay || dayIndex === timedEvent.dayIndex;
@@ -469,27 +498,25 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
                           top: `${timedEvent.top}px`,
                           height: `${timedEvent.height}px`,
                           backgroundColor: eventColor,
-                          color: 'rgba(33, 33, 33, 0.6);',
-                          fontWeight: isTemp ? '700' : '400',
-                          zIndex: isTemp ? 15 : (isHovered ? 10 : (isMultiDay ? 8 : 5)),
+                          color: getContrastColor(eventColor),
+                          fontWeight: '400',
+                          zIndex: isHovered ? 10 : (isMultiDay ? 8 : 5),
                           transform: isHovered ? 'translateY(-1px)' : 'none'
                         }}
                         onMouseEnter={() => setHoveredEventId(timedEvent.event.id)}
                         onMouseLeave={() => setHoveredEventId(null)}
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (!isTemp) {
-                            onEventClick(timedEvent.event);
-                          }
+                          onEventClick(timedEvent.event);
                         }}
                       >
                         {shouldShowText && (
                           <>
                             <div className={styles.eventTitle}>
-                              {isTemp ? tempEvent?.title || 'New Event' : timedEvent.event.title}
+                              {timedEvent.event.title}
                             </div>
                             <div style={{ fontSize: '10px', opacity: 0.9 }}>
-                              {format(parseISO(timedEvent.event.start_date), 'HH:mm')} - 
+                              {format(parseISO(timedEvent.event.start_date), 'HH:mm')} -
                               {format(parseISO(timedEvent.event.end_date), 'HH:mm')}
                             </div>
                           </>

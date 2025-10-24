@@ -167,7 +167,6 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
 
   const updateTempEvent = (updates: Partial<Event>) => {
     console.log('Context updateTempEvent 호출:', updates);
-  
     if (tempEvent) {
       const updatedEvent = {
         ...tempEvent,

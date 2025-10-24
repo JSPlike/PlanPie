@@ -1,0 +1,212 @@
+/* 커스텀 달력 오버레이 */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+/* 달력 컨테이너 */
+.picker {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.15),
+    0 8px 16px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  min-width: 320px;
+  width: 320px; /* 고정 너비 */
+  height: 400px; /* 고정 높이 */
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 헤더 */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.navButton {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.navButton:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+  transform: scale(1.05);
+}
+
+.monthYear {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+/* 요일 헤더 */
+.weekDays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.weekDay {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  padding: 8px 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.weekDay.sunday {
+  color: #ef4444;
+}
+
+/* 달력 그리드 - 6줄 고정 */
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, 36px); /* 6줄 고정, 각 줄 36px */
+  gap: 4px;
+  height: 240px; /* 고정 높이: 6줄 × 36px + 5개 gap × 4px = 236px */
+}
+
+.dayButton {
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.dayButton:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+  transform: scale(1.1);
+}
+
+.dayButton.otherMonth {
+  color: #cbd5e0;
+}
+
+.dayButton.today {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.dayButton.selected {
+  background: #667eea;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  transform: scale(1.1);
+}
+
+.dayButton.selected::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 2px solid #667eea;
+  border-radius: 10px;
+  opacity: 0.3;
+}
+
+/* 푸터 */
+.footer {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: center;
+}
+
+.todayButton {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.todayButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* 반응형 */
+@media (max-width: 480px) {
+  .picker {
+    margin: 16px;
+    padding: 20px;
+    width: 280px; /* 고정 너비 */
+    height: 360px; /* 고정 높이 */
+  }
+  
+  .calendarGrid {
+    height: 200px; /* 모바일에서도 고정 높이 */
+    grid-template-rows: repeat(6, 30px); /* 모바일에서 각 줄 30px */
+  }
+  
+  .dayButton {
+    width: 30px;
+    height: 30px;
+    font-size: 13px;
+  }
+}

@@ -1,0 +1,255 @@
+/* 시간 선택기 오버레이 */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(6px);
+}
+
+/* 시간 선택기 컨테이너 */
+.picker {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.2),
+    0 10px 20px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 헤더 */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.closeButton {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+  transform: scale(1.1);
+}
+
+/* 섹션 */
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 빠른 선택 */
+.quickSelect {
+  margin-bottom: 24px;
+}
+
+.quickTimes {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.quickTimeButton {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.quickTimeButton:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+  transform: scale(1.05);
+}
+
+.quickTimeButton.selected {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  transform: scale(1.05);
+}
+
+/* 시간 그리드 */
+.timeGrid {
+  margin-bottom: 20px;
+}
+
+.timeList {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fafbfc;
+}
+
+.timeOption {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #f1f5f9;
+  width: 100%;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.timeOption:last-child {
+  border-bottom: none;
+}
+
+.timeOption:hover {
+  background: #f1f5f9;
+  transform: translateX(4px);
+}
+
+.timeOption.selected {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  transform: translateX(8px);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.timeValue {
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.timeLabel {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.timeOption.selected .timeLabel {
+  opacity: 1;
+}
+
+/* 현재 선택된 시간 */
+.currentTime {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.currentTimeLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.currentTimeValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: #667eea;
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+/* 스크롤바 스타일링 */
+.timeList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.timeList::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.timeList::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.timeList::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* 반응형 */
+@media (max-width: 480px) {
+  .picker {
+    margin: 16px;
+    padding: 20px;
+    max-width: 320px;
+  }
+  
+  .quickTimes {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .timeValue {
+    font-size: 14px;
+  }
+  
+  .timeLabel {
+    font-size: 11px;
+  }
+}
