@@ -6,6 +6,7 @@ import { format, parseISO, isSameDay, formatDate } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import CustomDatePicker from './CustomDatePicker';
 import CustomTimePicker from './CustomTimePicker';
+import { useCalendarContext } from '../../contexts/CalendarContext';
 
 interface CalendarRightSideProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface CalendarRightSideProps {
   onUpdateTempEvent: (updates: Partial<Event>) => void; // 추가
   onSaveEvent: (eventData: CreateUpdateEventRequest & { id?: string }) => void;
   onDeleteEvent: (eventId: string) => void;
+  onEventClick?: (event: Event) => void; // 이벤트 클릭 콜백
   onDateErrorChange?: (hasError: boolean) => void;
   onCalendarDateChange?: (date: Date) => void; // 달력 날짜 변경 콜백
   isLoading?: boolean;
@@ -35,6 +37,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   onUpdateTempEvent,
   onSaveEvent,
   onDeleteEvent,
+  onEventClick,
   onDateErrorChange,
   onCalendarDateChange,
   isLoading = false,
@@ -47,13 +50,16 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   const [startTime, setStartTime] = useState('');
   const [endDate, setEndDate] = useState('');
   const [endTime, setEndTime] = useState('');
-  const [isAllDay, setIsAllDay] = useState(true);
+  const [isAllDay, setIsAllDay] = useState(false);
   const [selectedCalendarId, setSelectedCalendarId] = useState('');
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [location, setLocation] = useState('');
   const [showMemo, setShowMemo] = useState(false);
   const [description, setDescription] = useState('');
   const [showTagEditor, setShowTagEditor] = useState(false);
+  
+  // 선택된 날짜의 이벤트 목록 가져오기
+  const { selectedDateEvents, selectedDate: contextSelectedDate, setSelectedDate, setSelectedDateEvents } = useCalendarContext();
   
   // 커스텀 피커 상태
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -63,24 +69,21 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   //const [isLoading, setIsLoading] = useState(false);
 
 
-  // 30분 단위로 시간을 제한하는 함수
+  // 시간 형식 검증 함수 (1분 단위 허용)
   const validateAndFormatTime = (time: string): string => {
     if (!time) return '';
     
     const [hours, minutes] = time.split(':').map(Number);
     if (isNaN(hours) || isNaN(minutes)) return time;
     
-    // 분이 이미 30분 단위인지 확인
-    if (minutes === 0 || minutes === 30) {
-      return time; // 이미 30분 단위면 그대로 반환
-    }
+    // 시간 범위 검증 (0-23)
+    if (hours < 0 || hours > 23) return time;
     
-    // 분을 30분 단위로 반올림
-    const roundedMinutes = Math.round(minutes / 30) * 30;
-    const finalMinutes = roundedMinutes === 60 ? 0 : roundedMinutes;
-    const finalHours = roundedMinutes === 60 ? hours + 1 : hours;
+    // 분 범위 검증 (0-59)
+    if (minutes < 0 || minutes > 59) return time;
     
-    return `${finalHours.toString().padStart(2, '0')}:${finalMinutes.toString().padStart(2, '0')}`;
+    // 유효한 시간이면 그대로 반환 (1분 단위 허용)
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   };
 
   // rightside 캘린더 목록
@@ -659,28 +662,38 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   };
 
   const handleStartTimeChange = (newTime: string) => {
-    // 30분 단위로 제한
-    const formattedTime = validateAndFormatTime(newTime);
-    setStartTime(formattedTime);
-
-    // 시작 시간이 종료 시간보다 늦으면 종료 시간을 1시간 후로 설정
-    const [startHour, startMin] = formattedTime.split(':').map(Number);
-    const [endHour, endMin] = endTime.split(':').map(Number);
+    // 부분 입력 허용 - 완전한 형식일 때만 검증
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    let formattedTime = newTime;
     
-    const startMinutes = startHour * 60 + startMin;
-    const endMinutes = endHour * 60 + endMin;
-    
-    if (startMinutes >= endMinutes) {
-      const newEndMinutes = startMinutes + 60;
-      const newEndHour = Math.floor(newEndMinutes / 60) % 24;
-      const newEndMin = newEndMinutes % 60;
-      const newEndTime = `${newEndHour.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`;
-      setEndTime(newEndTime);
+    if (timeRegex.test(newTime)) {
+      // 완전한 형식인 경우에만 시간 형식 검증 (1분 단위 허용)
+      formattedTime = validateAndFormatTime(newTime);
     }
     
-    if (!selectedEvent && tempEvent && !isAllDay) {
-      const newDateTime = `${startDate}T${formattedTime}:00+09:00`;
-      onUpdateTempEvent({ start_date: newDateTime });
+    setStartTime(formattedTime);
+
+    // 완전한 형식인 경우에만 시간 비교 및 Context 업데이트
+    if (timeRegex.test(formattedTime)) {
+      // 시작 시간이 종료 시간보다 늦으면 종료 시간을 1시간 후로 설정
+      const [startHour, startMin] = formattedTime.split(':').map(Number);
+      const [endHour, endMin] = endTime.split(':').map(Number);
+      
+      const startMinutes = startHour * 60 + startMin;
+      const endMinutes = endHour * 60 + endMin;
+      
+      if (startMinutes >= endMinutes) {
+        const newEndMinutes = startMinutes + 60;
+        const newEndHour = Math.floor(newEndMinutes / 60) % 24;
+        const newEndMin = newEndMinutes % 60;
+        const newEndTime = `${newEndHour.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`;
+        setEndTime(newEndTime);
+      }
+      
+      if (!selectedEvent && tempEvent && !isAllDay) {
+        const newDateTime = `${startDate}T${formattedTime}:00+09:00`;
+        onUpdateTempEvent({ start_date: newDateTime });
+      }
     }
   };
 
@@ -725,13 +738,21 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   };
   
   const handleEndTimeChange = (newTime: string) => {
-    // 30분 단위로 제한
-    const formattedTime = validateAndFormatTime(newTime);
-    setEndTime(formattedTime);
+    // 부분 입력 허용 - 완전한 형식일 때만 검증
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
     
-    if (!selectedEvent && tempEvent && !isAllDay) {
-      const newDateTime = `${endDate}T${formattedTime}:00+09:00`;
-      onUpdateTempEvent({ end_date: newDateTime });
+    if (timeRegex.test(newTime)) {
+      // 완전한 형식인 경우에만 시간 형식 검증 (1분 단위 허용)
+      const formattedTime = validateAndFormatTime(newTime);
+      setEndTime(formattedTime);
+      
+      if (!selectedEvent && tempEvent && !isAllDay) {
+        const newDateTime = `${endDate}T${formattedTime}:00+09:00`;
+        onUpdateTempEvent({ end_date: newDateTime });
+      }
+    } else {
+      // 부분 입력인 경우 그대로 설정
+      setEndTime(newTime);
     }
   };
 
@@ -840,6 +861,104 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
         }
       }
     };
+
+    // 디버깅: 선택된 날짜와 이벤트 목록 확인
+    console.log('CalendarRightSide Debug:', {
+      contextSelectedDate,
+      selectedDateEvents: selectedDateEvents.length,
+      selectedEvent: !!selectedEvent,
+      tempEvent: !!tempEvent
+    });
+
+    // 선택된 날짜의 이벤트 목록 표시 모드 (우선순위 높음)
+    if (contextSelectedDate && selectedDateEvents.length > 0) {
+      console.log('이벤트 목록 모드 표시:', {
+        contextSelectedDate,
+        selectedDateEvents: selectedDateEvents.length,
+        selectedEvent: !!selectedEvent,
+        tempEvent: !!tempEvent
+      });
+      return (
+        <div className={styles.sidebar}>
+          <div className={styles.detailHeader}>
+            <h2 className={styles.headerTitle}>
+              {format(contextSelectedDate, 'M월 d일 (E)', { locale: ko })} 일정
+            </h2>
+            <div className={styles.headerActions}>
+              <button 
+                type="button" 
+                onClick={() => {
+                  // 이벤트 목록 모드에서 나가기
+                  setSelectedDate(null);
+                  setSelectedDateEvents([]);
+                }} 
+                className={styles.backButton}
+              >
+                ← 뒤로
+              </button>
+              <button type="button" onClick={onClose} className={styles.closeButton}>×</button>
+            </div>
+          </div>
+
+          <div className={styles.detailContent}>
+            <div className={styles.section}>
+              <div className={styles.eventList}>
+                {selectedDateEvents.map((event) => {
+                  const calendar = calendars.find(cal => cal.id === event.calendar);
+                  const eventColor = event.color || calendar?.color || '#4A90E2';
+                  
+                  return (
+                    <div 
+                      key={event.id} 
+                      className={styles.eventListItem}
+                      onClick={() => {
+                        // 이벤트 클릭 시 상세 보기로 전환
+                        onEventClick?.(event);
+                      }}
+                      style={{
+                        borderLeft: `4px solid ${eventColor}`,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div className={styles.eventListTitle}>{event.title}</div>
+                      <div className={styles.eventListTime}>
+                        {event.all_day ? '종일' : 
+                          `${format(parseISO(event.start_date), 'HH:mm', { locale: ko })} - ${format(parseISO(event.end_date), 'HH:mm', { locale: ko })}`
+                        }
+                      </div>
+                      {calendar && (
+                        <div className={styles.eventListCalendar}>
+                          <img 
+                            src={calendar.image || '/images/default-calendar.png'} 
+                            alt={calendar.name}
+                            className={styles.eventListCalendarImage}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/images/default-calendar.png';
+                            }}
+                          />
+                          <span>{calendar.name}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    } else {
+      console.log('이벤트 목록 모드 표시 안됨:', {
+        contextSelectedDate: !!contextSelectedDate,
+        selectedDateEvents: selectedDateEvents.length,
+        selectedEvent: !!selectedEvent,
+        tempEvent: !!tempEvent,
+        condition: contextSelectedDate && selectedDateEvents.length > 0,
+        reason: !contextSelectedDate ? 'contextSelectedDate 없음' : 
+                selectedDateEvents.length === 0 ? 'selectedDateEvents 없음' : 
+                '기타'
+      });
+    }
 
     return (
       <div className={styles.sidebar}>
@@ -1056,12 +1175,13 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                     <div className={styles.timeDiv}>
                       <div className={styles.timeInputContainer}>
                         <input
-                          type="time"
+                          type="text"
                           value={startTime}
                           onChange={(e) => handleStartTimeChange(e.target.value)}
                           className={`${styles.timeInput} ${styles.timeInputField}`}
-                          step="1800"
                           placeholder="HH:MM"
+                          pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
+                          title="HH:MM 형식으로 입력하세요 (예: 09:30)"
                         />
                         <button
                           type="button"
@@ -1119,12 +1239,13 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                     <div className={styles.timeDiv}>
                       <div className={styles.timeInputContainer}>
                         <input
-                          type="time"
+                          type="text"
                           value={endTime}
                           onChange={(e) => handleEndTimeChange(e.target.value)}
                           className={`${styles.timeInput} ${styles.timeInputField}`}
-                          step="1800"
                           placeholder="HH:MM"
+                          pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
+                          title="HH:MM 형식으로 입력하세요 (예: 18:30)"
                           style={{
                             backgroundColor: hasDateError
                               ? 'rgba(231, 59, 59, 0.1)'

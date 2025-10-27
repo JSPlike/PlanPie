@@ -55,7 +55,7 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
   onEventClick,
   onEventDelete,
 }) => {
-  const { tempEvent, getEventColor } = useCalendarContext();
+  const { tempEvent, getEventColor, showDateEvents } = useCalendarContext();
   const [hoveredEventId, setHoveredEventId] = React.useState<string | null>(null);
 
   // 주의 시작과 끝 계산
@@ -99,8 +99,8 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
 
   // 이벤트를 종일 이벤트와 시간 이벤트로 분리
   const { allDayEvents, timedEvents } = useMemo(() => {
-    // tempEvent는 종일 이벤트에만 포함, 시간 이벤트에는 제외
-    const allEvents = tempEvent && tempEvent.all_day ? [...events, tempEvent] : events;
+    // tempEvent는 모든 이벤트에 포함 (종일/시간 구분 없이)
+    const allEvents = tempEvent ? [...events, tempEvent] : events;
     const currentWeekEvents = allEvents.filter(event => {
       const eventStart = parseISO(event.start_date);
       const eventEnd = parseISO(event.end_date);
@@ -198,10 +198,15 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
   // 시간 이벤트 처리 (여러 날짜에 걸친 이벤트 연결 지원)
   const processedTimedEvents = useMemo(() => {
     const processed: TimedEvent[] = [];
+    
+    console.log('시간 이벤트 처리 시작:', timedEvents.length, '개');
+    console.log('현재 주 범위:', weekStart, '~', weekEnd);
 
     timedEvents.forEach(event => {
       const eventStart = parseISO(event.start_date);
       const eventEnd = parseISO(event.end_date);
+      
+      console.log('이벤트:', event.title, '시작:', eventStart, '종료:', eventEnd);
 
       // 이벤트가 여러 날에 걸쳐 있는지 확인
       let startDayIndex = -1;
@@ -235,7 +240,7 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
           const timedEvent: TimedEvent = {
             event,
             dayIndex: startDayIndex,
-            top: (eventStartTime / 60) * 90, // 1시간 = 90px (2격자 × 45px)
+            top: (eventStartTime / 30) * 45, // 30분 = 45px
             height: Math.max(90, 45), // 여러 날 이벤트는 최소 1시간 높이
             width,
             isSingle: false,
@@ -261,8 +266,8 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
               processed.push({
                 event,
                 dayIndex,
-                top: (startMinutes / 60) * 90, // 1시간 = 90px (2격자 × 45px)
-                height: Math.max((durationMinutes / 60) * 90, 45), // 최소 30분 높이
+                top: (startMinutes / 30) * 45, // 30분 = 45px
+                height: Math.max((durationMinutes / 30) * 45, 45), // 최소 30분 높이
                 isSingle: true
               });
             }
@@ -461,8 +466,8 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
                 ))}
                 
                 {/* 시간 이벤트들 */}
-                {processedTimedEvents
-                  .filter(timedEvent => {
+                {(() => {
+                  const dayTimedEvents = processedTimedEvents.filter(timedEvent => {
                     if (timedEvent.width && timedEvent.width > 1) {
                       // 여러 날 이벤트는 시작 날짜부터 끝 날짜까지 모든 날에 표시
                       return dayIndex >= timedEvent.dayIndex && dayIndex < timedEvent.dayIndex + timedEvent.width;
@@ -470,8 +475,11 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
                       // 단일 날 이벤트는 해당 날짜에만 표시
                       return timedEvent.dayIndex === dayIndex;
                     }
-                  })
-                  .map((timedEvent, eventIndex) => {
+                  });
+                  
+                  return (
+                    <>
+                      {dayTimedEvents.slice(0, 3).map((timedEvent, eventIndex) => {
                     const eventColor = getEventColor(timedEvent.event);
                     const isMultiDay = timedEvent.width && timedEvent.width > 1;
                     const shouldShowText = !isMultiDay || dayIndex === timedEvent.dayIndex;
@@ -516,14 +524,42 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
                               {timedEvent.event.title}
                             </div>
                             <div style={{ fontSize: '10px', opacity: 0.9 }}>
-                              {format(parseISO(timedEvent.event.start_date), 'HH:mm')} -
-                              {format(parseISO(timedEvent.event.end_date), 'HH:mm')}
+                              {format(parseISO(timedEvent.event.start_date), 'HH:mm', { locale: ko })} -
+                              {format(parseISO(timedEvent.event.end_date), 'HH:mm', { locale: ko })}
                             </div>
                           </>
                         )}
                       </div>
                     );
                   })}
+                    </>
+                  );
+                })()}
+                
+                {/* 3개 이상의 시간 이벤트가 있을 때 "+n개" 버튼 표시 - 격자 셀 오른쪽 아래 모서리 */}
+                {(() => {
+                  const dayTimedEvents = processedTimedEvents.filter(timedEvent => {
+                    if (timedEvent.width && timedEvent.width > 1) {
+                      return dayIndex >= timedEvent.dayIndex && dayIndex < timedEvent.dayIndex + timedEvent.width;
+                    } else {
+                      return timedEvent.dayIndex === dayIndex;
+                    }
+                  });
+                  
+                  return dayTimedEvents.length > 3 ? (
+                    <div 
+                      className={styles.moreEventsButton}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // 오른쪽 사이드바에 해당 날짜의 모든 이벤트 표시
+                        showDateEvents(day);
+                        console.log(`날짜 ${format(day, 'yyyy-MM-dd')}의 추가 시간 이벤트 ${dayTimedEvents.length - 3}개`);
+                      }}
+                    >
+                      +{dayTimedEvents.length - 3}개
+                    </div>
+                  ) : null;
+                })()}
               </div>
             ))}
           </div>

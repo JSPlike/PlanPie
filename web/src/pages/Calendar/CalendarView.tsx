@@ -35,6 +35,8 @@ const CalendarViewContent: React.FC = () => {
     tempEvent,
     setTempEvent,
     updateTempEvent,
+    setSelectedDate: setContextSelectedDate,
+    setSelectedDateEvents,
   } = useCalendarContext();
 
   // 더미 사용자 (임시)
@@ -51,8 +53,8 @@ const CalendarViewContent: React.FC = () => {
     date_joined: new Date().toISOString(),
   };
 
-  // UI 관련 로컬 상태만 남김
-  const [currentDate, setCurrentDate] = useState(new Date());
+  // UI 관련 로컬 상태만 남김 - 10월로 설정하여 시간 이벤트 확인
+  const [currentDate, setCurrentDate] = useState(new Date(2025, 9, 24)); // 2025년 10월 24일
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedRange, setSelectedRange] = useState<{start: Date, end: Date} | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -68,6 +70,20 @@ const CalendarViewContent: React.FC = () => {
 
   const handleDateErrorChange = (hasError: boolean) => {
     setHasDateError(hasError);
+  };
+
+  // 뷰 변경 핸들러 - rightSide 닫고 내용 초기화
+  const handleViewChange = (newView: 'month' | 'week' | 'day') => {
+    setView(newView);
+    // rightSide 닫고 모든 상태 초기화
+    setIsRightSideOpen(false);
+    setSelectedEvent(null);
+    setTempEvent(null);
+    setSelectedDate(null);
+    setSelectedRange(null);
+    // context 상태도 초기화
+    setContextSelectedDate(null);
+    setSelectedDateEvents([]);
   };
 
   // 달력 날짜 변경 핸들러
@@ -222,6 +238,13 @@ const CalendarViewContent: React.FC = () => {
   // 날짜 포맷 헬퍼
   const formatDate = (date: Date): string => {
     return date.toISOString().split('T')[0];
+  };
+
+  const handleEventClick = (event: Event) => {
+    console.log('이벤트 클릭:', event);
+    setSelectedEvent(event);
+    setTempEvent(null);
+    setIsRightSideOpen(true);
   };
 
   const handleDateSelect = (date: Date) => {
@@ -411,7 +434,7 @@ const CalendarViewContent: React.FC = () => {
           setIsEventModalOpen(true);
         }}
         onDateChange={setCurrentDate}
-        onViewChange={setView}
+        onViewChange={handleViewChange}
         onToday={() => setCurrentDate(new Date())}
       />
       
@@ -485,6 +508,7 @@ const CalendarViewContent: React.FC = () => {
             tempEvent={tempEvent}
             onUpdateTempEvent={updateTempEvent}
             onDeleteEvent={deleteEvent}
+            onEventClick={handleEventClick}
             onSaveEvent={handleSaveEvent}
             isLoading={isLoading}
             onDateErrorChange={handleDateErrorChange}

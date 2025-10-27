@@ -60,7 +60,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
   const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
 
-  const { tempEvent, getEventColor } = useCalendarContext();
+  const { tempEvent, getEventColor, showDateEvents } = useCalendarContext();
 
   // const calendarDays = eachDayOfInterval({
   //   start: calendarStart,
@@ -359,7 +359,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
               
               {/* 이벤트 바들 표시 */}
               <div className={styles.dayEvents}>
-                {dayEventBars.map((bar, barIndex) => {
+                {dayEventBars.slice(0, 4).map((bar, barIndex) => {
                   const isTemp = tempEvent && bar.event.id === tempEvent.id;
                   const isAllDay = bar.event.all_day === true;
                   const eventColor = getEventColor(bar.event);
@@ -427,6 +427,27 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                   );
                 })}
               </div>
+              
+              {/* 4개 이상의 이벤트가 있을 때 "+n개" 버튼 표시 - 격자 셀 오른쪽 아래 모서리 */}
+              {dayEventBars.length > 4 && (
+                <div 
+                  className={styles.moreEventsButton}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log('"+n개" 버튼 클릭:', {
+                      date,
+                      formattedDate: format(date, 'yyyy-MM-dd'),
+                      totalEvents: dayEventBars.length,
+                      additionalEvents: dayEventBars.length - 4
+                    });
+                    // 오른쪽 사이드바에 해당 날짜의 모든 이벤트 표시
+                    showDateEvents(date);
+                    console.log(`날짜 ${format(date, 'yyyy-MM-dd')}의 추가 이벤트 ${dayEventBars.length - 4}개`);
+                  }}
+                >
+                  +{dayEventBars.length - 4}
+                </div>
+              )}
             </div>
           );
         })}

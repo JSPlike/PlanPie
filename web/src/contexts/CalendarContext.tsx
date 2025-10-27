@@ -15,6 +15,13 @@ interface CalendarContextType {
   tempEvent: Event | null;
   setTempEvent: (event: Event | null) => void;
   updateTempEvent: (updates: Partial<Event>) => void;
+  
+  // 선택된 날짜의 이벤트 목록
+  selectedDateEvents: Event[];
+  selectedDate: Date | null;
+  setSelectedDate: (date: Date | null) => void;
+  setSelectedDateEvents: (events: Event[]) => void;
+  showDateEvents: (date: Date) => void;
 
   // 캘린더 액션
   setSelectedCalendarId: (id: string) => void;
@@ -70,6 +77,8 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
   const [calendarVisibility, setCalendarVisibility] = useState<Record<string, boolean>>({});
   const [events, setEvents] = useState<Event[]>([]); // 빈 배열로 초기화
   const [tempEvent, setTempEvent] = useState<Event | null>(null);
+  const [selectedDateEvents, setSelectedDateEvents] = useState<Event[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -124,11 +133,15 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
   // 이벤트 목록 불러오기
   const fetchEvents = useCallback(async () => {
     console.log('fetchEvents ========> 저장된 이벤트를 불러오는 중.....')
+    console.log('현재 인증 토큰:', localStorage.getItem('token'));
     try {
       setIsLoading(true);
       
       const response = await calendarAPI.getEvents() as EventAPIResponse;
-      console.log('응답결과 ===>', response)
+      console.log('API 응답 결과 ===>', response)
+      console.log('응답 데이터 타입:', typeof response.data)
+      console.log('응답 데이터:', response.data)
+      
       // 응답 구조 확인 - 타입 안전하게 처리
       let eventsData: Event[] = [];
       
@@ -152,10 +165,15 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
         return index === firstIndex;
       });
 
+      console.log('처리된 이벤트 수:', uniqueEvents.length);
+      console.log('시간 이벤트 수:', uniqueEvents.filter(e => !e.all_day).length);
+      console.log('종일 이벤트 수:', uniqueEvents.filter(e => e.all_day).length);
+      
       setEvents(() => uniqueEvents); 
       
     } catch (err) {
       console.error('이벤트 불러오기 실패:', err);
+      console.error('에러 상세:', err);
       setError('일정을 불러오는데 실패했습니다.');
       // 에러 발생시에도 빈 배열로 설정
       setEvents([]);
@@ -313,6 +331,35 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
     return calendar?.tags || [];
   }, [calendars]);
 
+  // 선택된 날짜의 이벤트 보여주기
+  const showDateEvents = useCallback((date: Date) => {
+    const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD 형식
+    
+    console.log('showDateEvents called:', {
+      date,
+      dateStr,
+      totalEvents: events.length
+    });
+    
+    const dayEvents = events.filter(event => {
+      const eventStartDate = event.start_date.split('T')[0];
+      const eventEndDate = event.end_date.split('T')[0];
+      
+      // 시작일이 해당 날짜이거나, 종료일이 해당 날짜이거나, 해당 날짜가 이벤트 기간 내에 있는 경우
+      return eventStartDate === dateStr || 
+             eventEndDate === dateStr || 
+             (eventStartDate <= dateStr && eventEndDate >= dateStr);
+    });
+    
+    console.log('Filtered dayEvents:', {
+      dayEvents: dayEvents.length,
+      events: dayEvents.map(e => ({ id: e.id, title: e.title, start_date: e.start_date }))
+    });
+    
+    setSelectedDate(date);
+    setSelectedDateEvents(dayEvents);
+  }, [events]);
+
   // 초기 데이터 로드
   useEffect(() => {
     fetchCalendars();
@@ -321,9 +368,10 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
   // 캘린더가 로드된 후 이벤트 로드
   useEffect(() => {
     if (calendars.length > 0) {
+      console.log('캘린더 로드 완료, 이벤트 가져오기 시작');
       fetchEvents();
     }
-  }, [calendars.length]);
+  }, [calendars.length, fetchEvents]);
 
   const contextValue: CalendarContextType = {
     // 상태
@@ -333,6 +381,13 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
     events,
     setTempEvent,
     updateTempEvent,
+    
+    // 선택된 날짜의 이벤트 목록
+    selectedDateEvents,
+    selectedDate,
+    setSelectedDate,
+    setSelectedDateEvents,
+    showDateEvents,
     
     tempEvent,
     isLoading,
