@@ -24,7 +24,7 @@
  */
 
 // src/pages/Calendar/CalendarView.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './CalendarView.module.css';
 import { toast } from 'react-toastify';
 import CalendarHeader from '../../components/Calendar/CalendarHeader';
@@ -79,8 +79,20 @@ const CalendarViewContent: React.FC = () => {
     date_joined: new Date().toISOString(),
   };
 
-  // UI 관련 로컬 상태 - 현재 날짜로 초기화
-  const [currentDate, setCurrentDate] = useState(new Date());
+  // UI 관련 로컬 상태 - sessionStorage에서 저장된 날짜를 불러오거나 현재 날짜로 초기화
+  const getInitialDate = (): Date => {
+    const savedDateStr = sessionStorage.getItem('calendarCurrentDate');
+    if (savedDateStr) {
+      const savedDate = new Date(savedDateStr);
+      // 유효한 날짜인지 확인
+      if (!isNaN(savedDate.getTime())) {
+        return savedDate;
+      }
+    }
+    return new Date();
+  };
+  
+  const [currentDate, setCurrentDate] = useState(getInitialDate);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedRange, setSelectedRange] = useState<{start: Date, end: Date} | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -97,6 +109,11 @@ const CalendarViewContent: React.FC = () => {
   const handleDateErrorChange = (hasError: boolean) => {
     setHasDateError(hasError);
   };
+
+  // currentDate 변경 시 sessionStorage에 저장
+  useEffect(() => {
+    sessionStorage.setItem('calendarCurrentDate', currentDate.toISOString());
+  }, [currentDate]);
 
   // 뷰 변경 핸들러 - rightSide 닫고 내용 초기화
   const handleViewChange = (newView: 'month' | 'week' | 'day') => {
