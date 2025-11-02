@@ -1035,18 +1035,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
             {format(listDate, 'M월 d일 (E)', { locale: ko })} 일정
           </h2>
           <div className={styles.headerActions}>
-            <button 
-              type="button" 
-              onClick={() => {
-                // 이벤트 목록 모드에서 나가기
-                setSelectedDate(null);
-                setSelectedDateEvents([]);
-              }} 
-              className={styles.backButton}
-            >
-              ← 뒤로
-            </button>
-            <button type="button" onClick={onClose} className={styles.closeButton}>×</button>
+            <button type="button" onClick={onClose} className={styles.closeIconButton}>×</button>
           </div>
         </div>
 
@@ -1065,6 +1054,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                       // 이벤트 클릭 시 상세 보기로 전환하고, 날짜 목록 모드 해제
                       setSelectedDate(null);
                       setSelectedDateEvents([]);
+                      // 리스트 모드 해제 후 이벤트 클릭
                       onEventClick?.(event);
                     }}
                     style={{

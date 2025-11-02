@@ -79,8 +79,8 @@ const CalendarViewContent: React.FC = () => {
     date_joined: new Date().toISOString(),
   };
 
-  // UI 관련 로컬 상태만 남김 - 10월로 설정하여 시간 이벤트 확인
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 9, 24)); // 2025년 10월 24일
+  // UI 관련 로컬 상태 - 현재 날짜로 초기화
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedRange, setSelectedRange] = useState<{start: Date, end: Date} | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -136,6 +136,9 @@ const CalendarViewContent: React.FC = () => {
    */
   const handleTimeSlotClick = (date: Date, hour: number) => {
     console.log('=======시간 슬롯 클릭', date, hour);
+    // 리스트 모드 해제
+    setContextSelectedDate(null);
+    setSelectedDateEvents([]);
     setSelectedDate(date);
     setSelectedEvent(null); // 새 이벤트 생성이므로 기존 선택 이벤트 초기화
     
@@ -305,6 +308,9 @@ const CalendarViewContent: React.FC = () => {
    * @param event - 클릭된 이벤트 객체
    */
   const handleEventClick = (event: Event) => {
+    // 리스트 모드 해제
+    setContextSelectedDate(null);
+    setSelectedDateEvents([]);
     setSelectedEvent(event);
     setTempEvent(null);
     console.log('[RightSide Open] from handleEventClick', { eventId: event.id, title: event.title });
@@ -400,6 +406,9 @@ const CalendarViewContent: React.FC = () => {
       }
     }
 
+    // 리스트 모드 해제
+    setContextSelectedDate(null);
+    setSelectedDateEvents([]);
     setSelectedDate(date);
     setSelectedEvent(null); // 새 이벤트 생성이므로 기존 선택 이벤트 초기화
     console.log('=======캘린더 날짜 두번째 클릭')
@@ -548,9 +557,7 @@ const CalendarViewContent: React.FC = () => {
                 if (tempEvent) {
                   setTempEvent(null);
                 }
-                setSelectedEvent(event);
-                console.log('[RightSide Open] from month onEventClick', { eventId: event.id, title: event.title });
-                setIsRightSideOpen(true);
+                handleEventClick(event);
               }}
               onEventDelete={deleteEvent} // Context 함수 사용
               onShowDateEvents={handleShowDateEvents}
@@ -565,9 +572,7 @@ const CalendarViewContent: React.FC = () => {
               onDateClick={handleDateClick}
               onTimeSlotClick={handleTimeSlotClick}
               onEventClick={(event) => {
-                setSelectedEvent(event);
-                console.log('[RightSide Open] from week onEventClick', { eventId: event.id, title: event.title });
-                setIsRightSideOpen(true);
+                handleEventClick(event);
               }}
               onEventDelete={deleteEvent}
               onShowDateEvents={handleShowDateEvents}

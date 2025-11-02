@@ -1252,6 +1252,36 @@
   color: #357ABD;
 }
 
+/* 리스트 모드 닫기 버튼 스타일 */
+.closeIconButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: #718096;
+  font-size: 20px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.closeIconButton:hover {
+  background: #f7fafc;
+  border-color: #cbd5e0;
+  color: #4a5568;
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.closeIconButton:active {
+  transform: scale(0.95);
+}
+
 /* 이벤트 목록 스타일 */
 .eventList {
   display: flex;
