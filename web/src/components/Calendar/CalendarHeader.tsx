@@ -124,6 +124,18 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
       <div className={styles.headerRight}>
         {/* 뷰 전환 버튼 */}
         <div className={styles.viewToggle}>
+          {/* 활성 슬라이더 */}
+          <div
+            className={styles.segmentSlider}
+            style={{
+              transform:
+                view === 'month'
+                  ? 'translateX(0%)'
+                  : view === 'week'
+                  ? 'translateX(100%)'
+                  : 'translateX(200%)',
+            }}
+          />
           <button 
             className={`${styles.viewButton} ${view === 'month' ? styles.active : ''}`}
             onClick={() => onViewChange('month')}

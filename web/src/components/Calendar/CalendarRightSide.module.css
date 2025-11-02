@@ -1273,30 +1273,47 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.eventListTitle {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 8px;
+.eventRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.eventListTime {
-  font-size: 14px;
+.eventTimeCell {
+  flex: 0 0 auto;
+  width: 52px;
+  font-size: 13px;
   color: #666;
-  margin-bottom: 8px;
 }
 
-.eventListCalendar {
+.eventTitleCell {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 14px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eventPeopleCell {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 8px;
+  color: #666;
   font-size: 13px;
-  color: #888;
 }
 
-.eventListCalendarImage {
+.avatarSmall {
   width: 20px;
   height: 20px;
-  border-radius: 4px;
-  object-fit: cover;
+  border-radius: 50%;
+  background: #e5e7eb;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
 }

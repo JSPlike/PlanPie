@@ -1,3 +1,28 @@
+/**
+ * CalendarView 컴포넌트
+ * 
+ * 이 컴포넌트는 캘린더 애플리케이션의 메인 뷰를 담당합니다.
+ * 다음과 같은 기능을 제공합니다:
+ * 
+ * 1. 캘린더 헤더 (월/주/일 뷰 전환, 날짜 네비게이션)
+ * 2. 왼쪽 사이드바 (캘린더 목록, 태그 관리)
+ * 3. 메인 캘린더 그리드 (월별/주별 뷰)
+ * 4. 오른쪽 사이드바 (이벤트 상세보기/편집)
+ * 
+ * 주요 상태 관리:
+ * - view: 현재 뷰 모드 ('month' | 'week' | 'day')
+ * - currentDate: 현재 표시 중인 날짜
+ * - selectedEvent: 선택된 이벤트 (상세보기/편집용)
+ * - tempEvent: 임시 이벤트 (생성 중인 이벤트)
+ * - isRightSideOpen: 오른쪽 사이드바 열림/닫힘 상태
+ * 
+ * 이벤트 관리:
+ * - 이벤트 생성, 수정, 삭제
+ * - 시간 슬롯 클릭 시 이벤트 생성
+ * - 날짜 클릭 시 이벤트 생성
+ * - 이벤트 클릭 시 상세보기/편집
+ */
+
 // src/pages/Calendar/CalendarView.tsx
 import React, { useState } from 'react';
 import styles from './CalendarView.module.css';
@@ -37,6 +62,7 @@ const CalendarViewContent: React.FC = () => {
     updateTempEvent,
     setSelectedDate: setContextSelectedDate,
     setSelectedDateEvents,
+    showDateEvents,
   } = useCalendarContext();
 
   // 더미 사용자 (임시)
@@ -94,6 +120,20 @@ const CalendarViewContent: React.FC = () => {
 
 
   // 시간 슬롯 클릭 핸들러
+  /**
+   * 시간 슬롯 클릭 핸들러
+   * 
+   * 주별 캘린더에서 시간 슬롯을 클릭했을 때 호출됩니다.
+   * 지정된 시간으로 새 이벤트 생성을 시작합니다.
+   * 
+   * 동작:
+   * 1. 선택된 이벤트 초기화 (새 이벤트 생성 모드)
+   * 2. 지정된 시간으로 새 이벤트 생성
+   * 3. 오른쪽 사이드바 열기
+   * 
+   * @param date - 클릭된 날짜
+   * @param hour - 클릭된 시간 (소수점 포함, 예: 9.5 = 9:30)
+   */
   const handleTimeSlotClick = (date: Date, hour: number) => {
     console.log('=======시간 슬롯 클릭', date, hour);
     setSelectedDate(date);
@@ -107,6 +147,7 @@ const CalendarViewContent: React.FC = () => {
       handleCreateNewEventWithTime(date, hour);
     }, 0);
     
+    console.log('[RightSide Open] from handleTimeSlotClick', { date: date.toISOString(), hour });
     setIsRightSideOpen(true);
   };
 
@@ -240,10 +281,33 @@ const CalendarViewContent: React.FC = () => {
     return date.toISOString().split('T')[0];
   };
 
+  // +n 버튼 클릭 시 해당 날짜 이벤트 목록을 사이드바에 표시
+  const handleShowDateEvents = (date: Date) => {
+    // 새/기존 편집 상태 해제하고, 생성모드 진입을 막기 위해 local selectedDate는 비움
+    setSelectedEvent(null);
+    setTempEvent(null);
+    setSelectedDate(null);
+    console.log('[RightSide Open] from +n (handleShowDateEvents)', { date: date.toISOString() });
+    setIsRightSideOpen(true);
+  };
+
+  /**
+   * 이벤트 클릭 핸들러
+   * 
+   * 캘린더에서 이벤트를 클릭했을 때 호출됩니다.
+   * 해당 이벤트의 상세보기를 표시합니다.
+   * 
+   * 동작:
+   * 1. 선택된 이벤트 설정
+   * 2. 오른쪽 사이드바 열기
+   * 3. 상세보기 모드로 전환
+   * 
+   * @param event - 클릭된 이벤트 객체
+   */
   const handleEventClick = (event: Event) => {
-    console.log('이벤트 클릭:', event);
     setSelectedEvent(event);
     setTempEvent(null);
+    console.log('[RightSide Open] from handleEventClick', { eventId: event.id, title: event.title });
     setIsRightSideOpen(true);
   };
 
@@ -311,6 +375,19 @@ const CalendarViewContent: React.FC = () => {
 
 
   // 날짜 더블 클릭 핸들러
+  /**
+   * 날짜 클릭 핸들러
+   * 
+   * 월별 캘린더에서 날짜를 클릭했을 때 호출됩니다.
+   * 해당 날짜로 새 이벤트 생성을 시작합니다.
+   * 
+   * 동작:
+   * 1. 선택된 이벤트 초기화 (새 이벤트 생성 모드)
+   * 2. 클릭된 날짜로 새 이벤트 생성
+   * 3. 오른쪽 사이드바 열기
+   * 
+   * @param date - 클릭된 날짜
+   */
   const handleDateClick = (date: Date) => {
     if (tempEvent) {
       const currentStart = new Date(tempEvent.start_date);
@@ -429,6 +506,7 @@ const CalendarViewContent: React.FC = () => {
         isRightSideOpen={isRightSideOpen}
         onToggleLeftSide={() => setIsLeftSideOpen(!isLeftSideOpen)}
         onToggleRightSide={() => {
+          console.log('[RightSide Open] from header add button');
           setIsRightSideOpen(true);
           setSelectedEvent(null);
           setIsEventModalOpen(true);
@@ -471,9 +549,11 @@ const CalendarViewContent: React.FC = () => {
                   setTempEvent(null);
                 }
                 setSelectedEvent(event);
+                console.log('[RightSide Open] from month onEventClick', { eventId: event.id, title: event.title });
                 setIsRightSideOpen(true);
               }}
               onEventDelete={deleteEvent} // Context 함수 사용
+              onShowDateEvents={handleShowDateEvents}
             />
           ) : view === 'week' ? (
             <CalendarGridW
@@ -486,9 +566,11 @@ const CalendarViewContent: React.FC = () => {
               onTimeSlotClick={handleTimeSlotClick}
               onEventClick={(event) => {
                 setSelectedEvent(event);
+                console.log('[RightSide Open] from week onEventClick', { eventId: event.id, title: event.title });
                 setIsRightSideOpen(true);
               }}
               onEventDelete={deleteEvent}
+              onShowDateEvents={handleShowDateEvents}
             />
           ) : (
             <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>

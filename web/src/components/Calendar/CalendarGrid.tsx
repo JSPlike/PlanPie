@@ -1,3 +1,23 @@
+/**
+ * CalendarGrid 컴포넌트
+ * 
+ * 이 컴포넌트는 월별 캘린더 그리드를 렌더링합니다.
+ * 다음과 같은 기능을 제공합니다:
+ * 
+ * 1. 월별 캘린더 그리드 표시
+ * 2. 이벤트 바 렌더링 (단일일/다중일 이벤트)
+ * 3. 날짜 클릭 이벤트 처리
+ * 4. 이벤트 클릭 이벤트 처리
+ * 5. 호버 효과 (다중일 이벤트의 모든 세그먼트에 적용)
+ * 6. 월/일 표시 (날짜 아래에 월.일 형식으로 표시)
+ * 
+ * 주요 기능:
+ * - 이벤트 바 높이: 20px로 고정
+ * - 다중일 이벤트는 여러 날에 걸쳐 연결되어 표시
+ * - 호버 시 모든 세그먼트가 함께 반응
+ * - "+n" 버튼으로 해당 날짜의 이벤트 목록 표시
+ */
+
 // src/components/CalendarGrid/CalendarGrid.tsx
 import React, { useMemo } from 'react';
 import styles from './CalendarGrid.module.css';
@@ -19,6 +39,7 @@ interface CalendarGridProps {
   onEventClick: (event: Event) => void;
   onEventDelete: (eventId: string) => void;
   // getEventColor: (event: Event) => string;
+  onShowDateEvents?: (date: Date) => void;
 }
 
 interface EventBar {
@@ -50,6 +71,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   onMonthChange,
   onEventClick,
   onEventDelete,
+  onShowDateEvents,
   // getEventColor
 }) => {
   const [hoveredEventId, setHoveredEventId] = React.useState<string | null>(null);
@@ -434,15 +456,12 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                   className={styles.moreEventsButton}
                   onClick={(e) => {
                     e.stopPropagation();
-                    console.log('"+n개" 버튼 클릭:', {
-                      date,
-                      formattedDate: format(date, 'yyyy-MM-dd'),
-                      totalEvents: dayEventBars.length,
-                      additionalEvents: dayEventBars.length - 4
-                    });
                     // 오른쪽 사이드바에 해당 날짜의 모든 이벤트 표시
                     showDateEvents(date);
-                    console.log(`날짜 ${format(date, 'yyyy-MM-dd')}의 추가 이벤트 ${dayEventBars.length - 4}개`);
+                    // 사이드바 열기 콜백 (있다면)
+                    if (typeof onShowDateEvents === 'function') {
+                      onShowDateEvents(date);
+                    }
                   }}
                 >
                   +{dayEventBars.length - 4}

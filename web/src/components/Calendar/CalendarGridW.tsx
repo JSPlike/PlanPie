@@ -1,3 +1,27 @@
+/**
+ * CalendarGridW 컴포넌트
+ * 
+ * 이 컴포넌트는 주별 캘린더 그리드를 렌더링합니다.
+ * 다음과 같은 기능을 제공합니다:
+ * 
+ * 1. 주별 캘린더 그리드 표시
+ * 2. 종일 이벤트 바 렌더링 (단일일/다중일)
+ * 3. 시간 지정 이벤트 렌더링 (30분 단위)
+ * 4. 시간 슬롯 클릭 이벤트 처리
+ * 5. 이벤트 클릭 이벤트 처리
+ * 6. 호버 효과 (다중일 이벤트의 모든 세그먼트에 적용)
+ * 7. 시간 그리드 (30분 간격, 45px 높이)
+ * 8. 시간 라벨 (1시간 단위, AM/PM 형식)
+ * 
+ * 주요 기능:
+ * - 시간 그리드: 30분 간격, 각 격자 45px 높이
+ * - 시간 라벨: 1시간 단위로 표시 (1AM, 2AM, ..., 11PM)
+ * - 0AM은 표시하지 않음 (격자는 있지만 라벨 없음)
+ * - 다중일 이벤트는 여러 날에 걸쳐 연결되어 표시
+ * - 호버 시 모든 세그먼트가 함께 반응
+ * - 시간 슬롯 클릭 시 해당 시간으로 새 이벤트 생성
+ */
+
 // src/components/Calendar/CalendarGridW.tsx
 import React, { useMemo } from 'react';
 import styles from './CalendarGridW.module.css';
@@ -17,6 +41,7 @@ interface CalendarGridWProps {
   onTimeSlotClick?: (date: Date, hour: number) => void;
   onEventClick: (event: Event) => void;
   onEventDelete: (eventId: string) => void;
+  onShowDateEvents?: (date: Date) => void;
 }
 
 interface AllDayEventBar {
@@ -54,6 +79,7 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
   onTimeSlotClick,
   onEventClick,
   onEventDelete,
+  onShowDateEvents,
 }) => {
   const { tempEvent, getEventColor, showDateEvents } = useCalendarContext();
   const [hoveredEventId, setHoveredEventId] = React.useState<string | null>(null);
@@ -553,6 +579,9 @@ const CalendarGridW: React.FC<CalendarGridWProps> = ({
                         e.stopPropagation();
                         // 오른쪽 사이드바에 해당 날짜의 모든 이벤트 표시
                         showDateEvents(day);
+                        if (typeof onShowDateEvents === 'function') {
+                          onShowDateEvents(day);
+                        }
                         console.log(`날짜 ${format(day, 'yyyy-MM-dd')}의 추가 시간 이벤트 ${dayTimedEvents.length - 3}개`);
                       }}
                     >

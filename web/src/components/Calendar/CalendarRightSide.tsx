@@ -1,4 +1,20 @@
-// src/components/CalendarRightSide/CalendarRightSide.tsx
+/**
+ * CalendarRightSide 컴포넌트
+ * 
+ * 이 컴포넌트는 캘린더의 오른쪽 사이드바를 담당하며, 다음과 같은 기능을 제공합니다:
+ * 1. 이벤트 상세 보기 및 편집
+ * 2. 새 이벤트 생성
+ * 3. 선택된 날짜의 이벤트 목록 표시
+ * 4. 캘린더 및 태그 선택
+ * 5. 이벤트 저장 및 삭제
+ * 
+ * 주요 상태 관리:
+ * - mode: 'detail' | 'edit' | 'list' - 상세/편집/목록 모드 구분
+ * - selectedCalendarId: 선택된 캘린더 ID
+ * - selectedTagId: 선택된 태그 ID
+ * - 각종 폼 필드들 (제목, 날짜, 시간, 위치, 설명 등)
+ */
+
 import React, { useState, useEffect, useMemo }  from 'react';
 import styles from './CalendarRightSide.module.css';
 import { Event, Calendar, CalendarTag, CreateUpdateEventRequest } from '../../types/calendar.types';
@@ -43,7 +59,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   isLoading = false,
   onClose
 }) => {
-  const [mode, setMode] = useState<'detail' | 'edit'>('detail'); // 상세/수정 모드 구분
+  const [mode, setMode] = useState<'detail' | 'edit' | 'list'>('detail'); // 상세/수정/목록 모드 구분
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [eventTitle, setEventTitle] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -59,7 +75,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   const [showTagEditor, setShowTagEditor] = useState(false);
   
   // 선택된 날짜의 이벤트 목록 가져오기
-  const { selectedDateEvents, selectedDate: contextSelectedDate, setSelectedDate, setSelectedDateEvents } = useCalendarContext();
+  const { selectedDateEvents, selectedDate: contextSelectedDate, setSelectedDate, setSelectedDateEvents, setSelectedCalendarId: setContextSelectedCalendarId, calendarVisibility } = useCalendarContext();
   
   // 커스텀 피커 상태
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -69,7 +85,15 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   //const [isLoading, setIsLoading] = useState(false);
 
 
-  // 시간 형식 검증 함수 (1분 단위 허용)
+  /**
+   * 시간 형식 검증 및 포맷팅 함수
+   * 
+   * 입력된 시간 문자열을 검증하고 올바른 형식으로 포맷팅합니다.
+   * 1분 단위까지 허용하며, 잘못된 형식은 기본값으로 대체합니다.
+   * 
+   * @param time - 검증할 시간 문자열 (예: "09:30", "9:30", "930")
+   * @returns 포맷팅된 시간 문자열 (예: "09:30")
+   */
   const validateAndFormatTime = (time: string): string => {
     if (!time) return '';
     
@@ -274,7 +298,14 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     };
   }, []);
 
-  // 선택된 캘린더의 태그들 가져오기
+  /**
+   * 선택된 캘린더의 태그 목록을 가져오는 함수
+   * 
+   * 현재 선택된 캘린더에 속한 태그들을 반환합니다.
+   * 실제 캘린더에 태그가 있으면 사용하고, 없으면 MOCK_TAGS에서 해당 캘린더의 태그를 찾습니다.
+   * 
+   * @returns 선택된 캘린더의 태그 배열
+   */
   const getSelectedCalendarTags = () => {
     //const calendar = calendars.find(cal => cal.id === selectedCalendarId);
     //return calendar?.tags || [];
@@ -290,7 +321,13 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     return MOCK_TAGS.filter(tag => tag.calendar === selectedCalendarId);
   };
 
-  // 선택된 태그 정보 가져오기
+  /**
+   * 선택된 태그 정보를 가져오는 함수
+   * 
+   * 현재 선택된 태그 ID로부터 실제 태그 객체를 찾아 반환합니다.
+   * 
+   * @returns 선택된 태그 객체 또는 undefined
+   */
   const getSelectedTag = () => {
     const tags = getSelectedCalendarTags();
     return tags.find(tag => tag.id === selectedTagId);
@@ -305,7 +342,18 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
       })
     : [];
 
-  // 폼 초기화 useEffect 수정
+  /**
+   * 폼 초기화 useEffect
+   * 
+   * selectedEvent, tempEvent, selectedDate, calendars가 변경될 때마다 폼을 초기화합니다.
+   * 
+   * 동작 순서:
+   * 1. selectedEvent가 있으면 해당 이벤트 정보로 폼 채움 (편집 모드)
+   * 2. tempEvent가 있으면 임시 이벤트 정보로 폼 채움 (생성 중)
+   * 3. selectedDate가 있으면 새 이벤트 생성 모드로 폼 초기화
+   * 4. 활성화된 캘린더 중 첫 번째를 기본 선택
+   * 5. 해당 캘린더의 첫 번째 태그를 기본 선택
+   */
   useEffect(() => {
     // selectedEvent가 있으면 우선, 없으면 tempEvent 사용
     const eventToEdit = selectedEvent || tempEvent;
@@ -335,27 +383,47 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
       setEndDate(dateStr);
       setEndTime('18:00');
       setIsAllDay(true);
-      setSelectedCalendarId(calendars[0]?.id || '');
+      // selectedCalendarId가 이미 설정되어 있으면 유지, 없으면 활성화된 첫 번째 캘린더로 설정
+      if (!selectedCalendarId) {
+        setSelectedCalendarId(activeCalendars[0]?.id || '');
+      }
 
-      const firstCalendar = calendars[0];
-      const firstTag = firstCalendar?.tags?.[0] || MOCK_TAGS.find(tag => tag.calendar === calendars[0]?.id);
+      const targetCalendarId = selectedCalendarId || activeCalendars[0]?.id;
+      const targetCalendar = activeCalendars.find(cal => cal.id === targetCalendarId);
+      const firstTag = targetCalendar?.tags?.[0] || MOCK_TAGS.find(tag => tag.calendar === targetCalendarId);
       setSelectedTagId(firstTag?.id || null);
       setLocation('');
       setShowMemo(false);
       setDescription('');
     }
-  }, [selectedEvent, tempEvent, selectedDate, calendars]);
+  }, [selectedEvent, tempEvent, selectedDate, calendars, calendarVisibility]);
 
+  /**
+   * 캘린더 변경 시 태그 상태 관리 useEffect
+   * 
+   * 캘린더가 변경될 때마다 실행되어 태그 상태를 관리합니다.
+   * 
+   * 동작:
+   * 1. 현재 선택된 태그가 새 캘린더에 없으면 첫 번째 태그로 변경
+   * 2. 사용자가 명시적으로 태그를 선택하지 않은 경우 자동 선택하지 않음
+   */
   useEffect(() => {
-    // 캘린더가 변경되었을 때 선택된 태그가 해당 캘린더의 태그가 아니면 초기화
+    // 캘린더가 변경되었을 때 선택된 태그가 해당 캘린더의 태그가 아니면 첫 번째 태그로 설정
     if (selectedCalendarId) {
       const availableTags = getSelectedCalendarTags();
+      console.log('캘린더 변경으로 인한 태그 체크:', {
+        캘린더ID: selectedCalendarId,
+        현재선택된태그ID: selectedTagId,
+        사용가능한태그들: availableTags.map(t => ({ id: t.id, name: t.name, color: t.color }))
+      });
+      
       if (selectedTagId && !availableTags.some(tag => tag.id === selectedTagId)) {
+        // 기존 태그가 새로운 캘린더에 없으면 첫 번째 태그로 변경
+        console.log('기존 태그가 새로운 캘린더에 없어서 첫 번째 태그로 변경');
         setSelectedTagId(availableTags[0]?.id || null);
       }
-      else if (!selectedTagId && availableTags.length > 0) {
-        setSelectedTagId(availableTags[0].id);
-      }
+      // selectedTagId가 null일 때는 자동으로 첫 번째 태그를 선택하지 않음
+      // (사용자가 명시적으로 태그를 선택할 때까지 기다림)
     }
   }, [selectedCalendarId]);
 
@@ -365,22 +433,45 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     }
   }, [hasDateError, onDateErrorChange]);
 
-  // 모드 설정 useEffect
+  /**
+   * 모드 설정 useEffect
+   * 
+   * 목록/상세/편집 모드를 결정합니다.
+   * 우선순위: 리스트 > 상세 > 편집
+   */
   useEffect(() => {
+    if (contextSelectedDate) {
+      setMode('list');
+      return;
+    }
     if (selectedEvent && !tempEvent) {
-      // 기존 이벤트 클릭 시 상세 모드
       setMode('detail');
     } else {
-      // 새 이벤트 생성 시 수정 모드
       setMode('edit');
     }
-  }, [selectedEvent, tempEvent]);
+  }, [contextSelectedDate, selectedEvent, tempEvent]);
 
-  // 상세 모드 핸들러들
+  /**
+   * 상세 모드에서 편집 모드로 전환하는 핸들러
+   * 
+   * 사용자가 상세보기에서 편집 버튼을 클릭했을 때 호출됩니다.
+   * 모드를 'edit'으로 변경하여 편집 폼을 표시합니다.
+   */
   const handleEditClick = () => {
     setMode('edit');
   };
 
+  /**
+   * 이벤트 삭제 핸들러
+   * 
+   * 사용자가 삭제 버튼을 클릭했을 때 호출됩니다.
+   * 확인 대화상자를 표시하고, 사용자가 확인하면 이벤트를 삭제합니다.
+   * 
+   * 동작:
+   * 1. 삭제 확인 대화상자 표시
+   * 2. 사용자가 확인하면 onDeleteEvent 호출
+   * 3. 삭제 후 사이드바 닫기
+   */
   const handleDeleteClick = () => {
     if (selectedEvent && window.confirm(`'${selectedEvent.title}' 일정을 삭제하시겠습니까?\n\n삭제된 일정은 복구할 수 없습니다.`)) {
       onDeleteEvent(selectedEvent.id);
@@ -388,6 +479,12 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     }
   };
 
+  /**
+   * 편집 모드에서 상세 모드로 돌아가는 핸들러
+   * 
+   * 사용자가 편집 중에 뒤로가기 버튼을 클릭했을 때 호출됩니다.
+   * 모드를 'detail'로 변경하여 상세보기를 표시합니다.
+   */
   const handleBackToDetail = () => {
     setMode('detail');
   };
@@ -441,6 +538,19 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     }
   ];  
 
+  /**
+   * 이벤트 저장 핸들러
+   * 
+   * 사용자가 저장 버튼을 클릭했을 때 호출됩니다.
+   * 폼 데이터를 검증하고 이벤트를 생성 또는 업데이트합니다.
+   * 
+   * 동작:
+   * 1. 폼 데이터 검증 (제목, 날짜 등)
+   * 2. 날짜/시간 형식 변환 (KST 고정 오프셋 사용)
+   * 3. 이벤트 데이터 객체 생성
+   * 4. onSaveEvent 콜백 호출
+   * 5. 사이드바 닫기
+   */
   const handleSave = async () => {
 
     console.log('CalendarRightSide ======> handleSave 저장버튼 클릭')
@@ -481,6 +591,15 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
       description: showMemo ? description : '',
       location: location
     };
+
+    console.log('이벤트 저장:', {
+      이벤트제목: eventTitle,
+      선택된캘린더ID: selectedCalendarId,
+      선택된캘린더명: activeCalendars.find(cal => cal.id === selectedCalendarId)?.name,
+      선택된태그ID: selectedTagId,
+      선택된태그명: availableTags.find(tag => tag.id === selectedTagId)?.name,
+      이벤트데이터: eventData
+    });
 
     onSaveEvent(eventData); // 하나의 함수로 처리
     //setIsLoading(false);
@@ -523,12 +642,57 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
 
   const availableTags = getSelectedCalendarTags();
 
+  // 활성화된 캘린더만 필터링
+  const activeCalendars = calendars.filter(calendar => 
+    calendarVisibility[calendar.id] !== false
+  );
+
+  // selectedCalendarId가 설정되지 않았거나 현재 선택된 캘린더가 비활성화되었으면 첫 번째 활성화된 캘린더로 설정
+  useEffect(() => {
+    if (activeCalendars.length > 0) {
+      const currentCalendarExists = activeCalendars.some(cal => cal.id === selectedCalendarId);
+      
+      if (!selectedCalendarId || !currentCalendarExists) {
+        console.log('캘린더 기본값 설정:', {
+          현재선택된캘린더: selectedCalendarId,
+          첫번째활성화된캘린더: activeCalendars[0].name,
+          활성화된캘린더들: activeCalendars.map(cal => cal.name)
+        });
+        setSelectedCalendarId(activeCalendars[0].id);
+      }
+    }
+  }, [selectedCalendarId, activeCalendars]);
+
+  /**
+   * 태그 선택 핸들러
+   * 
+   * 사용자가 태그 드롭다운에서 특정 태그를 선택했을 때 호출됩니다.
+   * 
+   * 동작:
+   * 1. 선택된 태그 ID를 상태에 저장
+   * 2. 태그 드롭다운 닫기
+   * 3. 임시 이벤트가 있으면 해당 이벤트의 태그 정보도 업데이트
+   * 4. 디버깅을 위한 로그 출력
+   * 
+   * @param tag - 선택된 태그 객체
+   */
   const handleTagSelect = (tag: CalendarTag) => {
+    console.log('태그 선택 시작:', {
+      선택된태그: tag.name,
+      태그ID: tag.id,
+      이전선택된태그ID: selectedTagId
+    });
+    
     setSelectedTagId(tag.id);
     setShowTagDropdown(false);
     
     // 임시 이벤트가 있으면 태그 정보도 업데이트
     if (tempEvent) {
+
+      console.log('태그 선택:', {
+        tag: tag
+      });
+
       onUpdateTempEvent({ 
         tag: {
           id: tag.id,
@@ -541,8 +705,21 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
         }
       });
     }
+    
+    console.log('태그 선택 완료:', {
+      새로운선택된태그ID: tag.id
+    });
   };
 
+  /**
+   * 다음 시간을 계산하는 함수
+   * 
+   * 현재 시간에서 지정된 시간만큼 더한 시간을 반환합니다.
+   * 새 이벤트 생성 시 기본 종료 시간을 설정하는 데 사용됩니다.
+   * 
+   * @param addHours - 더할 시간 (기본값: 1시간)
+   * @returns 포맷팅된 시간 문자열 (HH:mm 형식)
+   */
   const getNextHourTime = (addHours: number = 1) => {
     const now = new Date();
 
@@ -802,6 +979,9 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
   };
 
   const handleAllDayChange = (checked: boolean, event?: React.ChangeEvent<HTMLInputElement>) => {
+    
+    console.log('종일 이벤트 클릭')
+    
     // 이벤트 전파 막기
     if (event) {
       event.stopPropagation();
@@ -839,8 +1019,99 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
     }
   };
 
+  // 리스트 모드 렌더링 (최우선)
+  if (mode === 'list') {
+    const listDate = contextSelectedDate ?? new Date();
+    console.log('이벤트 목록 모드 표시:', {
+      contextSelectedDate,
+      selectedDateEvents: selectedDateEvents.length,
+      selectedEvent: !!selectedEvent,
+      tempEvent: !!tempEvent
+    });
+    return (
+      <div className={styles.sidebar}>
+        <div className={styles.detailHeader}>
+          <h2 className={styles.headerTitle}>
+            {format(listDate, 'M월 d일 (E)', { locale: ko })} 일정
+          </h2>
+          <div className={styles.headerActions}>
+            <button 
+              type="button" 
+              onClick={() => {
+                // 이벤트 목록 모드에서 나가기
+                setSelectedDate(null);
+                setSelectedDateEvents([]);
+              }} 
+              className={styles.backButton}
+            >
+              ← 뒤로
+            </button>
+            <button type="button" onClick={onClose} className={styles.closeButton}>×</button>
+          </div>
+        </div>
+
+        <div className={styles.detailContent}>
+          <div className={styles.section}>
+            <div className={styles.eventList}>
+              {selectedDateEvents.length > 0 ? selectedDateEvents.map((event) => {
+                const calendar = calendars.find(cal => cal.id === event.calendar);
+                const eventColor = event.color || calendar?.color || '#4A90E2';
+                
+                return (
+                  <div 
+                    key={event.id} 
+                    className={styles.eventListItem}
+                    onClick={() => {
+                      // 이벤트 클릭 시 상세 보기로 전환하고, 날짜 목록 모드 해제
+                      setSelectedDate(null);
+                      setSelectedDateEvents([]);
+                      onEventClick?.(event);
+                    }}
+                    style={{
+                      borderLeft: `4px solid ${eventColor}`,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div className={styles.eventRow}>
+                      <div className={styles.eventTimeCell}>
+                        {event.all_day ? '종일' : `${format(parseISO(event.start_date), 'HH:mm', { locale: ko })}`}
+                      </div>
+                      <div className={styles.eventTitleCell} title={event.title}>{event.title}</div>
+                      <div className={styles.eventPeopleCell}>
+                        {event.created_by ? (
+                          <div className={styles.avatarSmall} title={event.created_by.username}>
+                            {event.created_by.username?.slice(0, 2).toUpperCase()}
+                          </div>
+                        ) : (
+                          <div className={styles.avatarSmall}>?</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              }) : (
+                <div className={styles.emptyEventList}>
+                  <p>이 날짜에는 일정이 없습니다.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // 상세 모드 렌더링
   if (mode === 'detail' && selectedEvent) {
+
+    console.log('상세 모드 렌더링:', {
+      selectedEvent: selectedEvent,
+      calendars: calendars,
+      contextSelectedDate: contextSelectedDate,
+      selectedDateEvents: selectedDateEvents,
+      selectedDate: selectedDate
+    });
+
     const eventCalendar = calendars.find(cal => cal.id === selectedEvent.calendar);
     
     const formatEventDate = (startDate: string, endDate: string, allDay: boolean) => {
@@ -869,96 +1140,6 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
       selectedEvent: !!selectedEvent,
       tempEvent: !!tempEvent
     });
-
-    // 선택된 날짜의 이벤트 목록 표시 모드 (우선순위 높음)
-    if (contextSelectedDate && selectedDateEvents.length > 0) {
-      console.log('이벤트 목록 모드 표시:', {
-        contextSelectedDate,
-        selectedDateEvents: selectedDateEvents.length,
-        selectedEvent: !!selectedEvent,
-        tempEvent: !!tempEvent
-      });
-      return (
-        <div className={styles.sidebar}>
-          <div className={styles.detailHeader}>
-            <h2 className={styles.headerTitle}>
-              {format(contextSelectedDate, 'M월 d일 (E)', { locale: ko })} 일정
-            </h2>
-            <div className={styles.headerActions}>
-              <button 
-                type="button" 
-                onClick={() => {
-                  // 이벤트 목록 모드에서 나가기
-                  setSelectedDate(null);
-                  setSelectedDateEvents([]);
-                }} 
-                className={styles.backButton}
-              >
-                ← 뒤로
-              </button>
-              <button type="button" onClick={onClose} className={styles.closeButton}>×</button>
-            </div>
-          </div>
-
-          <div className={styles.detailContent}>
-            <div className={styles.section}>
-              <div className={styles.eventList}>
-                {selectedDateEvents.map((event) => {
-                  const calendar = calendars.find(cal => cal.id === event.calendar);
-                  const eventColor = event.color || calendar?.color || '#4A90E2';
-                  
-                  return (
-                    <div 
-                      key={event.id} 
-                      className={styles.eventListItem}
-                      onClick={() => {
-                        // 이벤트 클릭 시 상세 보기로 전환
-                        onEventClick?.(event);
-                      }}
-                      style={{
-                        borderLeft: `4px solid ${eventColor}`,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <div className={styles.eventListTitle}>{event.title}</div>
-                      <div className={styles.eventListTime}>
-                        {event.all_day ? '종일' : 
-                          `${format(parseISO(event.start_date), 'HH:mm', { locale: ko })} - ${format(parseISO(event.end_date), 'HH:mm', { locale: ko })}`
-                        }
-                      </div>
-                      {calendar && (
-                        <div className={styles.eventListCalendar}>
-                          <img 
-                            src={calendar.image || '/images/default-calendar.png'} 
-                            alt={calendar.name}
-                            className={styles.eventListCalendarImage}
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/images/default-calendar.png';
-                            }}
-                          />
-                          <span>{calendar.name}</span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    } else {
-      console.log('이벤트 목록 모드 표시 안됨:', {
-        contextSelectedDate: !!contextSelectedDate,
-        selectedDateEvents: selectedDateEvents.length,
-        selectedEvent: !!selectedEvent,
-        tempEvent: !!tempEvent,
-        condition: contextSelectedDate && selectedDateEvents.length > 0,
-        reason: !contextSelectedDate ? 'contextSelectedDate 없음' : 
-                selectedDateEvents.length === 0 ? 'selectedDateEvents 없음' : 
-                '기타'
-      });
-    }
 
     return (
       <div className={styles.sidebar}>
@@ -1292,7 +1473,7 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                   <div className={styles.customSelect}>
                     <input
                       type="text"
-                      value={calendars.find(cal => cal.id === selectedCalendarId)?.name || ''}
+                      value={activeCalendars.find(cal => cal.id === selectedCalendarId)?.name || ''}
                       onClick={() => {
                         const newState = !showCalendarDropdown;
                         setShowCalendarDropdown(newState);
@@ -1318,14 +1499,46 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                     {/* 드롭다운 목록 */}
                     {showCalendarDropdown && (
                       <div className={styles.dropdownList}>
-                        {calendars.map((calendar) => (
+                        {activeCalendars.map((calendar) => (
                           <div
                             key={calendar.id}
                             className={`${styles.dropdownItem} ${selectedCalendarId === calendar.id ? styles.selected : ''}`}
                             onClick={() => {
+                              console.log('캘린더 선택:', {
+                                선택된캘린더: calendar.name,
+                                캘린더ID: calendar.id,
+                                이전캘린더: activeCalendars.find(cal => cal.id === selectedCalendarId)?.name
+                              });
                               setSelectedCalendarId(calendar.id);
-                              setSelectedTagId(null); // 캘린더 변경 시 태그 초기화
+                              setContextSelectedCalendarId(calendar.id); // Context의 selectedCalendarId도 업데이트
+                              
+                              // 새로운 캘린더의 첫 번째 태그로 설정
+                              const newCalendarTags = calendars.find(cal => cal.id === calendar.id)?.tags || [];
+                              const firstTag = newCalendarTags[0] || MOCK_TAGS.find(tag => tag.calendar === calendar.id);
+                              setSelectedTagId(firstTag?.id || null);
+                              
                               setShowCalendarDropdown(false);
+                              
+                              // tempEvent가 있으면 캘린더 정보도 업데이트
+                              if (tempEvent) {
+                                console.log('캘린더 변경으로 tempEvent 업데이트:', {
+                                  새로운캘린더ID: calendar.id,
+                                  새로운캘린더명: calendar.name,
+                                  첫번째태그: firstTag
+                                });
+                                onUpdateTempEvent({ 
+                                  calendar: calendar.id,
+                                  tag: firstTag ? {
+                                    id: firstTag.id,
+                                    name: firstTag.name,
+                                    color: firstTag.color,
+                                    order: firstTag.order,
+                                    calendar: firstTag.calendar,
+                                    created_at: firstTag.created_at,
+                                    updated_at: firstTag.updated_at
+                                  } : null
+                                });
+                              }
                             }}
                           >
                             <div className={styles.calendarInfo}>

@@ -1,5 +1,39 @@
+/**
+ * CalendarContext
+ * 
+ * 캘린더 애플리케이션의 전역 상태를 관리하는 Context입니다.
+ * 다음과 같은 기능을 제공합니다:
+ * 
+ * 1. 캘린더 관리
+ *   - 캘린더 목록 조회, 생성, 수정, 삭제
+ *   - 캘린더 가시성 토글
+ *   - 선택된 캘린더 관리
+ * 
+ * 2. 이벤트 관리
+ *   - 이벤트 목록 조회, 생성, 수정, 삭제
+ *   - 임시 이벤트 관리 (생성 중인 이벤트)
+ *   - 선택된 날짜의 이벤트 목록 관리
+ * 
+ * 3. 상태 관리
+ *   - 로딩 상태 관리
+ *   - 에러 상태 관리
+ *   - 캘린더 가시성 상태 관리
+ * 
+ * 4. 유틸리티 함수
+ *   - 이벤트 색상 계산
+ *   - 캘린더 태그 조회
+ *   - 가시성 필터링된 이벤트 목록
+ * 
+ * 주요 특징:
+ * - API 호출과 로컬 상태 동기화
+ * - Optimistic UI 업데이트
+ * - 에러 처리 및 토스트 알림
+ * - 메모이제이션을 통한 성능 최적화
+ */
+
 // contexts/CalendarContext.tsx
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { format } from 'date-fns';
 import { Calendar, Event } from '../types/calendar.types';
 import { calendarAPI } from '../services/calendarApi';
 import { toast } from 'react-toastify';
@@ -200,14 +234,35 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
   };
 
   // 캘린더 표시/숨김 토글
+  /**
+   * 캘린더 가시성을 토글하는 함수
+   * 
+   * 특정 캘린더의 표시/숨김 상태를 변경합니다.
+   * 이 함수가 호출되면 visibleEvents가 자동으로 재계산됩니다.
+   * 
+   * 동작:
+   * 1. 현재 캘린더의 가시성 상태 확인
+   * 2. 상태를 반전시킴 (true -> false, false -> true)
+   * 3. 변경된 상태를 저장
+   * 4. 디버깅을 위한 로그 출력
+   * 
+   * @param calendarId - 토글할 캘린더의 ID
+   */
   const toggleCalendarVisibility = useCallback((calendarId: string) => {
     setCalendarVisibility(prev => {
+      const currentState = prev[calendarId];
+      const newState = !currentState;
       const newVisibility = {
         ...prev,
-        [calendarId]: !prev[calendarId]
+        [calendarId]: newState
       };
       
-      console.log(`캘린더 ${calendarId} ${newVisibility[calendarId] ? '활성화' : '비활성화'}`);
+      console.log(`캘린더 ${calendarId} 토글:`, {
+        이전상태: currentState,
+        새로운상태: newState,
+        전체가시성: newVisibility
+      });
+      
       return newVisibility;
     });
   }, []);
@@ -298,7 +353,19 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
     toast.success('일정이 삭제되었습니다.');
   }, [events]);
 
-  // 활성화된 캘린더의 이벤트만 필터링
+  /**
+   * 가시성 필터링된 이벤트 목록을 계산하는 메모이제이션된 값
+   * 
+   * 활성화된 캘린더에 속한 이벤트만 필터링하여 반환합니다.
+   * 캘린더 가시성이 변경될 때마다 자동으로 재계산됩니다.
+   * 
+   * 동작:
+   * 1. 모든 이벤트를 순회
+   * 2. 각 이벤트의 캘린더가 활성화되어 있는지 확인
+   * 3. 활성화된 캘린더의 이벤트만 필터링하여 반환
+   * 
+   * @returns 필터링된 이벤트 배열
+   */
   const visibleEvents = React.useMemo(() => {
     // events가 배열이 아닌 경우 빈 배열 반환
     if (!Array.isArray(events)) {
@@ -306,11 +373,19 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
       return [];
     }
     
+    console.log('visibleEvents 필터링:', {
+      totalEvents: events.length,
+      calendarVisibility,
+      events: events.map(e => ({ id: e.id, title: e.title, calendar: e.calendar }))
+    });
+    
     const filtered = events.filter(event => {
       const isVisible = calendarVisibility[event.calendar] !== false;
+      console.log(`이벤트 ${event.title} (캘린더: ${event.calendar}) - 가시성: ${isVisible}`);
       return isVisible;
     });
     
+    console.log('필터링된 이벤트:', filtered.length);
     return filtered;
   }, [events, calendarVisibility]);
 
@@ -332,14 +407,23 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) 
   }, [calendars]);
 
   // 선택된 날짜의 이벤트 보여주기
+  /**
+   * 특정 날짜의 이벤트 목록을 표시하는 함수
+   * 
+   * 선택된 날짜와 해당 날짜의 이벤트 목록을 설정합니다.
+   * 이 함수는 "+n" 버튼 클릭 시 호출되어 해당 날짜의 이벤트 목록을 표시합니다.
+   * 
+   * 동작:
+   * 1. 선택된 날짜 설정
+   * 2. 해당 날짜의 이벤트들을 필터링
+   * 3. 필터링된 이벤트 목록을 상태에 저장
+   * 
+   * @param date - 이벤트 목록을 표시할 날짜
+   */
   const showDateEvents = useCallback((date: Date) => {
-    const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD 형식
-    
-    console.log('showDateEvents called:', {
-      date,
-      dateStr,
-      totalEvents: events.length
-    });
+    // 로컬 타임존 기준 날짜 문자열 (UTC로 변환하면 하루가 어긋날 수 있음)
+    const dateStr = format(date, 'yyyy-MM-dd');
+
     
     const dayEvents = events.filter(event => {
       const eventStartDate = event.start_date.split('T')[0];
