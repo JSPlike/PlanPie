@@ -105,7 +105,7 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
     <div className={styles.sidebar}>
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
-          <h3>Calendar List</h3>
+          <p className={styles.sectionHeaderTitle}>Calendar List</p>
         </div>
 
         <div className={styles.calendarList}>
@@ -161,15 +161,6 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
         </div>
       </div>
 
-      {/* <div className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <h3>공유 캘린더</h3>
-        </div>
-        <div className={styles.emptyState}>
-          <p>공유받은 캘린더가 없습니다</p>
-        </div>
-      </div> */}
-
       <button className={styles.addCalendarButton} onClick={handleAddCalendar}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
           <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -181,48 +172,3 @@ const CalendarLeftSide: React.FC<CalendarSidebarProps> = ({
 };
 
 export default CalendarLeftSide;
-
-
-// components/Calendar/CalendarLeftSide.tsx
-/*
-import React from 'react';
-import { useCalendarContext } from '../../contexts/CalendarContext';
-import { Calendar } from '../../types/calendar.types';
-
-interface CalendarLeftSideProps {
-  calendars: Calendar[];
-  onToggleCalendar: (calendarId: string) => void;
-  onAddCalendar: (newCalendar: any) => void;
-  onUpdateCalendar: (calendarId: string, updates: any) => void;
-  onDeleteCalendar: (calendarId: string) => void;
-  selectedCalendarId: string;
-  onSelectCalendar: (calendarId: string) => void;
-  onAddEvent: () => void;
-  isOpen: boolean;
-}
-
-const CalendarLeftSide: React.FC<CalendarLeftSideProps> = ({
-  calendars,
-  onToggleCalendar,
-  // ... 기타 props
-}) => {
-  const { calendarVisibility } = useCalendarContext();
-
-  return (
-    <div className="calendar-left-side">
-      {calendars.map(calendar => (
-        <div key={calendar.id} className="calendar-item">
-          <input
-            type="checkbox"
-            checked={calendarVisibility[calendar.id] !== false} // Context의 visibility 상태 사용
-            onChange={() => onToggleCalendar(calendar.id)}
-          />
-          <span style={{ color: calendar.color }}>{calendar.name}</span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-export default CalendarLeftSide;
-*/
