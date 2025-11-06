@@ -32,6 +32,8 @@ import CalendarLeftSide from '../../components/Calendar/CalendarLeftSide';
 import CalendarGrid from '../../components/Calendar/CalendarGrid';
 import CalendarGridW from '../../components/Calendar/CalendarGridW';
 import CalendarRightSide from '../../components/Calendar/CalendarRightSide';
+import ShareLinkSection from '../../components/Calendar/ShareLinkSection';
+import MemberListSection from '../../components/Calendar/MemberListSection';
 import { CalendarProvider, useCalendarContext } from '../../contexts/CalendarContext';
 import { CreateUpdateEventRequest, Event } from '../../types/calendar.types';
 import { User } from '../../types/auth.types';
@@ -63,6 +65,7 @@ const CalendarViewContent: React.FC = () => {
     setSelectedDate: setContextSelectedDate,
     setSelectedDateEvents,
     showDateEvents,
+    calendarVisibility,
   } = useCalendarContext();
 
   // 더미 사용자 (임시)
@@ -105,6 +108,7 @@ const CalendarViewContent: React.FC = () => {
   const [hasDateError, setHasDateError] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [optionRightSideActive, setOptionRightSideActive] = useState<string | null>(null); // 'member' | 'notice' | null
 
   const handleDateErrorChange = (hasError: boolean) => {
     setHasDateError(hasError);
@@ -624,6 +628,95 @@ const CalendarViewContent: React.FC = () => {
             }}
           />
         </div>
+
+        {/* OptionRightSide (오른쪽 끝 고정 버튼) */}
+        {(() => {
+          const activeCalendars = calendars.filter(cal => calendarVisibility[cal.id] !== false);
+          const currentCalendar = activeCalendars.find(cal => cal.id === selectedCalendarId) || activeCalendars[0];
+          return currentCalendar?.is_admin ? (
+            <div className={styles.optionRightSideContainer}>
+              <div className={styles.optionButtons}>
+                <button
+                  type="button"
+                  onClick={() => setOptionRightSideActive(optionRightSideActive === 'member' ? null : 'member')}
+                  className={`${styles.optionButton} ${optionRightSideActive === 'member' ? styles.active : ''}`}
+                  title="멤버 초대"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="18" cy="5" r="3"/>
+                    <circle cx="6" cy="12" r="3"/>
+                    <circle cx="18" cy="19" r="3"/>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOptionRightSideActive(optionRightSideActive === 'notice' ? null : 'notice')}
+                  className={`${styles.optionButton} ${optionRightSideActive === 'notice' ? styles.active : ''}`}
+                  title="공지사항"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ) : null;
+        })()}
+
+        {/* 콘텐츠 섹션 (오른쪽에서 왼쪽으로 슬라이드) */}
+        {(() => {
+          const activeCalendars = calendars.filter(cal => calendarVisibility[cal.id] !== false);
+          const currentCalendar = activeCalendars.find(cal => cal.id === selectedCalendarId) || activeCalendars[0];
+          return currentCalendar?.is_admin ? (
+            <div className={`${styles.optionContent} ${optionRightSideActive ? styles.open : ''}`}>
+              {optionRightSideActive === 'member' && (
+                <div className={styles.optionContentInner}>
+                  <div className={styles.optionContentHeader}>
+                    <h3>멤버 리스트</h3>
+                    <button
+                      type="button"
+                      onClick={() => setOptionRightSideActive(null)}
+                      className={styles.closeButton}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <MemberListSection 
+                    calendars={calendars}
+                    calendarVisibility={calendarVisibility}
+                    isAdmin={true}
+                  />
+                </div>
+              )}
+              {optionRightSideActive === 'notice' && (
+                <div className={styles.optionContentInner}>
+                  <div className={styles.optionContentHeader}>
+                    <h3>공지사항</h3>
+                    <button
+                      type="button"
+                      onClick={() => setOptionRightSideActive(null)}
+                      className={styles.closeButton}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <div className={styles.noticeContent}>
+                    <p>공지사항 기능은 추후 구현 예정입니다.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : null;
+        })()}
 
       </div>
     </div>

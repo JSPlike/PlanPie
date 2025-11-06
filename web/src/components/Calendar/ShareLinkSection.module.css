@@ -1,9 +1,9 @@
 .shareSection {
-  padding: 24px;
-  background: white;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  margin-bottom: 24px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  border: none;
+  margin-bottom: 0;
 }
 
 .sectionHeader {

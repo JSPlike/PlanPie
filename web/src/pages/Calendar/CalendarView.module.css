@@ -150,11 +150,128 @@
     min-width: 420px;
     opacity: 1; /* 부드러운 페이드 인 */
   }
+
+  /* 오른쪽 끝 고정 섹션 (옵션 버튼) */
+  .optionRightSideContainer {
+    position: relative;
+    width: 60px;
+    flex-shrink: 0;
+    height: 100%;
+    background: white;
+    border-left: 0.5px solid #e0e0e0;
+    z-index: 10;
+  }
+
+  /* 옵션 버튼 섹션 */
+  .optionButtons {
+    width: 60px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 20px 0;
+    gap: 12px;
+    background: white;
+  }
+
+  .optionButton {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0.5px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .optionButton:hover {
+    background: #f5f5f5;
+    border-color: #5C7AEA;
+    color: #5C7AEA;
+  }
+
+  .optionButton.active {
+    background: #5C7AEA;
+    border-color: #5C7AEA;
+    color: white;
+  }
+
+  /* 콘텐츠 섹션 (오른쪽에서 왼쪽으로 슬라이드) */
+  .optionContent {
+    position: relative;
+    left: 0px;
+    right: 40px; /* optionRightSideContainer 너비만큼 오른쪽에서 떨어뜨림 */
+    width: 0;
+    height: 100%;
+    background: #f8f9fa;
+    overflow: hidden;
+    z-index: 15;
+    flex-shrink: 0;
+    border-left: 1px solid #e0e0e0;
+    opacity: 0;
+  }
+
+  .optionContent.open {
+    width: 425.5px;
+    opacity: 1;
+  }
+
+  .optionContentInner {
+    width: 385.5px;
+    height: 100%;
+    padding: 20px;
+    overflow-y: auto;
+  }
+
+  .optionContentHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .optionContentHeader h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #212121;
+  }
+
+  .closeButton {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: #666;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .closeButton:hover {
+    background: #e0e0e0;
+    color: #212121;
+  }
+
+  .noticeContent {
+    padding: 20px 0;
+    color: #666;
+  }
   
   /* 태블릿 크기 */
   @media (max-width: 1200px) {
     .rightSideContainer.open {
-      width: 420px; /* 조금 더 작게 */
+      width: 420px;
       min-width: 420px;
     }
   }
