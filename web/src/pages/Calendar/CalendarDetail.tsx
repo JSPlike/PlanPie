@@ -6,6 +6,7 @@ import { calendarAPI } from '../../services/calendarApi';
 import Loading from '../../components/Common/Loading';
 import CalendarGrid from '../../components/Calendar/CalendarGrid';
 import CalendarGridW from '../../components/Calendar/CalendarGridW';
+import ShareLinkSection from '../../components/Calendar/ShareLinkSection';
 //import './CalendarDetail.css';
 
 const CalendarDetail: React.FC = () => {
@@ -128,6 +129,14 @@ const CalendarDetail: React.FC = () => {
           <span className="meta-item">일정 {calendar.event_count}개</span>
         </div>
       </div>
+
+      {/* 공유 링크 섹션 */}
+      {calendar.is_admin && (
+        <ShareLinkSection 
+          calendarId={calendar.id}
+          isAdmin={calendar.is_admin}
+        />
+      )}
 
       <div className="calendar-view-controls">
         <div className="view-tabs">

@@ -23,6 +23,9 @@ import { ko } from 'date-fns/locale';
 import CustomDatePicker from './CustomDatePicker';
 import CustomTimePicker from './CustomTimePicker';
 import { useCalendarContext } from '../../contexts/CalendarContext';
+import ShareLinkSection from './ShareLinkSection';
+import { calendarAPI } from '../../services/calendarApi';
+import { toast } from 'react-toastify';
 
 interface CalendarRightSideProps {
   isOpen: boolean;
@@ -115,6 +118,9 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
 
   // 태그 드롭다운 상태 추가
   const [showTagDropdown, setShowTagDropdown] = useState(false);
+
+  // 공유 링크 섹션 표시 상태
+  const [showShareSection, setShowShareSection] = useState(false);
 
   // 날짜 형식 오류 체크 함수
   const checkDateFormatError = (date: string): boolean => {
@@ -1552,6 +1558,39 @@ const CalendarRightSide: React.FC<CalendarRightSideProps> = ({
                       </div>
                     )}
                   </div>
+                </div>
+              )}
+
+              {/* 공유 링크 버튼 (관리자인 경우에만 표시) */}
+              {selectedCalendarId && activeCalendars.find(cal => cal.id === selectedCalendarId)?.is_admin && (
+                <div className={styles.optionDiv}>
+                  <div className={styles.customLabel}>
+                    <label className={styles.smallLabel}>공유</label>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowShareSection(!showShareSection)}
+                    className={styles.shareButton}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="18" cy="5" r="3"/>
+                      <circle cx="6" cy="12" r="3"/>
+                      <circle cx="18" cy="19" r="3"/>
+                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" stroke="currentColor" strokeWidth="2"/>
+                      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" stroke="currentColor" strokeWidth="2"/>
+                    </svg>
+                    멤버 초대
+                  </button>
+                </div>
+              )}
+
+              {/* 공유 링크 섹션 */}
+              {showShareSection && selectedCalendarId && activeCalendars.find(cal => cal.id === selectedCalendarId)?.is_admin && (
+                <div className={styles.shareSectionWrapper}>
+                  <ShareLinkSection 
+                    calendarId={selectedCalendarId}
+                    isAdmin={true}
+                  />
                 </div>
               )}
 

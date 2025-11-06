@@ -42,16 +42,26 @@ const JoinCalendar: React.FC<JoinCalendarProps> = ({ type = 'share' }) => {
 
     try {
       if (type === 'invitation') {
-        await calendarAPI.acceptInvitation({ token });
+        // acceptInvitation은 Calendar를 반환
+        const response = await calendarAPI.acceptInvitation({ token });
+        if (response.data) {
+          setCalendarInfo(response.data);
+        }
+        alert('캘린더에 참여했습니다!');
       } else {
-        await calendarAPI.joinByShareLink(token);
+        // joinByShareLink는 { calendar, message } 형식으로 반환
+        const response = await calendarAPI.joinByShareLink(token);
+        if (response.data.calendar) {
+          setCalendarInfo(response.data.calendar);
+        }
+        alert(response.data.message || '캘린더에 참여했습니다!');
       }
       
-      alert('캘린더에 참여했습니다!');
       navigate('/calendars');
     } catch (error: any) {
       console.error('Failed to join calendar:', error);
       setError(
+        error.response?.data?.error || 
         error.response?.data?.message || 
         '캘린더 참여에 실패했습니다. 링크를 다시 확인해주세요.'
       );

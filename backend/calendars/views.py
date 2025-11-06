@@ -102,6 +102,99 @@ class CalendarViewSet(viewsets.ModelViewSet):
         events = calendar.events.all()
         serializer = EventSerializer(events, many=True)
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def share_link(self, request, pk=None):
+        """공유 링크 조회"""
+        calendar = self.get_object()
+        
+        # 관리자 권한 확인
+        if not calendar.is_admin(request.user):
+            return Response(
+                {'error': '권한이 없습니다.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # share_token이 없으면 생성
+        if not calendar.share_token:
+            import secrets
+            calendar.share_token = secrets.token_urlsafe(32)
+            calendar.save()
+        
+        return Response({
+            'share_token': calendar.share_token,
+            'share_url': calendar.get_share_url(),
+        })
+    
+    @action(detail=True, methods=['post'])
+    def generate_share_link(self, request, pk=None):
+        """공유 링크 생성/재생성"""
+        calendar = self.get_object()
+        
+        # 관리자 권한 확인
+        if not calendar.is_admin(request.user):
+            return Response(
+                {'error': '권한이 없습니다.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # share_token 재생성
+        import secrets
+        calendar.share_token = secrets.token_urlsafe(32)
+        calendar.save()
+        
+        return Response({
+            'share_token': calendar.share_token,
+            'share_url': calendar.get_share_url(),
+            'message': '새로운 공유 링크가 생성되었습니다.',
+        })
+    
+    @action(detail=False, methods=['post'])
+    def join_by_link(self, request):
+        """공유 링크로 캘린더 참여"""
+        share_token = request.data.get('share_token')
+        
+        if not share_token:
+            return Response(
+                {'error': 'share_token이 필요합니다.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            calendar = Calendar.objects.get(share_token=share_token)
+            user = request.user
+            
+            # 이미 멤버인지 확인
+            if calendar.owner == user:
+                return Response(
+                    {'error': '이미 캘린더 소유자입니다.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            if calendar.members.filter(user=user).exists():
+                return Response(
+                    {'error': '이미 캘린더 멤버입니다.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # 멤버로 추가
+            CalendarMember.objects.create(
+                calendar=calendar,
+                user=user,
+                role='member'
+            )
+            
+            serializer = CalendarSerializer(calendar, context={'request': request})
+            return Response({
+                'calendar': serializer.data,
+                'message': '캘린더에 참여했습니다.',
+            })
+            
+        except Calendar.DoesNotExist:
+            return Response(
+                {'error': '유효하지 않은 공유 링크입니다.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class EventViewSet(viewsets.ModelViewSet):

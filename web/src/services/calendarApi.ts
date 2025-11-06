@@ -125,9 +125,18 @@ export const calendarAPI = {
   cancelInvitation: (calendarId: string, invitationId: string) => 
     api.delete(`/calendars/${calendarId}/invitations/${invitationId}/`),
   
+  // 공유 링크 관련
+  getShareLink: (calendarId: string) => 
+    api.get<{ share_token: string; share_url: string }>(`/calendars/${calendarId}/share_link/`),
+  
+  generateShareLink: (calendarId: string) => 
+    api.post<{ share_token: string; share_url: string; message: string }>(
+      `/calendars/${calendarId}/generate_share_link/`
+    ),
+  
   // 공유 링크로 참여
   joinByShareLink: (token: string) => 
-    api.post<Calendar>('/calendars/join/', { share_token: token }),
+    api.post<{ calendar: Calendar; message: string }>('/calendars/join/', { share_token: token }),
 
   // ===== 이벤트 관련 =====
   // 이벤트 목록 조회

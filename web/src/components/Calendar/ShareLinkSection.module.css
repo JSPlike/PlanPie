@@ -1,0 +1,135 @@
+.shareSection {
+  padding: 24px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 24px;
+}
+
+.sectionHeader {
+  margin-bottom: 20px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #212121;
+  margin: 0 0 8px 0;
+}
+
+.description {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.linkContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.linkInputGroup {
+  display: flex;
+  gap: 8px;
+}
+
+.linkInput {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #212121;
+  background: #f8f9fa;
+  transition: all 0.2s;
+}
+
+.linkInput:focus {
+  outline: none;
+  border-color: #5C7AEA;
+  background: white;
+}
+
+.copyButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 20px;
+  border: 1px solid #5C7AEA;
+  border-radius: 6px;
+  background: white;
+  color: #5C7AEA;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.copyButton:hover:not(:disabled) {
+  background: #5C7AEA;
+  color: white;
+}
+
+.copyButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.copyButton.copied {
+  background: #6FCF97;
+  border-color: #6FCF97;
+  color: white;
+}
+
+.generateButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 20px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.generateButton:hover:not(:disabled) {
+  border-color: #5C7AEA;
+  color: #5C7AEA;
+  background: #f8f9fa;
+}
+
+.generateButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.infoBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background: #f0f7ff;
+  border-radius: 6px;
+  margin-top: 16px;
+}
+
+.infoBox svg {
+  flex-shrink: 0;
+  color: #5C7AEA;
+  margin-top: 2px;
+}
+
+.infoBox p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.5;
+}

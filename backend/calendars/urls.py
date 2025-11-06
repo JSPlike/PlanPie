@@ -68,6 +68,15 @@ urlpatterns = [
     
     #path('api/calendars/invitations/decline/', views.InvitationViewSet.as_view({'post': 'decline'}), name='invitation-decline'),
 
+    # 공유 링크 관련
+    path('api/calendars/<uuid:pk>/share_link/', 
+         views.CalendarViewSet.as_view({'get': 'share_link'}), 
+         name='calendar-share-link'),
+    
+    path('api/calendars/<uuid:pk>/generate_share_link/', 
+         views.CalendarViewSet.as_view({'post': 'generate_share_link'}), 
+         name='calendar-generate-share-link'),
+    
     path('api/calendars/join/', 
          views.CalendarViewSet.as_view({'post': 'join_by_link'}), 
          name='calendar-join'),
