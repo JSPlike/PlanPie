@@ -58,6 +58,13 @@ class CalendarSerializer(serializers.ModelSerializer):
         """공유 URL"""
         return obj.get_share_url()
 
+    def _get_user(self):
+        """context에서 user를 안전하게 가져오기"""
+        request = self.context.get('request')
+        if request and request.user and request.user.is_authenticated:
+            return request.user
+        return None
+        
     def get_is_admin(self, obj):
         """현재 사용자가 관리자인지"""
         request = self.context.get('request')

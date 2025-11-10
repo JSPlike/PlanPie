@@ -40,7 +40,10 @@ class LoginSerializer(serializers.Serializer):
         password = data.get('password')
 
         if email and password:
-            user = authenticate(email=email, password=password)
+            # 커스텀 백엔드를 통해 이메일로 인증
+            # request가 있으면 전달, 없으면 None
+            request = self.context.get('request') if self.context else None
+            user = authenticate(request=request, email=email, password=password)
             if not user:
                 raise serializers.ValidationError('이메일 또는 비밀번호가 올바르지 않습니다.')
         else:

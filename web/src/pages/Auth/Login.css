@@ -474,32 +474,82 @@
   
   /* 반응형 디자인 */
   @media (max-width: 1024px) {
+    .login-container {
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    
     .login-illustration {
       display: none;
     }
     
     .login-form-section {
+      flex: 1;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     
     .login-form-container {
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 100%;
     }
   }
   
-  @media (max-width: 480px) {
+  @media (max-width: 768px) {
+    .login-form-section {
+      padding: 16px;
+    }
+    
     .login-form-container {
       padding: 32px 24px;
+      border-radius: 16px;
     }
     
     .login-header h2 {
       font-size: 28px;
     }
     
+    .login-header p {
+      font-size: 14px;
+    }
+    
     .form-options {
       flex-direction: column;
       gap: 12px;
       align-items: flex-start;
+    }
+    
+    .auth-form-input {
+      font-size: 16px; /* iOS 줌 방지 */
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .login-form-section {
+      padding: 12px;
+    }
+    
+    .login-form-container {
+      padding: 24px 20px;
+      border-radius: 12px;
+    }
+    
+    .login-header h2 {
+      font-size: 24px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .submit-button {
+      padding: 14px;
+      font-size: 15px;
     }
   }
   

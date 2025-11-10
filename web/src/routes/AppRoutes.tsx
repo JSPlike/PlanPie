@@ -11,6 +11,7 @@ import CalendarList from '../pages/Calendar/CalendarList';
 import CalendarCreate from '../pages/Calendar/CalendarCreate';
 import CalendarDetail from '../pages/Calendar/CalendarDetail';
 import JoinCalendar from '../pages/Calendar/JoinCalendar';
+import InviteCalendarPage from '../pages/Calendar/InviteCalendarPage';
 
 // Common Components
 import PrivateRoute from '../components/Common/PrivateRoute';
@@ -47,6 +48,12 @@ const AppRoutes: React.FC = () => {
         } 
       />
 
+      {/* Calendar Invite Route - 공개 라우트 */}
+      <Route 
+        path="/calendar/invite/:token" 
+        element={<InviteCalendarPage />} 
+      />
+
       {/* Calendar Routes */}
       <Route 
         path="/calendars" 
@@ -79,11 +86,7 @@ const AppRoutes: React.FC = () => {
       {/* Invitation Routes */}
       <Route 
         path="/calendar/join/:token" 
-        element={
-          <PrivateRoute>
-            <JoinCalendar type="share" />
-          </PrivateRoute>
-        } 
+        element={<InviteCalendarPage />} 
       />
 
       <Route 

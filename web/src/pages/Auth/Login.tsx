@@ -1,6 +1,6 @@
 // src/pages/Auth/Login.tsx
 import React, { useState, FormEvent, ChangeEvent } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { authAPI } from '../../services/api';
 import { LoginRequest } from '../../types/auth.types';
 import SocialLogin from '../../components/SocialLogin';
@@ -9,6 +9,9 @@ import './Login.css';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectPath = searchParams.get('redirect') || '/calendars';
+  
   const [formData, setFormData] = useState<LoginRequest>({
     email: '',
     password: '',
@@ -44,19 +47,38 @@ const Login: React.FC = () => {
     setError('');
 
     try {
+      console.log('[Login] Attempting login with:', formData.email);
       const response = await authAPI.login(formData);
+      console.log('[Login] Login response:', response);
+      
       const { access, refresh, user } = response.data;
+      
+      if (!access || !refresh) {
+        throw new Error('로그인 응답에 토큰이 없습니다.');
+      }
       
       localStorage.setItem('access_token', access);
       localStorage.setItem('refresh_token', refresh);
+      console.log('[Login] Tokens saved to localStorage');
       
       if (rememberMe) {
         localStorage.setItem('remember_email', formData.email);
       }
       
-      navigate('/');
+      // 로그인 성공 후 리다이렉트 (redirect 파라미터가 있으면 해당 경로로)
+      console.log('[Login] Redirecting to:', redirectPath);
+      navigate(redirectPath);
     } catch (error: any) {
-      setError(error.response?.data?.detail || '이메일 또는 비밀번호를 확인해주세요.');
+      console.error('[Login] Login error:', error);
+      console.error('[Login] Error response:', error.response);
+      
+      // Network Error인 경우 더 자세한 메시지 표시
+      if (error.message === 'Network Error' || error.code === 'ERR_NETWORK') {
+        const apiUrl = sessionStorage.getItem('api_base_url') || 'http://localhost:8000/api';
+        setError(`네트워크 연결 오류: 백엔드 서버(${apiUrl})에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.`);
+      } else {
+        setError(error.response?.data?.detail || error.response?.data?.non_field_errors?.[0] || error.message || '이메일 또는 비밀번호를 확인해주세요.');
+      }
     } finally {
       setLoading(false);
     }

@@ -10,8 +10,7 @@ router.register(r'events', views.EventViewSet, basename='event')
 app_name = 'calendars'
 
 urlpatterns = [
-    # Router URLs
-    path('api/', include(router.urls)),
+    
     
     # 캘린더 관련 추가 엔드포인트
     path('api/calendars/check_calendars/', 
@@ -77,6 +76,10 @@ urlpatterns = [
          views.CalendarViewSet.as_view({'post': 'generate_share_link'}), 
          name='calendar-generate-share-link'),
     
+    path('api/calendars/share/', 
+         views.CalendarViewSet.as_view({'get': 'get_by_share_token'}), 
+         name='calendar-get-by-share-token'),
+    
     path('api/calendars/join/', 
          views.CalendarViewSet.as_view({'post': 'join_by_link'}), 
          name='calendar-join'),
@@ -85,4 +88,8 @@ urlpatterns = [
     path('api/calendars/<uuid:calendar_id>/events/', 
          views.EventViewSet.as_view({'get': 'calendar_events'}), 
          name='calendar-events'),
+
+
+    # Router URLs
+    path('api/', include(router.urls)),     
 ]

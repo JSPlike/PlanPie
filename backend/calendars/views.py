@@ -1,7 +1,7 @@
 # calendars/views.py
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django.db import models
 from django.shortcuts import get_object_or_404
@@ -19,9 +19,22 @@ class CalendarViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = None  # 페이지네이션 비활성화
     
+    def get_permissions(self):
+        """action에 따라 permission 설정"""
+        if self.action == 'get_by_share_token':
+            return [AllowAny()]
+        return [IsAuthenticated()]
+    
     def get_queryset(self):
         """사용자가 접근 가능한 캘린더만 반환"""
         user = self.request.user
+        
+        # 공개 API인 경우 (AnonymousUser) 전체 캘린더 반환하지 않음
+        # get_by_share_token action은 get_queryset을 사용하지 않으므로 문제 없음
+        if not user.is_authenticated:
+            # 인증되지 않은 사용자는 빈 queryset 반환
+            # (실제로는 get_by_share_token에서 직접 조회하므로 사용되지 않음)
+            return Calendar.objects.none()
 
         # 소유자이거나 멤버인 캘린더
         return Calendar.objects.filter(
@@ -148,6 +161,30 @@ class CalendarViewSet(viewsets.ModelViewSet):
             'share_url': calendar.get_share_url(),
             'message': '새로운 공유 링크가 생성되었습니다.',
         })
+    
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def get_by_share_token(self, request):
+        """share_token으로 캘린더 정보 조회 (공개 API, 인증 불필요)"""
+        share_token = request.query_params.get('share_token')
+        
+        if not share_token:
+            return Response(
+                {'error': 'share_token이 필요합니다.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # get_queryset을 사용하지 않고 직접 조회
+            calendar = Calendar.objects.get(share_token=share_token)
+            # 공개 API이므로 request.user가 없을 수 있음
+            # serializer에서 request.user를 사용하는 필드가 있을 수 있으므로 주의
+            serializer = CalendarSerializer(calendar, context={'request': request})
+            return Response(serializer.data)
+        except Calendar.DoesNotExist:
+            return Response(
+                {'error': '유효하지 않은 공유 링크입니다.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
     
     @action(detail=False, methods=['post'])
     def join_by_link(self, request):

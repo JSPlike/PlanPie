@@ -98,6 +98,11 @@ class Calendar(models.Model):
         return f"{settings.FRONTEND_URL}/calendar/join/{self.share_token}"
 
     def is_admin(self, user):
+
+        # ✅ 익명 사용자는 항상 False
+        if not getattr(user, 'is_authenticated', False):
+            return False
+
         """사용자가 관리자인지 확인"""
         # 소유자는 항상 관리자
         if self.owner == user:
@@ -108,11 +113,18 @@ class Calendar(models.Model):
         return member and member.role == 'admin'
     
     def can_delete(self, user):
+        if not getattr(user, 'is_authenticated', False):
+            return False
+
         """캘린더 삭제 권한 확인 (관리자만)"""
         return self.is_admin(user)
     
     def can_edit_event(self, user):
         """일정 수정 권한 확인 (모든 멤버)"""
+
+        if not getattr(user, 'is_authenticated', False):
+            return False
+
         # 소유자
         if self.owner == user:
             return True
@@ -121,6 +133,9 @@ class Calendar(models.Model):
         return self.members.filter(user=user).exists()
     
     def can_leave(self, user):
+        if not getattr(user, 'is_authenticated', False):
+            return False
+            
         """캘린더 나가기 가능 여부 (소유자는 불가)"""
         return self.owner != user and self.members.filter(user=user).exists()
 

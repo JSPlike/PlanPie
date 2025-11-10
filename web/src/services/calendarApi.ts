@@ -1,5 +1,6 @@
 // calendarApi.ts
 import api from './api';
+import axios from 'axios';
 import {
   Calendar,
   CalendarTag,
@@ -133,6 +134,30 @@ export const calendarAPI = {
     api.post<{ share_token: string; share_url: string; message: string }>(
       `/calendars/${calendarId}/generate_share_link/`
     ),
+  
+  // 공유 링크로 캘린더 정보 조회 (참가 전, 공개 API - 인증 불필요)
+  getCalendarByShareToken: (token: string) => {
+    // 공개 API이므로 인증 헤더 없이 별도 axios 인스턴스 사용
+    // 현재 호스트의 IP 사용
+    const getApiBaseUrl = () => {
+      if (process.env.REACT_APP_API_URL) {
+        return process.env.REACT_APP_API_URL;
+      }
+      const hostname = window.location.hostname;
+      if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+        return `http://${hostname}:8000/api`;
+      }
+      return 'http://localhost:8000/api';
+    };
+    
+    const publicApi = axios.create({
+      baseURL: getApiBaseUrl(),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    return publicApi.get<Calendar>('/calendars/share/', { params: { share_token: token } });
+  },
   
   // 공유 링크로 참여
   joinByShareLink: (token: string) => 

@@ -1,12 +1,15 @@
 html, body {
   overscroll-behavior: none;
   overscroll-behavior-y: none;
-
-  /* iOS Safari 대응 */
-  position: fixed;
+  
+  /* 모바일에서 스크롤 가능하도록 */
   width: 100%;
-  height: 100%;
-  overflow: hidden;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  
+  /* iOS Safari 대응 - 스크롤 부드럽게 */
+  -webkit-overflow-scrolling: touch;
 }
 
 body {

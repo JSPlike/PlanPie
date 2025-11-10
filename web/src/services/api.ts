@@ -8,26 +8,117 @@ import {
   AuthResponse,
 } from '../types/auth.types';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+// API Base URL 설정 (환경 변수 또는 동적 설정)
+const getApiBaseUrl = () => {
+  // 환경 변수가 있으면 사용
+  if (process.env.REACT_APP_API_URL) {
+    console.log('[API] Using environment variable API URL:', process.env.REACT_APP_API_URL);
+    return process.env.REACT_APP_API_URL;
+  }
+  
+  // 개발 환경에서 현재 호스트의 IP 사용
+  if (process.env.NODE_ENV === 'development') {
+    const hostname = window.location.hostname;
+    
+    // localhost가 아니면 현재 호스트 사용 (핸드폰에서 접속 시 PC의 IP 주소 사용)
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      const apiUrl = `http://${hostname}:8000/api`;
+      console.log('[API] Using network API URL:', apiUrl, '(from hostname:', hostname, ')');
+      // sessionStorage에 저장 (다음 요청에서 사용)
+      sessionStorage.setItem('api_base_url', apiUrl);
+      return apiUrl;
+    }
+    
+    // localhost인 경우에도 sessionStorage에 저장된 API URL이 있으면 사용
+    // 단, localhost를 포함하지 않은 경우만 사용
+    const savedApiUrl = sessionStorage.getItem('api_base_url');
+    if (savedApiUrl && !savedApiUrl.includes('localhost')) {
+      console.log('[API] Using saved API URL from sessionStorage:', savedApiUrl);
+      return savedApiUrl;
+    }
+  }
+  
+  // 기본값: localhost
+  const defaultUrl = 'http://localhost:8000/api';
+  console.log('[API] Using default API URL:', defaultUrl);
+  return defaultUrl;
+};
 
-// Axios 인스턴스 생성
+// API_BASE_URL을 동적으로 가져오도록 함수로 변경
+const getAPIBaseURL = () => getApiBaseUrl();
+
+// Axios 인스턴스 생성 (baseURL을 동적으로 설정)
 const api: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: getAPIBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10초 타임아웃
 });
 
-// Request 인터셉터 - 토큰 자동 추가
+// Request 인터셉터 - 토큰 자동 추가 및 baseURL 동적 설정
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // 매 요청마다 baseURL을 동적으로 설정 (핸드폰에서 접속 시 올바른 IP 사용)
+    // window.location.hostname을 직접 확인하여 항상 최신 값 사용
+    let currentBaseURL: string;
+    
+    // 개발 환경에서 hostname을 직접 확인하여 baseURL 설정
+    if (process.env.NODE_ENV === 'development') {
+      const hostname = window.location.hostname;
+      
+      // localhost가 아니면 네트워크 IP 사용 (핸드폰에서 접속 시)
+      if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+        currentBaseURL = `http://${hostname}:8000/api`;
+        // sessionStorage에 저장 (다음 요청에서 사용)
+        sessionStorage.setItem('api_base_url', currentBaseURL);
+      } else {
+        // localhost인 경우 sessionStorage에 저장된 네트워크 IP 사용
+        const savedApiUrl = sessionStorage.getItem('api_base_url');
+        if (savedApiUrl && !savedApiUrl.includes('localhost')) {
+          currentBaseURL = savedApiUrl;
+        } else {
+          // 기본값: localhost
+          currentBaseURL = 'http://localhost:8000/api';
+        }
+      }
+    } else {
+      // 프로덕션 환경
+      currentBaseURL = getAPIBaseURL();
+    }
+    
+    // baseURL을 항상 최신 값으로 설정
+    config.baseURL = currentBaseURL;
+    
     const token = localStorage.getItem('access_token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // 개발 환경에서 요청 URL 로깅
+    if (process.env.NODE_ENV === 'development') {
+      const url = (config.baseURL || '') + (config.url || '');
+      console.log('[API Request]', config.method?.toUpperCase(), url, '(hostname:', window.location.hostname, ')');
+    }
     return config;
   },
   (error: AxiosError) => {
+    console.error('[API Request Error]', error);
+    return Promise.reject(error);
+  }
+);
+
+// Response 인터셉터 - 에러 로깅
+api.interceptors.response.use(
+  (response) => {
+    // 개발 환경에서 응답 로깅
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[API Response]', response.status, response.config.url);
+    }
+    return response;
+  },
+  (error: AxiosError) => {
+    console.error('[API Response Error]', error.response?.status, error.config?.url);
+    console.error('[API Response Error Data]', error.response?.data);
     return Promise.reject(error);
   }
 );

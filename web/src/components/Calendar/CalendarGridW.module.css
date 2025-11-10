@@ -351,34 +351,134 @@
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .weekView {
-    font-size: 12px;
+    font-size: 11px;
   }
   
   .timeGutter {
-    width: 60px;
+    width: 50px;
   }
   
   .weekHeader {
-    grid-template-columns: 60px repeat(7, 1fr);
+    grid-template-columns: 50px repeat(7, 1fr);
   }
   
   .allDayRow {
-    grid-template-columns: 60px repeat(7, 1fr);
+    grid-template-columns: 50px repeat(7, 1fr);
   }
   
   .timeScroll {
-    grid-template-columns: 60px 1fr;
+    grid-template-columns: 50px 1fr;
   }
   
   .weekHeaderCell {
-    padding: 6px 4px;
+    padding: 6px 2px;
   }
   
   .weekHeaderDay {
-    font-size: 10px;
+    font-size: 9px;
   }
   
   .weekHeaderDate {
-    font-size: 12px;
+    font-size: 11px;
+  }
+  
+  .weekHeaderDate.today {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+  
+  .timeGutterRow {
+    font-size: 10px;
+    padding: 0 4px;
+    margin-right: 8px;
+  }
+  
+  .allDayPill {
+    font-size: 10px;
+    height: 18px;
+    padding: 0 4px;
+  }
+  
+  .timedEvent {
+    font-size: 10px;
+    padding: 0 4px;
+  }
+  
+  .multiDayTimedEvent {
+    font-size: 10px;
+  }
+  
+  .moreEventsButton {
+    font-size: 9px;
+    padding: 1px 3px;
+    min-width: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .weekView {
+    font-size: 10px;
+  }
+  
+  .timeGutter {
+    width: 45px;
+  }
+  
+  .weekHeader {
+    grid-template-columns: 45px repeat(7, 1fr);
+  }
+  
+  .allDayRow {
+    grid-template-columns: 45px repeat(7, 1fr);
+  }
+  
+  .timeScroll {
+    grid-template-columns: 45px 1fr;
+  }
+  
+  .weekHeaderCell {
+    padding: 4px 1px;
+  }
+  
+  .weekHeaderDay {
+    font-size: 8px;
+  }
+  
+  .weekHeaderDate {
+    font-size: 10px;
+  }
+  
+  .weekHeaderDate.today {
+    width: 18px;
+    height: 18px;
+    font-size: 9px;
+  }
+  
+  .timeGutterRow {
+    font-size: 9px;
+    padding: 0 2px;
+    margin-right: 4px;
+  }
+  
+  .allDayPill {
+    font-size: 9px;
+    height: 16px;
+    padding: 0 3px;
+  }
+  
+  .timedEvent {
+    font-size: 9px;
+    padding: 0 3px;
+  }
+  
+  .multiDayTimedEvent {
+    font-size: 9px;
+  }
+  
+  .moreEventsButton {
+    font-size: 8px;
+    padding: 1px 2px;
+    min-width: 18px;
   }
 }

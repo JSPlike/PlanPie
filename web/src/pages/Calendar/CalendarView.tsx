@@ -109,6 +109,8 @@ const CalendarViewContent: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [optionRightSideActive, setOptionRightSideActive] = useState<string | null>(null); // 'member' | 'notice' | null
+  const [isMobileAddButtonVisible, setIsMobileAddButtonVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   const handleDateErrorChange = (hasError: boolean) => {
     setHasDateError(hasError);
@@ -118,6 +120,32 @@ const CalendarViewContent: React.FC = () => {
   useEffect(() => {
     sessionStorage.setItem('calendarCurrentDate', currentDate.toISOString());
   }, [currentDate]);
+
+  // 모바일 스크롤 감지 - 스크롤 방향에 따라 + 버튼 숨기기/보이기
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // 스크롤을 내릴 때 버튼 숨기기, 올릴 때 버튼 보이기
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // 스크롤 다운 (100px 이상)
+        setIsMobileAddButtonVisible(false);
+      } else if (currentScrollY < lastScrollY) {
+        // 스크롤 업
+        setIsMobileAddButtonVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    // 모바일에서만 스크롤 이벤트 리스너 추가
+    if (window.innerWidth <= 768) {
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      return () => {
+        window.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, [lastScrollY]);
 
   // 뷰 변경 핸들러 - rightSide 닫고 내용 초기화
   const handleViewChange = (newView: 'month' | 'week' | 'day') => {
@@ -717,6 +745,44 @@ const CalendarViewContent: React.FC = () => {
             </div>
           ) : null;
         })()}
+
+        {/* 모바일용 하단 + 버튼 섹션 */}
+        <div className={`${styles.mobileAddButtonSection} ${isMobileAddButtonVisible ? styles.visible : styles.hidden}`}>
+          <div className={styles.mobileAddButtonWrapper}>
+            <button 
+              className={styles.mobileAddButton}
+              onClick={() => {
+                // 아무 날짜도 선택되지 않은 상태에서 + 버튼을 누르면 오늘 날짜로 바인딩
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                // 리스트 모드 해제
+                setContextSelectedDate(null);
+                setSelectedDateEvents([]);
+                setSelectedDate(today);
+                setSelectedEvent(null);
+                
+                if (tempEvent) {
+                  setTempEvent(null);
+                }
+                
+                // 오늘 날짜로 새 이벤트 생성
+                setTimeout(() => {
+                  handleCreateNewEvent(today, today);
+                }, 0);
+                
+                console.log('[RightSide Open] from mobile add button', { date: today.toISOString() });
+                setIsRightSideOpen(true);
+              }}
+              aria-label="새 일정 추가"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M12 5V19M5 12H19" strokeLinecap="round"/>
+              </svg>
+            </button>
+            <span className={styles.mobileAddButtonLabel}>추가</span>
+          </div>
+        </div>
 
       </div>
     </div>

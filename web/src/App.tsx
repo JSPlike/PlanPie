@@ -167,7 +167,6 @@ import { AuthProvider } from './contexts/AuthContext';
 import AppRoutes from './routes/AppRoutes';
 import ErrorBoundary from './components/Common/ErrorBoundary';
 import './App.css';
-import ProfileWidget from './components/Common/ProfileWidget';
 
 function App() {
   return (
@@ -176,7 +175,6 @@ function App() {
         <AuthProvider>
           <div className="App">
             <AppRoutes />
-            <ProfileWidget />
             <ToastContainer
               position="top-right"
               autoClose={3000}

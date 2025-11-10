@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-p-33#wti_(i-(t#&ea+y)(7i^$k$uty*(bct!%7!so)iky(&e6
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']  # 개발 환경: 모든 호스트 허용
 
 
 # Application definition
@@ -151,16 +151,23 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # 커스텀 유저 모델
 AUTH_USER_MODEL = 'accounts.User'
 
+# 커스텀 인증 백엔드 (이메일로 로그인 가능하도록)
+AUTHENTICATION_BACKENDS = [
+    'accounts.backends.EmailBackend',  # 커스텀 백엔드 (이메일 인증)
+    'django.contrib.auth.backends.ModelBackend',  # 기본 백엔드 (사용자명 인증)
+]
+
 FRONTEND_URL = 'https://planpie.com'
 
 # CORS 설정
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # React 웹
-    "http://localhost:8081",  # React Native
-]
+# 개발 환경에서는 모든 origin 허용 (IP 변경에 대응)
+CORS_ALLOW_ALL_ORIGINS = True  # 개발 환경: 모든 origin 허용
 
-# 개발 중에는 모든 origin 허용 (선택사항)
-# CORS_ALLOW_ALL_ORIGINS = True
+# 프로덕션 환경에서는 특정 origin만 허용
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",  # React 웹
+#     "http://localhost:8081",  # React Native
+# ]
 
 # REST Framework 설정
 REST_FRAMEWORK = {

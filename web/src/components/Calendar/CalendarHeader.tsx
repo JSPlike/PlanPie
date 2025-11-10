@@ -1,8 +1,10 @@
 // src/components/CalendarHeader/CalendarHeader.tsx
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './CalendarHeader.module.css';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useAuth } from '../../hooks/useAuth';
 
 interface CalendarHeaderProps {
   currentDate: Date;
@@ -27,9 +29,34 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   onViewChange,
   onToday,
 }) => {
+  const { user, logout, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
   const handleLeftToggle = () => {
     console.log('Left toggle clicked, current state:', isLeftSideOpen);
     onToggleLeftSide();
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const getInitials = () => {
+    if (!user) return '?';
+    const firstName = user.first_name || '';
+    const lastName = user.last_name || '';
+    const email = user.email || '';
+    
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    } else if (firstName) {
+      return firstName.slice(0, 2).toUpperCase();
+    } else if (email) {
+      return email.slice(0, 2).toUpperCase();
+    }
+    return '?';
   };
 
   const handlePrevious = () => {
@@ -162,6 +189,91 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
             <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           </svg>
         </button>
+
+        {/* 프로필 버튼 */}
+        {isAuthenticated && user && (
+          <div className={styles.profileSection}>
+            <button 
+              className={styles.profileButton}
+              onClick={() => setIsProfileOpen(!isProfileOpen)}
+              aria-label="Profile menu"
+            >
+              {user.profile_image_url ? (
+                <img 
+                  src={user.profile_image_url} 
+                  alt={user.username || user.email || 'Profile'}
+                  className={styles.profileImage}
+                />
+              ) : (
+                <div className={styles.profileAvatar}>
+                  {getInitials()}
+                </div>
+              )}
+            </button>
+
+            {/* 드롭다운 메뉴 */}
+            {isProfileOpen && (
+              <>
+                <div className={styles.profileDropdown}>
+                  <div className={styles.profileHeader}>
+                    <div className={styles.profileInfo}>
+                      <h4>{user.username || user.email}</h4>
+                      <p>{user.email}</p>
+                    </div>
+                  </div>
+
+                  <div className={styles.profileMenu}>
+                    <button 
+                      className={styles.profileMenuItem}
+                      onClick={() => {
+                        navigate('/profile');
+                        setIsProfileOpen(false);
+                      }}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12Z" fill="currentColor"/>
+                        <path d="M12 14C7.59 14 4 17.59 4 22H20C20 17.59 16.41 14 12 14Z" fill="currentColor"/>
+                      </svg>
+                      내 프로필
+                    </button>
+
+                    <button 
+                      className={styles.profileMenuItem}
+                      onClick={() => {
+                        navigate('/calendars');
+                        setIsProfileOpen(false);
+                      }}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="6" width="18" height="15" rx="2" stroke="currentColor" strokeWidth="2"/>
+                        <path d="M3 10H21" stroke="currentColor" strokeWidth="2"/>
+                        <path d="M8 2V6M16 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                      내 캘린더
+                    </button>
+
+                    <div className={styles.profileMenuDivider}></div>
+
+                    <button 
+                      className={`${styles.profileMenuItem} ${styles.logout}`}
+                      onClick={handleLogout}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M17 7L15.59 8.41L18.17 11H8V13H18.17L15.59 15.59L17 17L22 12L17 7Z" fill="currentColor"/>
+                        <path d="M4 5H12V3H4C2.9 3 2 3.9 2 5V19C2 20.1 2.9 21 4 21H12V19H4V5Z" fill="currentColor"/>
+                      </svg>
+                      로그아웃
+                    </button>
+                  </div>
+                </div>
+                <div 
+                  className={styles.profileBackdrop}
+                  onClick={() => setIsProfileOpen(false)}
+                />
+              </>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );
